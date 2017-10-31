@@ -1,5 +1,6 @@
 <?php
 include_once("./classes/DatabaseBridge.class.php");
+include_once("./classes/Utils.class.php");
 
 class GrantsManager
 {
@@ -14,11 +15,6 @@ class GrantsManager
 	{
 	}
 	
-	static function errorJSON( $msg )
-	{
-		return "{\"status\":\"error\", \"message\":\"".$msg."\"}";
-	}
-	
 	static function userHasGrant( $user, $pass, $grant )
 	{
 		$query = "SELECT gr.nome_grant FROM giocatori AS gi
@@ -30,11 +26,11 @@ class GrantsManager
 		
 		try 
 		{
-			$ret = $this->db->doQuery( $query, false );			
+			$ret = $this->db->doQuery( $query, False );			
 		}
 		catch( Exception $e )
 		{
-			return $this->errorJSON( $e->getMessage() );
+			return Utils::errorJSON( $e->getMessage() );
 		}
 		
 		return $ret->num_rows > 0;
