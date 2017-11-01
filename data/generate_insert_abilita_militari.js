@@ -1,4 +1,7 @@
-var fs = require('fs');
+var fs  = require('fs'),
+	ent = require('ent');
+
+const INSERT_QUERY = "INSERT INTO abilita_militari VALUES ({id_abilita_militare},{nome_abilita_militare},{descrizione_abilita_militare},{distanza_abilita_militare},{costo_abilita_militare},{bruciacarica_abilita_militare},{prerequisito_abilita_militare},{classi_militari_id_classe_militare});\r\n";
 
 var file  = fs.readFileSync('abilita_militari.txt','utf8'),
 	lines = file.split("\r\n"),
@@ -7,7 +10,8 @@ var file  = fs.readFileSync('abilita_militari.txt','utf8'),
 	linea = "",
 	prere = "",
 	id    = 0,
-	id_cl = 1;
+	id_cl = 1,
+	f_out = "";
 
 function abilityIdByName( name )
 {
@@ -25,6 +29,11 @@ function abilityIdByName( name )
 	
 	var filtered = data.filter( function( item ){ return item.nome_abilita_militare.replace(/(^\s+|\s+$)/g,"") === name; } );
 	return filtered[0].id_abilita_militare;
+}
+
+function trim( s )
+{
+	return (s+"").replace( /(^\s+|\s+$)/g, "" );
 }
 	
 for( var l in lines )
@@ -58,7 +67,7 @@ for( var l in lines )
 		{
 			temp.distanza_abilita_militare = linea.substring(10,linea.indexOf("Costo")-1);
 			temp.costo_abilita_militare = linea.substring(linea.indexOf("Costo: ") + 7,linea.indexOf("bruciacarica")-1);
-			temp.bruciacarica_abilita_militare = linea.substring(linea.indexOf("bruciacarica: ") + 14, linea.length+1) === "si";
+			temp.bruciacarica_abilita_militare = linea.substring(linea.indexOf("bruciacarica: ") + 14, linea.length+1) === "si" ? 1 : 0;
 		}
 		else if ( linea.indexOf("Distanza:") !== 0 && !temp.descrizione_abilita_militare )
 		{
@@ -71,16 +80,32 @@ for( var l in lines )
 	}
 }
 
-for( var d in data )
-{
-	if( data[d].prerequisito_abilita_militare !== "NULL" )
-		data[d].prerequisito_abilita_militare = abilityIdByName( data[d].prerequisito_abilita_militare );
-}
-
 if( temp !== {} )
 {
 	data.push( temp );
 	temp = {***REMOVED***
 }
 
-console.log(data);
+var temp_query = "",
+	temp_value = "";
+
+for( var d in data )
+{
+	if( data[d].prerequisito_abilita_militare !== "NULL" )
+		data[d].prerequisito_abilita_militare = abilityIdByName( data[d].prerequisito_abilita_militare );
+	
+	temp_query = INSERT_QUERY;
+	
+	for( var field in data[d] )
+	{
+		temp_value = ent.encode( trim( data[d][field] ) );
+		temp_value = temp_value === "" ? "NULL" : temp_value;
+		temp_value = temp_value === "NULL" ? temp_value : "'"+temp_value+"'";
+		temp_query = temp_query.replace( "{"+field+"}", temp_value );
+	}
+	
+	f_out += temp_query;
+}
+
+fs.writeFileSync("insert_abilita_militari.sql",f_out);
+console.log("SQL Scritto");

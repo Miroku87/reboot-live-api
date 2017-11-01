@@ -514,7 +514,7 @@ CONTROLLER – BLOCCO Prerequisiti: nessuno
 Il personaggio può dichiarare ELETTRO 1! BLOCCO!
 Tempo hacking: 10 secondi.
 Costo in Cariche Batteria: 2
-Distanza: 10 metri Costo:2 bruciacarica: no
+Distanza: 10 metri Costo: 2 bruciacarica: no
 CONTROLLER – PARALISI Prerequisiti: nessuno
 Il personaggio può dichiarare ELETTRO 1! PARALISI !
 Tempo hacking : 10 secondi.
