@@ -1,6 +1,6 @@
 <?php
 
-class GrantsManager
+class Utils
 {	
 	static function errorJSON( $msg )
 	{
