@@ -218,7 +218,9 @@ CREATE TABLE `giocatori` (
   `nome_giocatore` varchar(255) NOT NULL,
   `cognome_giocatore` varchar(255) NOT NULL,
   `email_giocatore` varchar(255) NOT NULL,
-  `ruoli_id_ruolo` int(255) NOT NULL,
+  `note_giocatore` text,
+  `note_staff_giocatore` text,
+  `ruoli_id_ruolo` int(255) NOT NULL DEFAULT '4',
   PRIMARY KEY (`codice_fiscale_giocatore`,`ruoli_id_ruolo`),
   KEY `fk_giocatori_ruoli1_idx` (`ruoli_id_ruolo`),
   CONSTRAINT `fk_giocatori_ruoli1` FOREIGN KEY (`ruoli_id_ruolo`) REFERENCES `ruoli` (`id_ruolo`) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -231,7 +233,7 @@ CREATE TABLE `giocatori` (
 
 LOCK TABLES `giocatori` WRITE;
 /*!40000 ALTER TABLE `giocatori` DISABLE KEYS */;
-INSERT INTO `giocatori` VALUES ('ABCDEF90C04C345F','ciao','Matteo','Barbieri','b-teo-90@libero.it',3),('SLVNDR87C27F205N','ciao','Andrea','Silvestri','miroku_87@yahoo.it',1);
+INSERT INTO `giocatori` VALUES ('ABCDEF90C04C345F','ciao','Matteo','Barbieri','b-teo-90@libero.it',NULL,NULL,3),('SLVNDR87C27F205N','ciao','Andrea','Silvestri','miroku_87@yahoo.it',NULL,NULL,1);
 /*!40000 ALTER TABLE `giocatori` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -329,11 +331,12 @@ CREATE TABLE `personaggi` (
   `background_personaggio` longtext,
   `px_personaggio` int(11) NOT NULL DEFAULT '0',
   `pc_personaggio` int(11) NOT NULL DEFAULT '0',
+  `note_admin_personaggio` text,
   `giocatori_codice_fiscale_giocatore` varchar(255) NOT NULL,
   PRIMARY KEY (`id_personaggio`,`giocatori_codice_fiscale_giocatore`),
   KEY `fk_personaggi_giocatori_idx` (`giocatori_codice_fiscale_giocatore`),
   CONSTRAINT `fk_personaggi_giocatori` FOREIGN KEY (`giocatori_codice_fiscale_giocatore`) REFERENCES `giocatori` (`codice_fiscale_giocatore`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -342,7 +345,7 @@ CREATE TABLE `personaggi` (
 
 LOCK TABLES `personaggi` WRITE;
 /*!40000 ALTER TABLE `personaggi` DISABLE KEYS */;
-INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,'SLVNDR87C27F205N');
+INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,NULL,'ABCDEF90C04C345F');
 /*!40000 ALTER TABLE `personaggi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -355,11 +358,10 @@ DROP TABLE IF EXISTS `personaggi_has_abilita_civili`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `personaggi_has_abilita_civili` (
   `personaggi_id_personaggio` int(11) NOT NULL,
-  `abilita_civili_id_abilita_civile` int(255) unsigned zerofill NOT NULL,
+  `abilita_civili_id_abilita_civile` int(255) NOT NULL,
   PRIMARY KEY (`personaggi_id_personaggio`,`abilita_civili_id_abilita_civile`),
   KEY `fk_personaggi_has_abilita_civili_abilita_civili1_idx` (`abilita_civili_id_abilita_civile`),
   KEY `fk_personaggi_has_abilita_civili_personaggi1_idx` (`personaggi_id_personaggio`),
-  CONSTRAINT `fk_personaggi_has_abilita_civili_abilita_civili1` FOREIGN KEY (`abilita_civili_id_abilita_civile`) REFERENCES `abilita_civili` (`id_abilita_civile`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_personaggi_has_abilita_civili_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -370,8 +372,10 @@ CREATE TABLE `personaggi_has_abilita_civili` (
 
 LOCK TABLES `personaggi_has_abilita_civili` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita_civili` DISABLE KEYS */;
+INSERT INTO `personaggi_has_abilita_civili` VALUES (1,1),(1,2),(1,3),(1,4),(2,44),(2,45);
 /*!40000 ALTER TABLE `personaggi_has_abilita_civili` ENABLE KEYS */;
 UNLOCK TABLES;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -399,6 +403,8 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -417,6 +423,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 
 --
 -- Table structure for table `personaggi_has_abilita_militari`
@@ -442,9 +449,10 @@ CREATE TABLE `personaggi_has_abilita_militari` (
 
 LOCK TABLES `personaggi_has_abilita_militari` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita_militari` DISABLE KEYS */;
-INSERT INTO `personaggi_has_abilita_militari` VALUES (1,1);
+INSERT INTO `personaggi_has_abilita_militari` VALUES (1,1),(1,2),(1,3),(2,69),(2,70);
 /*!40000 ALTER TABLE `personaggi_has_abilita_militari` ENABLE KEYS */;
 UNLOCK TABLES;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -470,6 +478,8 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -488,6 +498,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 
 --
 -- Table structure for table `personaggi_has_classi_civili`
@@ -513,6 +524,7 @@ CREATE TABLE `personaggi_has_classi_civili` (
 
 LOCK TABLES `personaggi_has_classi_civili` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_classi_civili` DISABLE KEYS */;
+INSERT INTO `personaggi_has_classi_civili` VALUES (1,1),(1,2),(2,4);
 /*!40000 ALTER TABLE `personaggi_has_classi_civili` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -540,6 +552,7 @@ CREATE TABLE `personaggi_has_classi_militari` (
 
 LOCK TABLES `personaggi_has_classi_militari` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_classi_militari` DISABLE KEYS */;
+INSERT INTO `personaggi_has_classi_militari` VALUES (1,1),(1,2),(2,5);
 /*!40000 ALTER TABLE `personaggi_has_classi_militari` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -684,6 +697,7 @@ UNLOCK TABLES;
 -- Dumping routines for database 'reboot_live'
 --
 /*!50003 DROP PROCEDURE IF EXISTS `controllaAbilitaCivileAcquistata` */;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -733,7 +747,9 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 /*!50003 DROP PROCEDURE IF EXISTS `controllaAbilitaMilitareAcquistata` */;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
 /*!50003 SET @saved_col_connection = @@collation_connection */ ;
@@ -826,6 +842,7 @@ DELIMITER ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
 /*!50003 SET character_set_results = @saved_cs_results */ ;
 /*!50003 SET collation_connection  = @saved_col_connection */ ;
+ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -836,4 +853,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-01 23:17:59
+-- Dump completed on 2017-11-07  0:41:19

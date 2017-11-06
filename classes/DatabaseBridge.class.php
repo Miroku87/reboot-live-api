@@ -1,8 +1,8 @@
 <?php
+$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+include $path."config/config.inc.php";
 
-include "./config/config.inc.php";
-
-class DatabaseBridge 
+class DatabaseBridge extends PDO
 {
 	public function __construct()
 	{
@@ -15,38 +15,46 @@ class DatabaseBridge
 	private function connect()
 	{
 		global $DB_DATA;
+		$dns = $DB_DATA["DB_DRIVER"] . ':host=' . $DB_DATA["DB_HOST"] . ';dbname=' . $DB_DATA["DB_NAME"];
 		
-		$connection = new mysqli( $DB_DATA["DB_HOST"], $DB_DATA["DB_USER"], $DB_DATA["DB_PASS"], $DB_DATA["DB_NAME"] );
-
-		if ( $connection->connect_error )
-			die( "{\"status\":\"error\", \"message\":\"".$connection->connect_error."\"}" );
+        try
+		{
+			$connection = new PDO( $dns, $DB_DATA["DB_USER"], $DB_DATA["DB_PASS"] );
+		} 
+		catch (PDOException $e) 
+		{
+			die( "{\"status\":\"error\", \"message\":\"".$e->getMessage()."\"}" );
+		}
 		
 		return $connection;
 	}
 	
-	private function toJSON( $result )
+	/*private function toJSON( $result )
 	{
 		$arr = array();
 		
 		while( $row = $result->fetch_assoc( ) )
-				$arr[] = $row;
+			$arr[] = $row;
 			
 		return json_encode($arr);
-	}
+	}*/
 	
-	public function doQuery( $query, $to_json = true )
+	public function doQuery( $query, $params, $to_json = True )
 	{
-		$conn   = $this->connect();
-		$result = $conn->query( $query );
-		$error  = $conn->error;
-		$conn->close();
+		if( !is_array( $params ) )
+			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO.");
+		
+		$conn   = $this->connect();		
+		$stmnt  = $conn->prepare( $query );
+		
+		$stmnt->execute( $params );
+		
+		$result = $stmnt->fetchAll( PDO::FETCH_ASSOC );
 		
 		if( $result && !$to_json )
 			return $result;
 		else if( $result && $to_json )
-			return $this->toJSON( $result );
-		else
-			throw new Exception( $error );
+			return json_encode( $result );
 	}
 }
 

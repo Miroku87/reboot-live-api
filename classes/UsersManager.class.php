@@ -1,19 +1,22 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api";
-include_once($path."/classes/DatabaseBridge.class.php");
-include_once($path."/classes/GrantsManager.class.php");
-include_once($path."/classes/Utils.class.php");
-include_once($path."/config/constants.php");
+$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+include_once($path."classes/DatabaseBridge.class.php");
+include_once($path."classes/Mailer.class.php");
+include_once($path."classes/SessionManager.class.php");
+include_once($path."classes/Utils.class.php");
+include_once($path."config/constants.php");
 
 class UsersManager
 {
 	protected $db;
 	protected $grants;
+	protected $session;
 	
 	public function __construct()
 	{
-		$this->db = new DatabaseBridge();
-		$this->grants = new GrantsManager();
+		$this->session = SessionManager::getInstance();
+		$this->db      = new DatabaseBridge();
+		$this->mailer  = new Mailer();
 	}
 	
 	public function __destruct()
@@ -25,9 +28,58 @@ class UsersManager
         return "[UsersManager]";
     }
 	
-	private function errorJSON( $msg )
+	public function login( $mail, $pass )
 	{
-		return "{\"status\":\"error\", \"message\":\"".$msg."\"}";
+		$query  = "SELECT gi.codice_fiscale_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
+					JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
+					JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
+					WHERE gi.email_giocatore = :mail AND 
+					      gi.password_giocatore = :pass";
+		$params = array( ":mail" => $mail, ":pass" => $pass );
+		
+		try 
+		{
+			$result = $this->db->doQuery( $query, $params, False );
+		}
+		catch( Exception $e )
+		{
+			return Utils::errorJSON( $e->getMessage() );
+		}
+		
+		if( count( $result ) === 0 )
+			return Utils::errorJSON( "Email utente o password sono errati. Per favore ritentare." );
+		
+		$this->session->codice_fiscale_giocatore = $result[0]["codice_fiscale_giocatore"];
+		$this->session->permessi_giocatore       = array_map( "Utils::mappaPermessiUtente", $result );
+		
+		return "{\"status\": \"ok\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."}";
+	}
+	
+	public function registra( $cf, $nome, $cognome, $mail, $note )
+	{
+		$pass   = "";
+		$query  = "INSERT INTO giocatori VALUES (:cf,:pass,:nome,:cognome,:mail,:note)";
+		$params = array( 
+			":cf"      => $cf, 
+			":pass"    => $pass,
+			":nome"    => $nome,
+			":cognome" => $cognome,
+			":mail"    => $mail,
+			":note"    => $note
+		);
+		
+		try 
+		{
+			$result = $this->db->doQuery( $query, $params );
+		}
+		catch( Exception $e )
+		{
+			return Utils::errorJSON( $e->getMessage() );
+		}
+		
+		$this->mailer->sendMail( "registrazione", $mail, $nome, $pass  );
+		
+		return "{\"status\": \"ok\"}";
 	}
 	
 	/**
@@ -37,25 +89,30 @@ class UsersManager
 	{
 		global $VEDI_TUTTI_PG;
 		
-		$where       = array();
-		$user_grants = $this->grants->getUserGrants( $userid, $pass );
-		//return Utils::errorJSON( "Non hai i permessi per compiere questa operazione." );
+		$where  = array();
+		$params = array();
 		
-		if( !in_array( $VEDI_TUTTI_PG, $user_grants ) )
-			$where[] = "bj.codice_fiscale_giocatore = '$userid'";
+		if( !isset( $session->permessi_giocatore ) || !in_array( $VEDI_TUTTI_PG, $session->permessi_giocatore ) )
+		{
+			$params[":userid"] = $userid;
+			$where[]           = "bj.codice_fiscale_giocatore = :userid";
+		}
 		
 		if( isset( $search ) && $search != "" )
+		{
+			$params[":search"] = "%$search%";
 			$where[] = "(
-						bj.nome_personaggio LIKE '%$search%' OR 
-						bj.cognome_personaggio LIKE '%$search%' OR
-						bj.lista_classi_civili LIKE '%$search%' OR
-						bj.lista_abilita_civili LIKE '%$search%' OR
-						bj.lista_classi_militari LIKE '%$search%' OR
-						bj.lista_abilita_militari LIKE '%$search%' OR
-						bj.nome_giocatore LIKE '%$search%' OR
-						bj.cognome_giocatore LIKE '%$search%' OR
-						bj.email_giocatore LIKE '%$search%'
+						bj.nome_personaggio LIKE :search OR 
+						bj.cognome_personaggio LIKE :search OR
+						bj.lista_classi_civili LIKE :search OR
+						bj.lista_abilita_civili LIKE :search OR
+						bj.lista_classi_militari LIKE :search OR
+						bj.lista_abilita_militari LIKE :search OR
+						bj.nome_giocatore LIKE :search OR
+						bj.cognome_giocatore LIKE :search OR
+						bj.email_giocatore LIKE :search
 					  )";
+		}
 		
 		if( isset( $sort ) )
 		{
@@ -101,30 +158,28 @@ class UsersManager
 		
 		try 
 		{
-			$ret = $this->db->doQuery( $query, False );
+			$result = $this->db->doQuery( $query, $params, False );
 		}
 		catch( Exception $e )
 		{
 			return Utils::errorJSON( $e->getMessage() );
 		}
 		
-		$i   = 1;
 		$arr = array();
-		while( $row = $ret->fetch_assoc( ) )
+		foreach( $result as $k => $v )
 		{
-			if( $i >= $current && $i <= $row_count )
+			if( $k + 1 >= $current && $k + 1 <= $row_count )
 			{
-				$row["lista_classi_civili"]    = explode( ";", $row["lista_classi_civili"] );
-				$row["lista_classi_militari"]  = explode( ";", $row["lista_classi_militari"] );
-				$row["lista_abilita_civili"]   = explode( ";", $row["lista_abilita_civili"] );
-				$row["lista_abilita_militari"] = explode( ";", $row["lista_abilita_militari"] );
-				$arr[] = $row;
+				$v["lista_classi_civili"]    = explode( ";", $v["lista_classi_civili"] );
+				$v["lista_classi_militari"]  = explode( ";", $v["lista_classi_militari"] );
+				$v["lista_abilita_civili"]   = explode( ";", $v["lista_abilita_civili"] );
+				$v["lista_abilita_militari"] = explode( ";", $v["lista_abilita_militari"] );
+				
+				$arr[] = $v;
 			}
-		
-			$i++;
 		}
 		
-		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": ".$ret->num_rows.", \"rows\":".json_encode( $arr )."}";
+		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": ".count($result).", \"rows\":".json_encode( $arr )."}";
 	}
 }
 ?>

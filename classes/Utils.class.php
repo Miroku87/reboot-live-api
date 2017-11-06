@@ -7,9 +7,9 @@ class Utils
 		return "{\"status\":\"error\", \"message\":\"".$msg."\"}";
 	}
 	
-	static function arrangeDataForBootgrid( $data, $current, $row_count, $sort, $search )
+	static function mappaPermessiUtente( $item )
 	{
-		
+		return $item["permessi"];
 	}
 }
 

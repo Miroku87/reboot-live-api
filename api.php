@@ -1,7 +1,7 @@
 <?php
 //https://www.leaseweb.com/labs/2015/10/creating-a-simple-rest-api-in-php/
-$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api";
-include_once( $path."/classes/UsersManager.class.php" );
+$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+include_once( $path."classes/UsersManager.class.php" );
 
 class Main
 {
