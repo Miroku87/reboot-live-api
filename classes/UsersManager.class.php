@@ -37,22 +37,22 @@ class UsersManager
 					      gi.password_giocatore = :pass";
 		$params = array( ":mail" => $mail, ":pass" => $pass );
 		
-		try 
-		{
-			$result = $this->db->doQuery( $query, $params, False );
-		}
-		catch( Exception $e )
-		{
-			return Utils::errorJSON( $e->getMessage() );
-		}
+		$result = $this->db->doQuery( $query, $params, False );
 		
 		if( count( $result ) === 0 )
-			return Utils::errorJSON( "Email utente o password sono errati. Per favore ritentare." );
+			throw new Exception( "Email utente o password sono errati. Per favore ritentare." );
 		
 		$this->session->codice_fiscale_giocatore = $result[0]["codice_fiscale_giocatore"];
 		$this->session->permessi_giocatore       = array_map( "Utils::mappaPermessiUtente", $result );
 		
 		return "{\"status\": \"ok\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."}";
+	}
+	
+	public function logout( )
+	{
+		$this->session->destroy();
+		
+		return "{\"status\": \"ok\"}";
 	}
 	
 	public function registra( $cf, $nome, $cognome, $mail, $note )
@@ -68,16 +68,8 @@ class UsersManager
 			":note"    => $note
 		);
 		
-		try 
-		{
-			$result = $this->db->doQuery( $query, $params );
-		}
-		catch( Exception $e )
-		{
-			return Utils::errorJSON( $e->getMessage() );
-		}
-		
-		$this->mailer->sendMail( "registrazione", $mail, $nome, $pass  );
+		$result = $this->db->doQuery( $query, $params );
+		//$this->mailer->sendMail( "registrazione", $mail, $nome, $pass  );
 		
 		return "{\"status\": \"ok\"}";
 	}

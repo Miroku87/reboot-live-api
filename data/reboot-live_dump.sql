@@ -249,7 +249,7 @@ CREATE TABLE `grants` (
   `nome_grant` varchar(255) NOT NULL,
   `descrizione_grant` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_grant`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -258,7 +258,7 @@ CREATE TABLE `grants` (
 
 LOCK TABLES `grants` WRITE;
 /*!40000 ALTER TABLE `grants` DISABLE KEYS */;
-INSERT INTO `grants` VALUES (1,'visualizza_pagina_personaggi','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'visualizza_tutti_personaggi','L\'utente potrà visualizzare tutti i personaggi creati dagli altri utenti.'),(8,'crea_personaggio','L\'utente può creare un nuovo personaggio.'),(9,'modifica_personaggio','L\'utente può modificare qualsiasi parametro di un personaggio qualsiasi.'),(10,'cancella_personaggio','L\'utente può eliminare definitivamente un personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.');
+INSERT INTO `grants` VALUES (1,'mostraMieiPersonaggi','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraTuttiPersonaggi','L\'utente potrà visualizzare tutti i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modifica_personaggio','L\'utente può modificare qualsiasi parametro di un personaggio qualsiasi.'),(10,'cancella_personaggio','L\'utente può eliminare definitivamente un personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassi','L\'utente può assegnare nuove classi a un personaggio.'),(23,'aggiungiAbilita','L\'utente può assegnare nuove abilità ad un personaggio.');
 /*!40000 ALTER TABLE `grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -336,7 +336,7 @@ CREATE TABLE `personaggi` (
   PRIMARY KEY (`id_personaggio`,`giocatori_codice_fiscale_giocatore`),
   KEY `fk_personaggi_giocatori_idx` (`giocatori_codice_fiscale_giocatore`),
   CONSTRAINT `fk_personaggi_giocatori` FOREIGN KEY (`giocatori_codice_fiscale_giocatore`) REFERENCES `giocatori` (`codice_fiscale_giocatore`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -345,7 +345,7 @@ CREATE TABLE `personaggi` (
 
 LOCK TABLES `personaggi` WRITE;
 /*!40000 ALTER TABLE `personaggi` DISABLE KEYS */;
-INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,NULL,'ABCDEF90C04C345F');
+INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,NULL,'ABCDEF90C04C345F'),(17,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(18,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(19,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(20,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(21,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F');
 /*!40000 ALTER TABLE `personaggi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -372,7 +372,7 @@ CREATE TABLE `personaggi_has_abilita_civili` (
 
 LOCK TABLES `personaggi_has_abilita_civili` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita_civili` DISABLE KEYS */;
-INSERT INTO `personaggi_has_abilita_civili` VALUES (1,1),(1,2),(1,3),(1,4),(2,44),(2,45);
+INSERT INTO `personaggi_has_abilita_civili` VALUES (1,1),(1,2),(1,3),(1,4),(2,44),(2,45),(21,1),(21,2);
 /*!40000 ALTER TABLE `personaggi_has_abilita_civili` ENABLE KEYS */;
 UNLOCK TABLES;
 ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
@@ -449,7 +449,7 @@ CREATE TABLE `personaggi_has_abilita_militari` (
 
 LOCK TABLES `personaggi_has_abilita_militari` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita_militari` DISABLE KEYS */;
-INSERT INTO `personaggi_has_abilita_militari` VALUES (1,1),(1,2),(1,3),(2,69),(2,70);
+INSERT INTO `personaggi_has_abilita_militari` VALUES (1,1),(1,2),(1,3),(2,69),(2,70),(21,1),(21,2);
 /*!40000 ALTER TABLE `personaggi_has_abilita_militari` ENABLE KEYS */;
 UNLOCK TABLES;
 ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
@@ -524,7 +524,7 @@ CREATE TABLE `personaggi_has_classi_civili` (
 
 LOCK TABLES `personaggi_has_classi_civili` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_classi_civili` DISABLE KEYS */;
-INSERT INTO `personaggi_has_classi_civili` VALUES (1,1),(1,2),(2,4);
+INSERT INTO `personaggi_has_classi_civili` VALUES (1,1),(1,2),(2,4),(21,1),(21,2);
 /*!40000 ALTER TABLE `personaggi_has_classi_civili` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -552,7 +552,7 @@ CREATE TABLE `personaggi_has_classi_militari` (
 
 LOCK TABLES `personaggi_has_classi_militari` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_classi_militari` DISABLE KEYS */;
-INSERT INTO `personaggi_has_classi_militari` VALUES (1,1),(1,2),(2,5);
+INSERT INTO `personaggi_has_classi_militari` VALUES (1,1),(1,2),(2,5),(21,1),(21,2);
 /*!40000 ALTER TABLE `personaggi_has_classi_militari` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -633,7 +633,7 @@ CREATE TABLE `ruoli_has_grants` (
 
 LOCK TABLES `ruoli_has_grants` WRITE;
 /*!40000 ALTER TABLE `ruoli_has_grants` DISABLE KEYS */;
-INSERT INTO `ruoli_has_grants` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,21);
+INSERT INTO `ruoli_has_grants` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,21),(1,22),(1,23);
 /*!40000 ALTER TABLE `ruoli_has_grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -853,4 +853,4 @@ ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-07  0:41:19
+-- Dump completed on 2017-11-08  0:01:50

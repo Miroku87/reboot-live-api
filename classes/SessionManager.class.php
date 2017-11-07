@@ -9,8 +9,8 @@
 
 class SessionManager
 {
-    const SESSION_STARTED = TRUE;
-    const SESSION_NOT_STARTED = FALSE;
+    const SESSION_STARTED = True;
+    const SESSION_NOT_STARTED = False;
     
     // The state of the session
     private $sessionState = self::SESSION_NOT_STARTED;
@@ -119,6 +119,6 @@ class SessionManager
             return !$this->sessionState;
 ***REMOVED***
         
-        return FALSE;
+        return False;
     }
 }

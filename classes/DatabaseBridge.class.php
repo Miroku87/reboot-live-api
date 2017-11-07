@@ -20,6 +20,7 @@ class DatabaseBridge extends PDO
         try
 		{
 			$connection = new PDO( $dns, $DB_DATA["DB_USER"], $DB_DATA["DB_PASS"] );
+			$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		} 
 		catch (PDOException $e) 
 		{
@@ -28,16 +29,6 @@ class DatabaseBridge extends PDO
 		
 		return $connection;
 	}
-	
-	/*private function toJSON( $result )
-	{
-		$arr = array();
-		
-		while( $row = $result->fetch_assoc( ) )
-			$arr[] = $row;
-			
-		return json_encode($arr);
-	}*/
 	
 	public function doQuery( $query, $params, $to_json = True )
 	{
@@ -49,12 +40,37 @@ class DatabaseBridge extends PDO
 		
 		$stmnt->execute( $params );
 		
-		$result = $stmnt->fetchAll( PDO::FETCH_ASSOC );
+		if( $stmnt->columnCount() !== 0 )
+			$result = $stmnt->fetchAll( PDO::FETCH_ASSOC );
+		else if( $stmnt->columnCount() === 0 && $conn->lastInsertId() !== 0 )
+		{
+			$result  = $conn->lastInsertId();
+			$to_json = False;
+		}
+		else if ( $stmnt->columnCount() === 0 && $conn->lastInsertId() === 0 )
+		{
+			$result  = True;
+			$to_json = False;
+		}
 		
 		if( $result && !$to_json )
 			return $result;
 		else if( $result && $to_json )
 			return json_encode( $result );
+	}
+	
+	public function doMultipleInserts( $query, $params, $to_json = True )
+	{
+		if( !is_array( $params ) || ( is_array( $params ) && !is_array( $params[0] ) ) )
+			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO a due dimensioni.");
+		
+		$conn   = $this->connect();		
+		$stmnt  = $conn->prepare( $query );
+		
+		foreach( $params as $p )
+			$stmnt->execute( $p );
+			
+		return True;
 	}
 }
 

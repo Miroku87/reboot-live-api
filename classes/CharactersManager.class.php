@@ -28,21 +28,12 @@ class CharactersManager
         return "[CharactersManager]";
     }
 	
-	/**
-	 * GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
-	 */
-	public function mostraPersonaggi( $userid, $pass, $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
+	private function recuperaPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL, $extra_where = array(), $extra_param = array() )
 	{
 		global $VEDI_TUTTI_PG;
 		
-		$where  = array();
-		$params = array();
-		
-		if( !isset( $session->permessi_giocatore ) || !in_array( $VEDI_TUTTI_PG, $session->permessi_giocatore ) )
-		{
-			$params[":userid"] = $userid;
-			$where[]           = "bj.codice_fiscale_giocatore = :userid";
-		}
+		$where  = $extra_where;
+		$params = $extra_param;
 		
 		if( isset( $search ) && $search != "" )
 		{
@@ -102,14 +93,7 @@ class CharactersManager
 		$where_str = count( $where ) > 0 ? "WHERE ".implode( $where, " AND ") : "";
 		$query     = "SELECT * FROM ( $big_join ) AS bj $where_str $order";
 		
-		try 
-		{
-			$result = $this->db->doQuery( $query, $params, False );
-		}
-		catch( Exception $e )
-		{
-			return Utils::errorJSON( $e->getMessage() );
-		}
+		$result = $this->db->doQuery( $query, $params, False );
 		
 		$arr = array();
 		
@@ -132,38 +116,108 @@ class CharactersManager
 		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": ".count($result).", \"rows\":".json_encode( $arr )."}";
 	}
 	
-	public function creaPG( $cf, $nome, $cognome, $classi_civili, $classi_militari, $abilita_civili, $abilita_militari )
+	/**
+	 * GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
+	 */
+	public function mostraMieiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
 	{
-		$query  = "INSERT INTO personaggi VALUES (...)";
-		$params = array( 
-			":cf"      => $cf
+		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+		
+		$where  = array( "bj.codice_fiscale_giocatore = :userid" );
+		$params = array( ":userid" => $this->session->codice_fiscale_giocatore );
+		
+		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search, $where, $params );
+	}
+	
+	/**
+	 * GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
+	 */
+	public function mostraTuttiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
+	{
+		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+		
+		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search );
+	}
+	
+	public function creaPG( $cf, $nome, $cognome, $classi_civili_id, $abilita_civili_id, $classi_militari_id, $abilita_militari_id )
+	{
+		global $PX_INIZIALI;
+		global $PC_INIZIALI;
+		
+		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+		
+		$new_pg_query  = "INSERT INTO personaggi VALUES ( :idpg, :nomepg, :cognomepg, :bg, :initpx, :initpc, :note, :cf )";
+		$new_pg_params = array( 
+			":idpg"      => NULL,
+			":nomepg"    => $nome,
+			":cognomepg" => $cognome,
+			":bg"        => NULL,
+			":initpx"    => $PX_INIZIALI,
+			":initpc"    => $PC_INIZIALI,
+			":note"      => NULL,
+			":cf"        => $cf
 		);
 		
-		try 
-		{
-			$result = $this->db->doQuery( $query, $params, False );
-		}
-		catch( Exception $e )
-		{
-			return Utils::errorJSON( $e->getMessage() );
-		}
+		$new_pg_id = $this->db->doQuery( $new_pg_query, $new_pg_params );
 		
-		$this->mailer->sendMail( "creazionePG", $mail, $nome, $pass  );
+		// CLASSI E ABILITA CIVILI
+		$this->aggiungiClassi( $new_pg_id, "civili", $classi_civili_id );
+		$this->aggiungiAbilita( $new_pg_id, "civili", $abilita_civili_id );
 		
-		return "{\"status\": \"ok\"}";
+		// CLASSI E ABILITA MILITARI
+		$this->aggiungiClassi( $new_pg_id, "militari", $classi_militari_id );
+		$this->aggiungiAbilita( $new_pg_id, "militari", $abilita_militari_id );
+		
+		//$this->mailer->sendMail( "creazionePG", $mail, $nome, $pass  );
+		
+		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 	
-	public function aggiungiAbilita( $pgid, $tipo, $abid )
+	public function aggiungiClassi( $pgid, $tipo, $class_ids )
 	{
+		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 		
+		$classi_query  = "INSERT INTO personaggi_has_classi_$tipo VALUES ( :idpg, :idclasse )";
+		$classi_params = array();
+		
+		foreach( $class_ids as $ci )
+			$classi_params[] = array( ":idpg" => $pgid, ":idclasse" => $ci );
+		
+		$this->db->doMultipleInserts( $classi_query, $classi_params );
+		
+		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 	
-	public function aggiornaPG( $pgid, $aggiornamenti )
+	public function aggiungiAbilita( $pgid, $tipo, $ab_ids )
 	{
+		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 		
+		$abilita_query  = "INSERT INTO personaggi_has_abilita_$tipo VALUES ( :idpg, :idabilita )";
+		$abilita_params = array();
+		
+		foreach( $ab_ids as $ai )
+			$abilita_params[] = array( ":idpg" => $pgid, ":idabilita" => $ai );
+		
+		$this->db->doMultipleInserts( $abilita_query, $abilita_params );
+		
+		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 	
-	public function eliminaPG( $pgid, $aggiornamenti )
+	public function modificaPG( $pgid, $modifiche )
+	{
+		foreach( $modifiche as $campo => $valore )
+		{
+			if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__.$campo, $this->session->permessi_giocatore ) )
+				throw new Exception( "Non hai i permessi per compiere questa operazione: <code>".(__FUNCTION__.$campo)."</code>" );
+		}
+	}
+	
+	public function eliminaPG( $pgid )
 	{
 		
 	}

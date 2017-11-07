@@ -35,21 +35,28 @@ class Main
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
 		$input   = json_decode( file_get_contents( 'php://input' ), true );
 		
-		if( $method == "GET" )
+		try
 		{
-			echo call_user_func_array( array( $this->$request[0], $request[1] ), $_GET );
+			if( $method == "GET" )
+			{
+				echo call_user_func_array( array( $this->$request[0], $request[1] ), $_GET );
+			}
+			else if ( $method == "POST" )
+			{
+				
+			}
+			else if ( $method == "PUT" )
+			{
+				
+			}
+			else if ( $method == "DELETE" )
+			{
+				
+			}
 		}
-		else if ( $method == "POST" )
+		catch( Exception $e )
 		{
-			
-		}
-		else if ( $method == "PUT" )
-		{
-			
-		}
-		else if ( $method == "DELETE" )
-		{
-			
+			echo Utils::errorJSON( $e->getMessage() );
 		}
 	}
 }
