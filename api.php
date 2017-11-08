@@ -21,7 +21,8 @@ class Main
 
 		$this->usersmanager      = new UsersManager();
 		$this->charactersmanager = new CharactersManager();
-		$this->runAPI();
+		
+		return $this->runAPI();
 	}
 	
 	public function __destruct()
@@ -33,33 +34,21 @@ class Main
 		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
-		$input   = json_decode( file_get_contents( 'php://input' ), true );
-		
+		//$input   = json_decode( file_get_contents( 'php://input' ), true );
+		//die( var_dump($_POST) );
 		try
 		{
-			if( $method == "GET" )
-			{
-				echo call_user_func_array( array( $this->$request[0], $request[1] ), $_GET );
-			}
-			else if ( $method == "POST" )
-			{
-				
-			}
-			else if ( $method == "PUT" )
-			{
-				
-			}
-			else if ( $method == "DELETE" )
-			{
-				
-			}
+			if( $method == "GET" )        $data = $_GET;
+			else if ( $method == "POST" ) $data = $_POST;
+			
+			return call_user_func_array( array( $this->$request[0], $request[1] ), $data );
 		}
 		catch( Exception $e )
 		{
-			echo Utils::errorJSON( $e->getMessage() );
+			return Utils::errorJSON( $e->getMessage() );
 		}
 	}
 }
 
-$main = new Main();
+echo new Main();
 ?>
