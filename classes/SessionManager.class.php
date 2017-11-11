@@ -21,6 +21,11 @@ class SessionManager
     
     private function __construct() {}
     
+	public function __toString() 
+	{
+		return "[SessionManager]";
+	}
+    
     
     /**
     *    Returns THE instance of 'Session'.

@@ -17,19 +17,18 @@ class Main
 		date_default_timezone_set( 'Europe/Rome' );
 
 		header( 'Content-Type: application/json' );
-		header( 'Access-Control-Allow-Origin: *' );
+		header( 'Access-Control-Allow-Origin: http://localhost:9000' );
+		header( 'Access-Control-Allow-Credentials: true' );
 
 		$this->usersmanager      = new UsersManager();
 		$this->charactersmanager = new CharactersManager();
-		
-		return $this->runAPI();
 	}
 	
 	public function __destruct()
 	{
 	}
 	
-	private function runAPI()
+	public function runAPI()
 	{
 		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
@@ -50,5 +49,6 @@ class Main
 	}
 }
 
-echo new Main();
+$main = new Main();
+echo $main->runAPI();
 ?>

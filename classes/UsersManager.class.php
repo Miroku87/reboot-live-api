@@ -45,7 +45,7 @@ class UsersManager
 		$this->session->codice_fiscale_giocatore = $result[0]["codice_fiscale_giocatore"];
 		$this->session->permessi_giocatore       = array_map( "Utils::mappaPermessiUtente", $result );
 		
-		return "{\"status\": \"ok\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."}";
+		return "{\"status\": \"ok\", \"user_info\": { \"cf_giocatore\":\"".$this->session->codice_fiscale_giocatore."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
 	}
 	
 	public function logout( )

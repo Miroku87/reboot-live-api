@@ -34,6 +34,7 @@ class CharactersManager
 		
 		$where  = $extra_where;
 		$params = $extra_param;
+		$order  = "";
 		
 		if( isset( $search ) && $search != "" )
 		{
@@ -64,10 +65,10 @@ class CharactersManager
 					SELECT 
 						pg.*,
 						gi.*,
-						GROUP_CONCAT(DISTINCT cc.nome_classe_civile SEPARATOR ';') AS lista_classi_civili,
-						GROUP_CONCAT(DISTINCT CONCAT(cm.nome_classe_militare,' ',cm.grado_classe_militare) SEPARATOR ';') AS lista_classi_militari,
-						GROUP_CONCAT(DISTINCT ac.nome_abilita_civile SEPARATOR ';') AS lista_abilita_civili,
-						GROUP_CONCAT(DISTINCT am.nome_abilita_militare SEPARATOR ';') AS lista_abilita_militari
+						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cc.id_classe_civile,'\",\"nome_classe\":\"',cc.nome_classe_civile,'\"}') SEPARATOR ','), ']' ) AS lista_classi_civili,
+						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cm.id_classe_militare,'\",\"nome_classe\":\"',cm.nome_classe_militare,' ',cm.grado_classe_militare,'\"}') SEPARATOR ','), ']' ) AS lista_classi_militari,
+						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',ac.id_abilita_civile,'\",\"nome_abilita\":\"',ac.nome_abilita_civile,'\"}') SEPARATOR ','), ']' ) AS lista_abilita_civili,
+						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',am.id_abilita_militare,'\",\"nome_abilita\":\"',am.nome_abilita_militare,'\"}') SEPARATOR ','), ']' ) AS lista_abilita_militari
 					FROM
 						personaggi AS pg
 							LEFT OUTER JOIN
@@ -103,10 +104,10 @@ class CharactersManager
 			{
 				if( $k + 1 >= $current && $k + 1 <= $row_count )
 				{
-					$v["lista_classi_civili"]    = explode( ";", $v["lista_classi_civili"] );
-					$v["lista_classi_militari"]  = explode( ";", $v["lista_classi_militari"] );
-					$v["lista_abilita_civili"]   = explode( ";", $v["lista_abilita_civili"] );
-					$v["lista_abilita_militari"] = explode( ";", $v["lista_abilita_militari"] );
+					$v["lista_classi_civili"]    = json_decode( $v["lista_classi_civili"] );
+					$v["lista_classi_militari"]  = json_decode( $v["lista_classi_militari"] );
+					$v["lista_abilita_civili"]   = json_decode( $v["lista_abilita_civili"] );
+					$v["lista_abilita_militari"] = json_decode( $v["lista_abilita_militari"] );
 					
 					$arr[] = $v;
 				}
@@ -139,6 +140,76 @@ class CharactersManager
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 		
 		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search );
+	}
+	
+	public function recuperaInfoClassi( )
+	{
+		$query  = " SELECT 
+						cc.id_classe_civile AS id_classe,
+						cc.nome_classe_civile AS nome_classe,
+						ac.id_abilita_civile AS id_abilita,
+						ac.nome_abilita_civile AS nome_abilita,
+						ac.prerequisito_abilita_civile AS prerequisito_abilita,
+						ac.costo_px_abilita_civile AS costo_abilita
+					FROM
+						classi_civili AS cc
+							JOIN
+						abilita_civili AS ac ON ac.classi_civili_id_classe_civile = cc.id_classe_civile 
+					UNION
+					SELECT 
+						cm.id_classe_militare AS id_classe,
+						CONCAT(cm.nome_classe_militare, ' ', cm.grado_classe_militare) AS nome_classe,
+						am.id_abilita_militare AS id_abilita,
+						am.nome_abilita_militare AS nome_abilita,
+						am.prerequisito_abilita_militare AS prerequisito_abilita,
+						1 AS costo_abilita
+					FROM
+						classi_militari AS cm
+							JOIN
+						abilita_militari AS am ON am.classi_militari_id_classe_militare = cm.id_classe_militare";
+						
+		$params = array();
+		$result = $this->db->doQuery( $query, $params, False );
+		
+		$classi_civili    = array();
+		$abilita_civili   = array();
+		$classi_militari  = array();
+		$abilita_militari = array();
+		$ordine_classi    = array( &$classi_civili, &$classi_militari );
+		$ordine_abilita   = array( &$abilita_civili, &$abilita_militari );
+		$indice_ordine    = 0;
+		
+		$id_classe_precedente  = 1;
+		$record_precedente     = $result[0];
+		
+		foreach( $result as $r ) 
+		{
+			if ( $r["id_classe"] > $id_classe_precedente )
+			{
+				$ordine_classi[ $indice_ordine ][]  = $record_precedente;
+			}
+			else if ( $r["id_classe"] < $id_classe_precedente )
+			{
+				$ordine_classi[ $indice_ordine ][]  = $record_precedente;
+				$indice_ordine++;
+			}
+			
+			$ordine_abilita[ $indice_ordine ][] = $r;
+			
+			$id_classe_precedente = $r["id_classe"];
+			$record_precedente    = $r;
+		}
+		
+		$info_obj = json_encode( 
+						array( 
+							"classi_civili"    => $classi_civili, 
+							"abilita_civili"   => $abilita_civili, 
+							"classi_militari"  => $classi_militari, 
+							"abilita_militari" => $abilita_militari  
+						)
+					);
+		
+		return "{\"status\": \"ok\", \"info\": ".$info_obj."}";
 	}
 	
 	public function creaPG( $cf, $nome, $cognome, $classi_civili_id, $abilita_civili_id, $classi_militari_id, $abilita_militari_id )
