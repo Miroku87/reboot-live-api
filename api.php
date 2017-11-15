@@ -39,6 +39,7 @@ class Main
 		{
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;
+			//die(var_dump($data));
 			
 			return call_user_func_array( array( $this->$request[0], $request[1] ), $data );
 		}

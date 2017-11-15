@@ -235,19 +235,19 @@ class CharactersManager
 		$new_pg_id = $this->db->doQuery( $new_pg_query, $new_pg_params );
 		
 		// CLASSI E ABILITA CIVILI
-		$this->aggiungiClassi( $new_pg_id, "civili", $classi_civili_id );
-		$this->aggiungiAbilita( $new_pg_id, "civili", $abilita_civili_id );
+		$this->aggiungiClassiAlPG( $new_pg_id, "civili", $classi_civili_id );
+		$this->aggiungiAbilitaAlPG( $new_pg_id, "civili", $abilita_civili_id );
 		
 		// CLASSI E ABILITA MILITARI
-		$this->aggiungiClassi( $new_pg_id, "militari", $classi_militari_id );
-		$this->aggiungiAbilita( $new_pg_id, "militari", $abilita_militari_id );
+		$this->aggiungiClassiAlPG( $new_pg_id, "militari", $classi_militari_id );
+		$this->aggiungiAbilitaAlPG( $new_pg_id, "militari", $abilita_militari_id );
 		
 		//$this->mailer->sendMail( "creazionePG", $mail, $nome, $pass  );
 		
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 	
-	public function aggiungiClassi( $pgid, $tipo, $class_ids )
+	public function aggiungiClassiAlPG( $pgid, $tipo, $class_ids )
 	{
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
@@ -263,7 +263,7 @@ class CharactersManager
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 	
-	public function aggiungiAbilita( $pgid, $tipo, $ab_ids )
+	public function aggiungiAbilitaAlPG( $pgid, $tipo, $ab_ids )
 	{
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );

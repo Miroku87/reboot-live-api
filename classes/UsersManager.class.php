@@ -28,6 +28,44 @@ class UsersManager
         return "[UsersManager]";
     }
 	
+	private function controllaDatiRegistrazione( $nome, $cognome, $cf, $note, $mail, $pass1, $pass2, $condizioni )
+	{
+		$errors = "";
+		
+		if ( $nome === "" || Utils::soloSpazi($nome) )
+			$errors .= "Il campo Nome non pu&ograve; essere vuoto.<br>";
+
+		if ( $cognome === "" || Utils::soloSpazi($cognome) )
+			$errors .= "Il campo Cognome non pu&ograve; essere vuoto.<br>";
+
+		if ( $cf === "" || Utils::soloSpazi($cf) )
+			$errors .= "Il campo Codice Fiscale non pu&ograve; essere vuoto.<br>";
+		else if ( !Utils::controllaCF( $cf ) )
+			$errors += "Il campo Codice Fiscale contiene un valore non corretto.<br>";
+
+		if ( $mail === "" || Utils::soloSpazi($mail) )
+			$errors .= "Il campo Mail non pu&ograve; essere vuoto.<br>";
+		else if ( !Utils::controllaMail($mail) )
+			$errors .= "Il campo Mail contiene un indirizzo non valido.<br>";
+
+		if ( $pass1 === "" || Utils::soloSpazi($pass1) )
+			$errors .= "Il primo campo Password non pu&ograve; essere vuoto.<br>";
+
+		if ( $pass2 === "" || Utils::soloSpazi($pass2) )
+			$errors .= "Il secondo campo Password non pu&ograve; essere vuoto.<br>";
+
+		if( $pass1 !== "" && !Utils::soloSpazi($pass1) &&
+			$pass2 !== "" && !Utils::soloSpazi($pass2) &&
+			$pass1 !== $pass2
+		)
+			$errors .= "Le password inserite non combaciano.<br>";
+			
+		if( !isset( $condizioni ) || ( isset( $condizioni ) && $condizioni !== "on" ) )
+			$errors .= "Non &egrave; possibile registrarsi senza accettare i termini e le condizioni.";
+		
+		return $errors;
+	}
+	
 	public function login( $mail, $pass )
 	{
 		$query  = "SELECT gi.codice_fiscale_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
@@ -55,11 +93,16 @@ class UsersManager
 		return "{\"status\": \"ok\"}";
 	}
 	
-	public function registra( $cf, $nome, $cognome, $mail, $note )
+	public function registra( $nome, $cognome, $cf, $note, $mail, $pass1, $pass2, $condizioni )
 	{
-		$pass   = Utils::generatePassword();
-		$query  = "INSERT INTO giocatori VALUES (:cf,:pass,:nome,:cognome,:mail,:note)";
-		$params = array( 
+		$errors = $this->controllaDatiRegistrazione( $nome, $cognome, $cf, $note, $mail, $pass1, $pass2, $condizioni );
+		
+		if( isset( $errors ) && $errors !== "" )
+			throw new Exception($errors);
+		
+		$pass   = sha1( $pass1 );
+		$query  = "INSERT INTO giocatori VALUES (:cf,:pass,:nome,:cognome,:mail,NOW(),:note,NULL,4)";
+		$params = array(
 			":cf"      => $cf, 
 			":pass"    => $pass,
 			":nome"    => $nome,

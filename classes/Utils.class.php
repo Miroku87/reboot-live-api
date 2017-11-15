@@ -25,6 +25,27 @@ class Utils
 		}
 		return implode($pass);
 	}
+
+	static function controllaCF( $cf )
+	{
+		$pattern = "/^[a-zA-Z]{6}[0-9]{2}[a-zA-Z][0-9]{2}[a-zA-Z][0-9]{3}[a-zA-Z]$/";
+
+		return preg_match( $pattern, $cf );
+	}
+
+	static function controllaMail( $mail )
+	{
+		$pattern = "/^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/";
+
+		return preg_match( $pattern, $mail );
+	}
+
+	static function soloSpazi( $stringa )
+	{
+		$pattern = "/^\s+$/";
+
+		return preg_match( $pattern, $stringa );
+	}
 }
 
 ?>

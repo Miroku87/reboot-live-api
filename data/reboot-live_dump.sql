@@ -218,6 +218,7 @@ CREATE TABLE `giocatori` (
   `nome_giocatore` varchar(255) NOT NULL,
   `cognome_giocatore` varchar(255) NOT NULL,
   `email_giocatore` varchar(255) NOT NULL,
+  `data_registrazione_giocatore` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `note_giocatore` text,
   `note_staff_giocatore` text,
   `ruoli_id_ruolo` int(255) NOT NULL DEFAULT '4',
@@ -233,9 +234,53 @@ CREATE TABLE `giocatori` (
 
 LOCK TABLES `giocatori` WRITE;
 /*!40000 ALTER TABLE `giocatori` DISABLE KEYS */;
-INSERT INTO `giocatori` VALUES ('ABCDEF90C04C345F','ciao','Matteo','Barbieri','b-teo-90@libero.it',NULL,NULL,3),('SLVNDR87C27F205N','ciao','Andrea','Silvestri','miroku_87@yahoo.it',NULL,NULL,1);
+INSERT INTO `giocatori` VALUES ('ABCDEF90C04C345F','ciao','Matteo','Barbieri','b-teo-90@libero.it','2017-11-15 22:51:24',NULL,NULL,3),('PRCCIO87A23F205N','7bf5975c693842d9b73defe8a764f1a426944cce','Porco','Riccio','porco.riccio@riccissimo.it','2017-11-15 22:52:14','sdfs',NULL,4),('SLVNDR87C27F205N','ciao','Andrea','Silvestri','miroku_87@yahoo.it','2017-11-15 22:51:24',NULL,NULL,1);
 /*!40000 ALTER TABLE `giocatori` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `reboot_live`.`giocatori_BEFORE_INSERT` BEFORE INSERT ON `giocatori` FOR EACH ROW
+BEGIN
+	IF 
+		( SELECT COUNT(*) FROM giocatori WHERE email_giocatore = NEW.email_giocatore ) > 0
+    THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Esiste gi&agrave; un giocatore con questa email. Per favore controllare.';
+	END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `reboot_live`.`giocatori_BEFORE_UPDATE` BEFORE UPDATE ON `giocatori` FOR EACH ROW
+BEGIN
+	IF 
+		( SELECT COUNT(*) FROM giocatori WHERE email_giocatore = NEW.email_giocatore ) > 0
+    THEN
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Esiste gi&agrave; un giocatore con questa email. Per favore controllare.';
+	END IF;
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `grants`
@@ -331,6 +376,7 @@ CREATE TABLE `personaggi` (
   `background_personaggio` longtext,
   `px_personaggio` int(11) NOT NULL DEFAULT '0',
   `pc_personaggio` int(11) NOT NULL DEFAULT '0',
+  `data_creazione_personaggio` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `note_admin_personaggio` text,
   `giocatori_codice_fiscale_giocatore` varchar(255) NOT NULL,
   PRIMARY KEY (`id_personaggio`,`giocatori_codice_fiscale_giocatore`),
@@ -345,7 +391,7 @@ CREATE TABLE `personaggi` (
 
 LOCK TABLES `personaggi` WRITE;
 /*!40000 ALTER TABLE `personaggi` DISABLE KEYS */;
-INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,NULL,'ABCDEF90C04C345F'),(17,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(18,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(19,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(20,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F'),(21,'porco','riccio',NULL,100,8,NULL,'ABCDEF90C04C345F');
+INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,'2017-11-10 23:00:53',NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(17,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(18,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(19,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(20,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(21,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F');
 /*!40000 ALTER TABLE `personaggi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -853,4 +899,4 @@ ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-08  0:01:50
+-- Dump completed on 2017-11-16  0:20:45
