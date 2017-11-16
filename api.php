@@ -16,7 +16,7 @@ class Main
 
 		date_default_timezone_set( 'Europe/Rome' );
 
-		header( 'Content-Type: application/json' );
+		header( 'Content-Type: application/json;charset=UTF-8' );
 		header( 'Access-Control-Allow-Origin: http://localhost:9000' );
 		header( 'Access-Control-Allow-Credentials: true' );
 

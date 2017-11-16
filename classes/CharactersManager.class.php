@@ -150,6 +150,7 @@ class CharactersManager
 						ac.id_abilita_civile AS id_abilita,
 						ac.nome_abilita_civile AS nome_abilita,
 						ac.prerequisito_abilita_civile AS prerequisito_abilita,
+						ac.descrizione_abilita_civile AS descrizione_abilita,
 						ac.costo_px_abilita_civile AS costo_abilita
 					FROM
 						classi_civili AS cc
@@ -162,6 +163,7 @@ class CharactersManager
 						am.id_abilita_militare AS id_abilita,
 						am.nome_abilita_militare AS nome_abilita,
 						am.prerequisito_abilita_militare AS prerequisito_abilita,
+						am.descrizione_abilita_militare AS descrizione_abilita,
 						1 AS costo_abilita
 					FROM
 						classi_militari AS cm
@@ -190,10 +192,16 @@ class CharactersManager
 				unset( $record_precedente["id_abilita"] );
 				unset( $record_precedente["nome_abilita"] );
 				unset( $record_precedente["prerequisito_abilita"] );
+				unset( $record_precedente["descrizione_abilita"] );
 				$ordine_classi[ $indice_ordine ][]  = $record_precedente;
 			}
 			else if ( $r["id_classe"] < $id_classe_precedente )
 			{
+				unset( $record_precedente["costo_abilita"] );
+				unset( $record_precedente["id_abilita"] );
+				unset( $record_precedente["nome_abilita"] );
+				unset( $record_precedente["prerequisito_abilita"] );
+				unset( $record_precedente["descrizione_abilita"] );
 				$ordine_classi[ $indice_ordine ][]  = $record_precedente;
 				$indice_ordine++;
 			}
@@ -213,7 +221,7 @@ class CharactersManager
 						)
 					);
 		
-		return "{\"status\": \"ok\", \"info\": ".$info_obj."}";
+		return "{\"status\": \"ok\", \"info\": ".html_entity_decode( $info_obj )."}";
 	}
 	
 	public function creaPG( $cf, $nome, $cognome, $classi_civili_id, $abilita_civili_id, $classi_militari_id, $abilita_militari_id )
