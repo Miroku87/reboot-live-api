@@ -186,6 +186,10 @@ class CharactersManager
 		{
 			if ( $r["id_classe"] > $id_classe_precedente )
 			{
+				unset( $record_precedente["costo_abilita"] );
+				unset( $record_precedente["id_abilita"] );
+				unset( $record_precedente["nome_abilita"] );
+				unset( $record_precedente["prerequisito_abilita"] );
 				$ordine_classi[ $indice_ordine ][]  = $record_precedente;
 			}
 			else if ( $r["id_classe"] < $id_classe_precedente )
