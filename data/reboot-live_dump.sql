@@ -303,7 +303,7 @@ CREATE TABLE `grants` (
 
 LOCK TABLES `grants` WRITE;
 /*!40000 ALTER TABLE `grants` DISABLE KEYS */;
-INSERT INTO `grants` VALUES (1,'mostraMieiPersonaggi','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraTuttiPersonaggi','L\'utente potrà visualizzare tutti i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modifica_personaggio','L\'utente può modificare qualsiasi parametro di un personaggio qualsiasi.'),(10,'cancella_personaggio','L\'utente può eliminare definitivamente un personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassi','L\'utente può assegnare nuove classi a un personaggio.'),(23,'aggiungiAbilita','L\'utente può assegnare nuove abilità ad un personaggio.');
+INSERT INTO `grants` VALUES (1,'mostraMieiPersonaggi','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraTuttiPersonaggi','L\'utente potrà visualizzare tutti i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modifica_personaggio','L\'utente può modificare qualsiasi parametro di un personaggio qualsiasi.'),(10,'cancella_personaggio','L\'utente può eliminare definitivamente un personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassiAlPG','L\'utente può assegnare nuove classi a un personaggio.'),(23,'aggiungiAbilitaAlPG','L\'utente può assegnare nuove abilità ad un personaggio.');
 /*!40000 ALTER TABLE `grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -381,8 +381,8 @@ CREATE TABLE `personaggi` (
   `giocatori_codice_fiscale_giocatore` varchar(255) NOT NULL,
   PRIMARY KEY (`id_personaggio`,`giocatori_codice_fiscale_giocatore`),
   KEY `fk_personaggi_giocatori_idx` (`giocatori_codice_fiscale_giocatore`),
-  CONSTRAINT `fk_personaggi_giocatori` FOREIGN KEY (`giocatori_codice_fiscale_giocatore`) REFERENCES `giocatori` (`codice_fiscale_giocatore`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+  CONSTRAINT `fk_personaggi_giocatori` FOREIGN KEY (`giocatori_codice_fiscale_giocatore`) REFERENCES `giocatori` (`codice_fiscale_giocatore`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -391,7 +391,7 @@ CREATE TABLE `personaggi` (
 
 LOCK TABLES `personaggi` WRITE;
 /*!40000 ALTER TABLE `personaggi` DISABLE KEYS */;
-INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,'2017-11-10 23:00:53',NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(17,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(18,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(19,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(20,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(21,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F');
+INSERT INTO `personaggi` VALUES (1,'Ciccio','Pasticcio',NULL,30,1,'2017-11-10 23:00:53',NULL,'SLVNDR87C27F205N'),(2,'Bella','Frate',NULL,9999,9999,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(17,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(18,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(19,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(20,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(21,'porco','riccio',NULL,100,8,'2017-11-10 23:00:53',NULL,'ABCDEF90C04C345F'),(22,'John Doe',NULL,NULL,100,18,'2017-11-23 23:37:08',NULL,'SLVNDR87C27F205N'),(23,'JD',NULL,NULL,100,18,'2017-11-23 23:39:22',NULL,'SLVNDR87C27F205N'),(24,'JD',NULL,NULL,100,18,'2017-11-23 23:42:57',NULL,'SLVNDR87C27F205N'),(25,'Petra',NULL,NULL,100,18,'2017-11-23 23:47:56',NULL,'SLVNDR87C27F205N'),(26,'Mark',NULL,NULL,100,18,'2017-11-23 23:54:14',NULL,'SLVNDR87C27F205N');
 /*!40000 ALTER TABLE `personaggi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -404,11 +404,12 @@ DROP TABLE IF EXISTS `personaggi_has_abilita_civili`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `personaggi_has_abilita_civili` (
   `personaggi_id_personaggio` int(11) NOT NULL,
-  `abilita_civili_id_abilita_civile` int(255) NOT NULL,
+  `abilita_civili_id_abilita_civile` int(255) unsigned NOT NULL,
   PRIMARY KEY (`personaggi_id_personaggio`,`abilita_civili_id_abilita_civile`),
   KEY `fk_personaggi_has_abilita_civili_abilita_civili1_idx` (`abilita_civili_id_abilita_civile`),
   KEY `fk_personaggi_has_abilita_civili_personaggi1_idx` (`personaggi_id_personaggio`),
-  CONSTRAINT `fk_personaggi_has_abilita_civili_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_personaggi_has_abilita_civili_abilita_civili1` FOREIGN KEY (`abilita_civili_id_abilita_civile`) REFERENCES `abilita_civili` (`id_abilita_civile`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_personaggi_has_abilita_civili_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -418,7 +419,7 @@ CREATE TABLE `personaggi_has_abilita_civili` (
 
 LOCK TABLES `personaggi_has_abilita_civili` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita_civili` DISABLE KEYS */;
-INSERT INTO `personaggi_has_abilita_civili` VALUES (1,1),(1,2),(1,3),(1,4),(2,44),(2,45),(21,1),(21,2);
+INSERT INTO `personaggi_has_abilita_civili` VALUES (1,1),(1,2),(1,3),(1,4),(2,44),(2,45),(21,1),(21,2),(24,1),(24,2),(24,3),(25,15),(25,16),(26,43),(26,44);
 /*!40000 ALTER TABLE `personaggi_has_abilita_civili` ENABLE KEYS */;
 UNLOCK TABLES;
 ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
@@ -484,7 +485,7 @@ CREATE TABLE `personaggi_has_abilita_militari` (
   PRIMARY KEY (`personaggi_id_personaggio`,`abilita_id_abilita_militare`),
   KEY `fk_personaggi_has_abilita_abilita1_idx` (`abilita_id_abilita_militare`),
   KEY `fk_personaggi_has_abilita_personaggi1_idx` (`personaggi_id_personaggio`),
-  CONSTRAINT `fk_personaggi_has_abilita_abilita1` FOREIGN KEY (`abilita_id_abilita_militare`) REFERENCES `abilita_militari` (`id_abilita_militare`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_personaggi_has_abilita_abilita1` FOREIGN KEY (`abilita_id_abilita_militare`) REFERENCES `abilita_militari` (`id_abilita_militare`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_personaggi_has_abilita_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -495,7 +496,7 @@ CREATE TABLE `personaggi_has_abilita_militari` (
 
 LOCK TABLES `personaggi_has_abilita_militari` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita_militari` DISABLE KEYS */;
-INSERT INTO `personaggi_has_abilita_militari` VALUES (1,1),(1,2),(1,3),(2,69),(2,70),(21,1),(21,2);
+INSERT INTO `personaggi_has_abilita_militari` VALUES (1,1),(1,2),(1,3),(2,69),(2,70),(21,1),(21,2),(24,1),(24,2),(24,3),(24,5),(25,65),(25,67),(25,69),(26,65),(26,67),(26,68),(26,69),(26,70);
 /*!40000 ALTER TABLE `personaggi_has_abilita_militari` ENABLE KEYS */;
 UNLOCK TABLES;
 ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_general_ci ;
@@ -559,7 +560,7 @@ CREATE TABLE `personaggi_has_classi_civili` (
   PRIMARY KEY (`personaggi_id_personaggio`,`classi_civili_id_classe_civile`),
   KEY `fk_personaggi_has_classi_civili_classi_civili1_idx` (`classi_civili_id_classe_civile`),
   KEY `fk_personaggi_has_classi_civili_personaggi1_idx` (`personaggi_id_personaggio`),
-  CONSTRAINT `fk_personaggi_has_classi_civili_classi_civili1` FOREIGN KEY (`classi_civili_id_classe_civile`) REFERENCES `classi_civili` (`id_classe_civile`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `fk_personaggi_has_classi_civili_classi_civili1` FOREIGN KEY (`classi_civili_id_classe_civile`) REFERENCES `classi_civili` (`id_classe_civile`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_personaggi_has_classi_civili_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -570,7 +571,7 @@ CREATE TABLE `personaggi_has_classi_civili` (
 
 LOCK TABLES `personaggi_has_classi_civili` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_classi_civili` DISABLE KEYS */;
-INSERT INTO `personaggi_has_classi_civili` VALUES (1,1),(1,2),(2,4),(21,1),(21,2);
+INSERT INTO `personaggi_has_classi_civili` VALUES (1,1),(1,2),(2,4),(21,1),(21,2),(24,1),(25,2),(26,4);
 /*!40000 ALTER TABLE `personaggi_has_classi_civili` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -587,8 +588,8 @@ CREATE TABLE `personaggi_has_classi_militari` (
   PRIMARY KEY (`personaggi_id_personaggio`,`classi_militari_id_classe_militare`),
   KEY `fk_personaggi_has_classi_militari_classi_militari1_idx` (`classi_militari_id_classe_militare`),
   KEY `fk_personaggi_has_classi_militari_personaggi1_idx` (`personaggi_id_personaggio`),
-  CONSTRAINT `fk_personaggi_has_classi_militari_classi_militari1` FOREIGN KEY (`classi_militari_id_classe_militare`) REFERENCES `classi_militari` (`id_classe_militare`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_personaggi_has_classi_militari_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_personaggi_has_classi_militari_classi_militari1` FOREIGN KEY (`classi_militari_id_classe_militare`) REFERENCES `classi_militari` (`id_classe_militare`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_personaggi_has_classi_militari_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -598,7 +599,7 @@ CREATE TABLE `personaggi_has_classi_militari` (
 
 LOCK TABLES `personaggi_has_classi_militari` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_classi_militari` DISABLE KEYS */;
-INSERT INTO `personaggi_has_classi_militari` VALUES (1,1),(1,2),(2,5),(21,1),(21,2);
+INSERT INTO `personaggi_has_classi_militari` VALUES (1,1),(1,2),(2,5),(21,1),(21,2),(24,1),(24,2),(25,5),(25,6),(26,5);
 /*!40000 ALTER TABLE `personaggi_has_classi_militari` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -668,8 +669,8 @@ CREATE TABLE `ruoli_has_grants` (
   PRIMARY KEY (`ruoli_id_ruolo`,`grants_id_grant`),
   KEY `fk_ruoli_has_grants_grants1_idx` (`grants_id_grant`),
   KEY `fk_ruoli_has_grants_ruoli1_idx` (`ruoli_id_ruolo`),
-  CONSTRAINT `fk_ruoli_has_grants_grants1` FOREIGN KEY (`grants_id_grant`) REFERENCES `grants` (`id_grant`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `fk_ruoli_has_grants_ruoli1` FOREIGN KEY (`ruoli_id_ruolo`) REFERENCES `ruoli` (`id_ruolo`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `fk_ruoli_has_grants_grants1` FOREIGN KEY (`grants_id_grant`) REFERENCES `grants` (`id_grant`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_ruoli_has_grants_ruoli1` FOREIGN KEY (`ruoli_id_ruolo`) REFERENCES `ruoli` (`id_ruolo`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -899,4 +900,4 @@ ALTER DATABASE `reboot_live` CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-11-16  0:20:45
+-- Dump completed on 2017-11-24  0:58:02

@@ -224,7 +224,7 @@ class CharactersManager
 		return "{\"status\": \"ok\", \"info\": ".html_entity_decode( $info_obj )."}";
 	}
 	
-	public function creaPG( $cf, $nome, $cognome, $classi_civili_id, $abilita_civili_id, $classi_militari_id, $abilita_militari_id )
+	public function creaPG( $nome, $classi_civili_id, $abilita_civili_id, $classi_militari_id, $abilita_militari_id )
 	{
 		global $PX_INIZIALI;
 		global $PC_INIZIALI;
@@ -232,16 +232,12 @@ class CharactersManager
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 		
-		$new_pg_query  = "INSERT INTO personaggi VALUES ( :idpg, :nomepg, :cognomepg, :bg, :initpx, :initpc, :note, :cf )";
+		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_codice_fiscale_giocatore) VALUES (  :nomepg, :initpx, :initpc, :cf )";
 		$new_pg_params = array( 
-			":idpg"      => NULL,
 			":nomepg"    => $nome,
-			":cognomepg" => $cognome,
-			":bg"        => NULL,
 			":initpx"    => $PX_INIZIALI,
 			":initpc"    => $PC_INIZIALI,
-			":note"      => NULL,
-			":cf"        => $cf
+			":cf"        => $this->session->codice_fiscale_giocatore
 		);
 		
 		$new_pg_id = $this->db->doQuery( $new_pg_query, $new_pg_params );
