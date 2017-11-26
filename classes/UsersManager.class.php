@@ -69,16 +69,16 @@ class UsersManager
 	public function login( $mail, $pass )
 	{
 		$query  = "SELECT gi.codice_fiscale_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
-					JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
-					JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
+					LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
+					LEFT OUTER JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
 					WHERE gi.email_giocatore = :mail AND 
 					      gi.password_giocatore = :pass";
-		$params = array( ":mail" => $mail, ":pass" => $pass );
-		
+
+		$params = array( ":mail" => $mail, ":pass" => sha1( $pass ) );
 		$result = $this->db->doQuery( $query, $params, False );
 		
 		if( count( $result ) === 0 )
-			throw new Exception( "Email utente o password sono errati. Per favore ritentare." );
+			throw new Exception( "Email utente o password sono errati. Per favore riprovare." );
 		
 		$this->session->codice_fiscale_giocatore = $result[0]["codice_fiscale_giocatore"];
 		$this->session->permessi_giocatore       = array_map( "Utils::mappaPermessiUtente", $result );
@@ -86,10 +86,18 @@ class UsersManager
 		return "{\"status\": \"ok\", \"user_info\": { \"cf_giocatore\":\"".$this->session->codice_fiscale_giocatore."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
 	}
 	
+	public function controllaaccesso( $section )
+	{
+		if( !isset( $this->session ) || ( isset( $this->session ) && !in_array( "visualizza_".$section, $this->session->permessi_giocatore ) ) )
+            return "{\"status\": \"error\", \"message\": \"Impossibile accedere a questa sezione.\", }";
+
+		return "{\"status\": \"ok\"}";
+	}
+
 	public function logout( )
 	{
 		$this->session->destroy();
-		
+
 		return "{\"status\": \"ok\"}";
 	}
 	
