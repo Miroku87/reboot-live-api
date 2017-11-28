@@ -88,8 +88,8 @@ class UsersManager
 	
 	public function controllaaccesso( $section )
 	{
-		if( !isset( $this->session ) || ( isset( $this->session ) && !in_array( "visualizza_".$section, $this->session->permessi_giocatore ) ) )
-            return "{\"status\": \"error\", \"message\": \"Impossibile accedere a questa sezione.\", }";
+		if( !isset( $this->session ) || ( isset( $this->session ) && !in_array( "visualizza_pagina_".$section, $this->session->permessi_giocatore ) ) )
+            throw new Exception( "Impossibile accedere a questa sezione." );
 
 		return "{\"status\": \"ok\"}";
 	}

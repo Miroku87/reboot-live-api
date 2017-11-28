@@ -29,7 +29,14 @@ class DatabaseBridge extends PDO
 		
 		return $connection;
 	}
-	
+
+    /**
+     * @param string $query
+     * @param Array $params
+     * @param bool $to_json
+     * @return array|bool|string
+     * @throws Exception
+     */
 	public function doQuery( $query, $params, $to_json = True )
 	{
 		if( !is_array( $params ) )

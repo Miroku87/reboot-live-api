@@ -116,10 +116,45 @@ class CharactersManager
 		
 		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": ".count($result).", \"rows\":".json_encode( $arr )."}";
 	}
+
+    private function controllaPrerequisitiAbilitaCivili( $abilita_civili_id, $pg_id = NULL )
+    {
+        $punti_domanda = str_repeat('?,', count($abilita_civili_id) - 1) . '?';
+        $query         = "SELECT nome_abilita_civile, prerequisito_abilita_civile, classi_civili_id_classe_civile FROM abilita_civili
+                            WHERE id_abilita_civile IN ($punti_domanda)";
+        $prerequisiti  = $this->db->doQuery( $query, $abilita_civili_id, False );
+
+        if( isset( $pg_id ) )
+        {
+            $query             = "SELECT abilita_civili_id_abilita_civile FROM personaggi_has_abilita_civili
+                                   WHERE personaggi_id_personaggio = :idpg";
+            $altre_abilita_pg  = $this->db->doQuery( $query, $abilita_civili_id, False );
+            $abilita_civili_id = array_merge( $abilita_civili_id, $altre_abilita_pg );
+***REMOVED***
+
+        foreach ( $prerequisiti as $p )
+        {
+            if( (int)$p->prerequisito_abilita_civile > 0 && !in_array( $p->prerequisito_abilita_civile, $abilita_civili_id ) )
+                return $p->nome_abilita_civile;
+            else if ( (int)$p->prerequisito_abilita_civile === -1 )
+                echo "ciao";
+            //TODO
+***REMOVED***
+
+        return true;
+    }
+
+    private function controllaPrerequisitiClassiMilitari( $classi_militari_id, $pg_id = NULL )
+    {
+
+    }
+
+    private function controllaPrerequisitiAbilitaMilitari( $abilita_militari_id, $pg_id = NULL )
+    {
+
+    }
 	
-	/**
-	 * GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
-	 */
+	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
 	public function mostraMieiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
 	{
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
@@ -131,9 +166,7 @@ class CharactersManager
 		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search, $where, $params );
 	}
 	
-	/**
-	 * GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
-	 */
+	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
 	public function mostraTuttiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
 	{
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
@@ -231,8 +264,12 @@ class CharactersManager
 		
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
-		
-		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_codice_fiscale_giocatore) VALUES (  :nomepg, :initpx, :initpc, :cf )";
+
+        $this->controllaPrerequisitiAbilitaCivili( $abilita_civili_id );
+        $this->controllaPrerequisitiClassiMilitari( $classi_militari_id );
+        $this->controllaPrerequisitiAbilitaMilitari( $abilita_militari_id );
+
+		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_codice_fiscale_giocatore) VALUES ( :nomepg, :initpx, :initpc, :cf )";
 		$new_pg_params = array( 
 			":nomepg"    => $nome,
 			":initpx"    => $PX_INIZIALI,
