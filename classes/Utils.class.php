@@ -11,6 +11,11 @@ class Utils
 	{
 		return $item["permessi"];
 	}
+
+	static function mappaRisultatoJson( $item )
+	{
+		return $item["json"];
+	}
 	
 	static function generatePassword( $length = 8 )
 	{
