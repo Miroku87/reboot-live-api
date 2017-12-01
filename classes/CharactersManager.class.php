@@ -63,33 +63,23 @@ class CharactersManager
 		
 		$big_join = " 
 					SELECT 
-						pg.*,
-						gi.*,
-						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cc.id_classe_civile,'\",\"nome_classe\":\"',cc.nome_classe_civile,'\"}') SEPARATOR ','), ']' ) AS lista_classi_civili,
-						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cm.id_classe_militare,'\",\"nome_classe\":\"',cm.nome_classe_militare,' ',cm.grado_classe_militare,'\"}') SEPARATOR ','), ']' ) AS lista_classi_militari,
-						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',ac.id_abilita_civile,'\",\"nome_abilita\":\"',ac.nome_abilita_civile,'\"}') SEPARATOR ','), ']' ) AS lista_abilita_civili,
-						CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',am.id_abilita_militare,'\",\"nome_abilita\":\"',am.nome_abilita_militare,'\"}') SEPARATOR ','), ']' ) AS lista_abilita_militari
-					FROM
-						personaggi AS pg
-							LEFT OUTER JOIN
-						giocatori AS gi ON gi.codice_fiscale_giocatore = pg.giocatori_codice_fiscale_giocatore
-							LEFT OUTER JOIN
-						personaggi_has_classi_civili AS phcc ON phcc.personaggi_id_personaggio = pg.id_personaggio
-							LEFT OUTER JOIN
-						classi_civili AS cc ON cc.id_classe_civile = phcc.classi_civili_id_classe_civile
-							LEFT OUTER JOIN
-						personaggi_has_abilita_civili AS phac ON phac.personaggi_id_personaggio = pg.id_personaggio
-							LEFT OUTER JOIN
-						abilita_civili AS ac ON ac.id_abilita_civile = phac.abilita_civili_id_abilita_civile
-							LEFT OUTER JOIN
-						personaggi_has_classi_militari AS phcm ON phcm.personaggi_id_personaggio = pg.id_personaggio
-							LEFT OUTER JOIN
-						classi_militari AS cm ON cm.id_classe_militare = phcm.classi_militari_id_classe_militare
-							LEFT OUTER JOIN
-						personaggi_has_abilita_militari AS pham ON pham.personaggi_id_personaggio = pg.id_personaggio
-							LEFT OUTER JOIN
-						abilita_militari AS am ON am.id_abilita_militare = pham.abilita_id_abilita_militare
-					GROUP BY pg.id_personaggio";
+                        pg.*,
+                        gi.*,
+                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cl.id_classe,'\",\"nome_classe\":\"',cl.nome_classe,'\"}') SEPARATOR ','), ']' ) AS lista_classi,
+                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',ab.id_abilita,'\",\"nome_abilita\":\"',ab.nome_abilita,'\"}') SEPARATOR ','), ']' ) AS lista_abilita
+                    FROM
+                        personaggi AS pg
+                            LEFT OUTER JOIN
+                        giocatori AS gi ON gi.codice_fiscale_giocatore = pg.giocatori_codice_fiscale_giocatore
+                            LEFT OUTER JOIN
+                        personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
+                            LEFT OUTER JOIN
+                        personaggi_has_abilita AS pha ON pha.personaggi_id_personaggio = pg.id_personaggio
+                            LEFT OUTER JOIN
+                        abilita AS ab ON ab.id_abilita = pha.abilita_id_abilita
+                            LEFT OUTER JOIN
+                        classi AS cl ON cl.id_classe = phc.classi_id_classe
+                    GROUP BY pg.id_personaggio";
 		
 		$where_str = count( $where ) > 0 ? "WHERE ".implode( $where, " AND ") : "";
 		$query     = "SELECT * FROM ( $big_join ) AS bj $where_str $order";
@@ -104,10 +94,8 @@ class CharactersManager
 			{
 				if( $k + 1 >= $current && $k + 1 <= $row_count )
 				{
-					$v["lista_classi_civili"]    = json_decode( $v["lista_classi_civili"] );
-					$v["lista_classi_militari"]  = json_decode( $v["lista_classi_militari"] );
-					$v["lista_abilita_civili"]   = json_decode( $v["lista_abilita_civili"] );
-					$v["lista_abilita_militari"] = json_decode( $v["lista_abilita_militari"] );
+					$v["lista_classi"]    = json_decode( $v["lista_classi"] );
+					$v["lista_abilita"]   = json_decode( $v["lista_abilita"] );
 					
 					$arr[] = $v;
 				}
@@ -191,7 +179,11 @@ class CharactersManager
         $lista_abilita = array();
 
 		foreach( $res_abilita as $l )
-            $lista_abilita[ $l["classi_id_classe"] ][] = $l;
+		{
+		    $l["id_classe"] = $l["classi_id_classe"];
+		    unset( $l["classi_id_classe"] );
+            $lista_abilita[$l["id_classe"]][] = $l;
+***REMOVED***
 
 		$info_obj = "{\"classi\":".json_encode($lista_classi).", \"abilita\":".json_encode($lista_abilita)."}";
 		
