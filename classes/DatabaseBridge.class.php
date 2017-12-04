@@ -41,43 +41,52 @@ class DatabaseBridge extends PDO
 	{
 		if( !is_array( $params ) )
 			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO.");
-		
-		$conn   = $this->connect();		
-		$stmnt  = $conn->prepare( $query );
-		
-		$stmnt->execute( $params );
-		
-		if( $stmnt->columnCount() !== 0 )
-			$result = $stmnt->fetchAll( PDO::FETCH_ASSOC );
-		else if( $stmnt->columnCount() === 0 && $conn->lastInsertId() !== 0 )
-		{
-			$result  = $conn->lastInsertId();
-			$to_json = False;
-		}
-		else if ( $stmnt->columnCount() === 0 && $conn->lastInsertId() === 0 )
-		{
-			$result  = True;
-			$to_json = False;
-		}
-		
-		if( $result && !$to_json )
-			return $result;
-		else if( $result && $to_json )
-			return json_encode( $result );
+
+		try {
+            $conn = $this->connect();
+            $stmnt = $conn->prepare($query);
+
+            $stmnt->execute($params);
+
+            if ($stmnt->columnCount() !== 0)
+                $result = $stmnt->fetchAll(PDO::FETCH_ASSOC);
+            else if ($stmnt->columnCount() === 0 && $conn->lastInsertId() !== 0) {
+                $result = $conn->lastInsertId();
+                $to_json = False;
+***REMOVED*** else if ($stmnt->columnCount() === 0 && $conn->lastInsertId() === 0) {
+                $result = True;
+                $to_json = False;
+***REMOVED***
+
+            if ($result && !$to_json)
+                return $result;
+            else if ($result && $to_json)
+                return json_encode($result);
+***REMOVED***
+        catch( Exception $e )
+        {
+            throw new Exception($query."<br>".$e->getMessage());
+***REMOVED***
 	}
 	
 	public function doMultipleInserts( $query, $params, $to_json = True )
 	{
 		if( !is_array( $params ) || ( is_array( $params ) && !is_array( $params[0] ) ) )
 			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO a due dimensioni.");
-		
-		$conn   = $this->connect();		
-		$stmnt  = $conn->prepare( $query );
-		
-		foreach( $params as $p )
-			$stmnt->execute( $p );
-			
-		return True;
+
+        try {
+            $conn   = $this->connect();
+            $stmnt  = $conn->prepare( $query );
+
+            foreach( $params as $p )
+                $stmnt->execute( $p );
+
+            return True;
+***REMOVED***
+        catch( Exception $e )
+        {
+            throw new Exception($query."<br>".$e->getMessage());
+***REMOVED***
 	}
 }
 

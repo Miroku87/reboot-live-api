@@ -16,6 +16,26 @@ class Utils
 	{
 		return $item["json"];
 	}
+
+	static function mappaId( $item )
+	{
+		return $item["id"];
+	}
+
+	static function ordinaArrayPerPrerequisito( $a, $b )
+	{
+        if( $a["pre"] == "null" && $b["pre"] == "null" )
+            return 0;
+
+        if( $a["pre"] != "null" && $b["pre"] == "null" )
+            return 1;
+
+        if( $a["pre"] == "null" && $b["pre"] != "null" )
+            return -1;
+
+        if( $a["pre"] != "null" && $b["pre"] != "null" )
+            return (int)$a["pre"] - (int)$b["pre"];
+	}
 	
 	static function generatePassword( $length = 8 )
 	{

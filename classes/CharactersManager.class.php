@@ -61,8 +61,8 @@ class CharactersManager
 					SELECT 
                         pg.*,
                         gi.*,
-                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cl.id_classe,'\",\"nome_classe\":\"',cl.nome_classe,'\"}') SEPARATOR ','), ']' ) AS lista_classi,
-                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',ab.id_abilita,'\",\"nome_abilita\":\"',ab.nome_abilita,'\"}') SEPARATOR ','), ']' ) AS lista_abilita
+                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cl.id_classe,'\",\"nome_classe\":\"',cl.nome_classe,'\",\"tipo_classe\":\"',cl.tipo_classe,'\"}') SEPARATOR ','), ']' ) AS lista_classi,
+                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',ab.id_abilita,'\",\"nome_abilita\":\"',ab.nome_abilita,'\",\"tipo_abilita\":\"',ab.tipo_abilita,'\"}') SEPARATOR ','), ']' ) AS lista_abilita
                     FROM
                         personaggi AS pg
                             LEFT OUTER JOIN
@@ -86,6 +86,8 @@ class CharactersManager
 		
 		if( count( $result ) > 0 )
 		{
+		    echo var_dump($result);
+		    die();
 			foreach( $result as $k => $v )
 			{
 				if( $k + 1 >= $current && $k + 1 <= $row_count )
@@ -100,38 +102,6 @@ class CharactersManager
 		
 		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": ".count($result).", \"rows\":".json_encode( $arr )."}";
 	}
-
-    private function controllaPrerequisitiAbilita( $abilita_id, $pg_id = NULL )
-    {
-        $punti_domanda = str_repeat('?,', count($abilita_id) - 1) . '?';
-        $query         = "SELECT nome_abilita, prerequisito_abilita, classi_id_classe FROM abilita
-                            WHERE id_abilita IN ($punti_domanda)";
-        $prerequisiti  = $this->db->doQuery( $query, $abilita_id, False );
-
-        if( isset( $pg_id ) )
-        {
-            $query             = "SELECT abilita_id_abilita FROM personaggi_has_abilita
-                                   WHERE personaggi_id_personaggio = :idpg";
-            $altre_abilita_pg  = $this->db->doQuery( $query, $abilita_id, False );
-            $abilita_id        = array_merge( $abilita_id, $altre_abilita_pg );
-***REMOVED***
-
-        foreach ( $prerequisiti as $p )
-        {
-            if( (int)$p->prerequisito_abilita > 0 && !in_array( $p->prerequisito_abilita, $abilita_id ) )
-                return $p->nome_abilita;
-            else if ( (int)$p->prerequisito_abilita === -1 )
-                echo "ciao";
-            //TODO
-***REMOVED***
-
-        return true;
-    }
-
-    private function controllaPrerequisitiClassi( $classi_id, $pg_id = NULL )
-    {
-
-    }
 	
 	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
 	public function mostraMieiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
@@ -181,16 +151,21 @@ class CharactersManager
 		return "{\"status\": \"ok\", \"info\": ".html_entity_decode( $info_obj )."}";
 	}
 	
-	public function creaPG( $nome, $classi_civili_id, $abilita_civili_id, $classi_militari_id, $abilita_militari_id )
+	public function creaPG( $nome, $classi, $abilita )
 	{
 		global $PX_INIZIALI;
 		global $PC_INIZIALI;
-		
+
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 
-        $this->controllaPrerequisitiAbilita( $abilita_id );
-        $this->controllaPrerequisitiClassi( $classi_id );
+        //Riordino classi e abilita in base alla presenza di prerequisiti. In questo modo ci pensera' il DB a dare errore se i
+        //prerequisiti non coincidono
+        usort( $classi, "Utils::ordinaArrayPerPrerequisito" );
+        usort( $abilita, "Utils::ordinaArrayPerPrerequisito" );
+
+        $classi_id  = array_map( "Utils::mappaId", $classi );
+        $abilita_id = array_map( "Utils::mappaId", $abilita );
 
 		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_codice_fiscale_giocatore) VALUES ( :nomepg, :initpx, :initpc, :cf )";
 		$new_pg_params = array( 
