@@ -56,15 +56,8 @@ class CharactersManager
 			}			
 			$order = "ORDER BY ".implode( $sorting, "," );
 		}
-		
-		$big_join = " 
-					SELECT 
-                        pg.*,
-                        gi.*,
-                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_classe\":\"',cl.id_classe,'\",\"nome_classe\":\"',cl.nome_classe,'\",\"tipo_classe\":\"',cl.tipo_classe,'\"}') SEPARATOR ','), ']' ) AS lista_classi,
-                        CONCAT( '[', GROUP_CONCAT(DISTINCT CONCAT('{\"id_abilita\":\"',ab.id_abilita,'\",\"nome_abilita\":\"',ab.nome_abilita,'\",\"tipo_abilita\":\"',ab.tipo_abilita,'\"}') SEPARATOR ','), ']' ) AS lista_abilita
-                    FROM
-                        personaggi AS pg
+
+		$big_join = " SELECT pg.*, gi.*, cl.*, ab.* FROM personaggi AS pg
                             LEFT OUTER JOIN
                         giocatori AS gi ON gi.codice_fiscale_giocatore = pg.giocatori_codice_fiscale_giocatore
                             LEFT OUTER JOIN
@@ -74,33 +67,42 @@ class CharactersManager
                             LEFT OUTER JOIN
                         abilita AS ab ON ab.id_abilita = pha.abilita_id_abilita
                             LEFT OUTER JOIN
-                        classi AS cl ON cl.id_classe = phc.classi_id_classe
-                    GROUP BY pg.id_personaggio";
+                        classi AS cl ON cl.id_classe = phc.classi_id_classe";
 		
 		$where_str = count( $where ) > 0 ? "WHERE ".implode( $where, " AND ") : "";
 		$query     = "SELECT * FROM ( $big_join ) AS bj $where_str $order";
 		
 		$result = $this->db->doQuery( $query, $params, False );
-		
-		$arr = array();
+		$arr    = array();
+		$total  = 0;
 		
 		if( count( $result ) > 0 )
 		{
-		    echo var_dump($result);
-		    die();
-			foreach( $result as $k => $v )
-			{
-				if( $k + 1 >= $current && $k + 1 <= $row_count )
-				{
-					$v["lista_classi"]    = json_decode( $v["lista_classi"] );
-					$v["lista_abilita"]   = json_decode( $v["lista_abilita"] );
-					
-					$arr[] = $v;
-				}
-			}
+            foreach( $result as $r )
+            {
+                foreach( $r as $k => $v )
+                {
+                    if( strpos( $k, "classe" ) != False )
+                        $arr[ "id".$r["id_personaggio"] ]["classi"][ "id".$r["id_classe"] ][$k] = $v;
+                    else if ( strpos( $k, "abilita" ) != False )
+                        $arr[ "id".$r["id_personaggio"] ]["abilita"][ "id".$r["id_abilita"] ][$k] = $v;
+                    else
+                        $arr[ "id".$r["id_personaggio"] ][$k] = $v;
+    ***REMOVED***
+***REMOVED***
+
+            $arr = array_values($arr);
+            $total = count($arr);
+			array_splice( $arr, $current, $row_count );
+
+            for( $i = 0; $i < count($arr); $i++ )
+            {
+                $arr[$i]["classi"]  = array_values($arr[$i]["classi"]);
+                $arr[$i]["abilita"] = array_values($arr[$i]["abilita"]);
+***REMOVED***
 		}
 		
-		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": ".count($result).", \"rows\":".json_encode( $arr )."}";
+		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": $total, \"rows\":".json_encode( $arr )."}";
 	}
 	
 	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
