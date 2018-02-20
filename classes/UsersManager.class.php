@@ -28,7 +28,7 @@ class UsersManager
         return "[UsersManager]";
     }
 	
-	private function controllaDatiRegistrazione( $nome, $cognome, $cf, $note, $mail, $pass1, $pass2, $condizioni )
+	private function controllaDatiRegistrazione( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni )
 	{
 		$errors = "";
 		
@@ -37,11 +37,6 @@ class UsersManager
 
 		if ( $cognome === "" || Utils::soloSpazi($cognome) )
 			$errors .= "Il campo Cognome non pu&ograve; essere vuoto.<br>";
-
-		if ( $cf === "" || Utils::soloSpazi($cf) )
-			$errors .= "Il campo Codice Fiscale non pu&ograve; essere vuoto.<br>";
-		else if ( !Utils::controllaCF( $cf ) )
-			$errors += "Il campo Codice Fiscale contiene un valore non corretto.<br>";
 
 		if ( $mail === "" || Utils::soloSpazi($mail) )
 			$errors .= "Il campo Mail non pu&ograve; essere vuoto.<br>";
@@ -68,7 +63,7 @@ class UsersManager
 	
 	public function login( $mail, $pass )
 	{
-		$query  = "SELECT gi.codice_fiscale_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
+		$query  = "SELECT gi.email_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
 					LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
 					LEFT OUTER JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
 					WHERE gi.email_giocatore = :mail AND 
@@ -80,10 +75,10 @@ class UsersManager
 		if( count( $result ) === 0 )
 			throw new Exception( "Email utente o password sono errati. Per favore riprovare." );
 		
-		$this->session->codice_fiscale_giocatore = $result[0]["codice_fiscale_giocatore"];
-		$this->session->permessi_giocatore       = array_map( "Utils::mappaPermessiUtente", $result );
+		$this->session->email_giocatore    = $result[0]["email_giocatore"];
+		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
 		
-		return "{\"status\": \"ok\", \"user_info\": { \"cf_giocatore\":\"".$this->session->codice_fiscale_giocatore."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
+		return "{\"status\": \"ok\", \"user_info\": { \"email_giocatore\":\"".$this->session->email_giocatore."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
 	}
 	
 	public function controllaaccesso( $section )

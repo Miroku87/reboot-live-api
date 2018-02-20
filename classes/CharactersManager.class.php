@@ -59,7 +59,7 @@ class CharactersManager
 
 		$big_join = " SELECT pg.*, gi.*, cl.*, ab.* FROM personaggi AS pg
                             LEFT OUTER JOIN
-                        giocatori AS gi ON gi.codice_fiscale_giocatore = pg.giocatori_codice_fiscale_giocatore
+                        giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
                             LEFT OUTER JOIN
                         personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
                             LEFT OUTER JOIN
@@ -75,7 +75,10 @@ class CharactersManager
 		$result = $this->db->doQuery( $query, $params, False );
 		$arr    = array();
 		$total  = 0;
-		
+
+		//echo var_dump($result);
+		//die();
+
 		if( count( $result ) > 0 )
 		{
             foreach( $result as $r )
@@ -92,8 +95,9 @@ class CharactersManager
 ***REMOVED***
 
             $arr = array_values($arr);
+
             $total = count($arr);
-			array_splice( $arr, $current, $row_count );
+			//array_splice( $arr, $row_count );
 
             for( $i = 0; $i < count($arr); $i++ )
             {
@@ -111,8 +115,8 @@ class CharactersManager
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 		
-		$where  = array( "bj.codice_fiscale_giocatore = :userid" );
-		$params = array( ":userid" => $this->session->codice_fiscale_giocatore );
+		$where  = array( "bj.email_giocatore = :userid" );
+		$params = array( ":userid" => $this->session->email_giocatore );
 		
 		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search, $where, $params );
 	}
@@ -161,26 +165,18 @@ class CharactersManager
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
 
-        //Riordino classi e abilita in base alla presenza di prerequisiti. In questo modo ci pensera' il DB a dare errore se i
-        //prerequisiti non coincidono
-        usort( $classi, "Utils::ordinaArrayPerPrerequisito" );
-        usort( $abilita, "Utils::ordinaArrayPerPrerequisito" );
-
-        $classi_id  = array_map( "Utils::mappaId", $classi );
-        $abilita_id = array_map( "Utils::mappaId", $abilita );
-
-		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_codice_fiscale_giocatore) VALUES ( :nomepg, :initpx, :initpc, :cf )";
+		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_email_giocatore) VALUES ( :nomepg, :initpx, :initpc, :email )";
 		$new_pg_params = array( 
 			":nomepg"    => $nome,
 			":initpx"    => $PX_INIZIALI,
 			":initpc"    => $PC_INIZIALI,
-			":cf"        => $this->session->codice_fiscale_giocatore
+			":email"     => $this->session->email_giocatore
 		);
 		
 		$new_pg_id = $this->db->doQuery( $new_pg_query, $new_pg_params );
 		
-		$this->aggiungiClassiAlPG( $new_pg_id, $classi_id );
-		$this->aggiungiAbilitaAlPG( $new_pg_id, $abilita_id );
+		$this->aggiungiClassiAlPG( $new_pg_id, $classi );
+		$this->aggiungiAbilitaAlPG( $new_pg_id, $abilita );
 		
 		//$this->mailer->sendMail( "creazionePG", $mail, $nome, $pass  );
 		
