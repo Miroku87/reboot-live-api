@@ -108,6 +108,55 @@ class CharactersManager
 		
 		return "{\"current\": $current, \"rowCount\": $row_count, \"total\": $total, \"rows\":".json_encode( $arr )."}";
 	}
+
+	private function controllaPossibilitaPunti( $id_classi, $id_abilita, $pg_id = NULL, $disponibilita_px = NULL, $disponibilita_pc = NULL )
+    {
+        global $MAPPA_COSTO_CLASSI_CIVILI;
+
+        if( ( !isset( $disponibilita_px ) || !isset( $disponibilita_pc ) ) && isset( $pg_id ) )
+        {
+            $query_punti = "SELECT px_personaggio, pc_personaggio FROM personaggi WHERE id_personaggio = :pgid";
+            $res_punti   = $this->db->doQuery( $query_punti, array( ":pgid" => $pg_id ), False );
+
+            if( !isset( $disponibilita_px ) )
+                $px = $res_punti[0]["px_personaggio"];
+
+            if( !isset( $disponibilita_pc ) )
+                $pc = $res_punti[0]["pc_personaggio"];
+***REMOVED***
+        else if ( isset( $disponibilita_px ) && isset( $disponibilita_pc ) )
+        {
+            $px = $disponibilita_px;
+            $pc = $disponibilita_pc;
+***REMOVED***
+
+        $marker_abilita      = str_repeat("?,", count($id_abilita) );
+        $marker_abilita      = substr( $marker_abilita,0,strlen($marker_abilita) - 1 );
+        $query_costo_abilita = "SELECT tipo_abilita, SUM(costo_abilita) AS costo FROM abilita WHERE id_abilita IN ($marker_abilita) GROUP BY tipo_abilita";
+        $res_costo_abilita   = $this->db->doQuery( $query_costo_abilita, $id_abilita, False);
+
+        $marker_classi    = str_repeat("?,", count($id_classi) );
+        $marker_classi    = substr( $marker_classi,0,strlen($marker_classi) - 1 );
+        $query_qta_classi = "SELECT tipo_classe, COUNT(id_classe) AS qta FROM classi WHERE id_classe IN ($marker_classi) GROUP BY tipo_classe";
+        $res_qta_abilita  = $this->db->doQuery( $query_qta_classi, $id_classi, False);
+
+        foreach ( $res_costo_abilita as $rca )
+            $costo[ $rca["tipo_abilita"] ] = $rca["costo"];
+
+        foreach ( $res_qta_abilita as $rca )
+            $qta[ $rca["tipo_classe"] ] = $rca["qta"];
+
+        for( $i = 0; $i < $qta["civile"]; $i++ )
+            $costo["civile"] += $MAPPA_COSTO_CLASSI_CIVILI[$i];
+
+        $costo["militare"] += $qta["militare"];
+
+        if( $px < $costo["civile"] )
+            throw new Exception( "Non hai abbastanza Punti Esperienza per effettuare questi acquisti." );
+
+        if( $pc < $costo["militare"] )
+            throw new Exception( "Non hai abbastanza Punti Combattimento per effettuare questi acquisti." );
+    }
 	
 	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
 	public function mostraMieiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
@@ -164,6 +213,8 @@ class CharactersManager
 
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+
+		$this->controllaPossibilitaPunti( $classi, $abilita, NULL, $PX_INIZIALI, $PC_INIZIALI );
 
 		$new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_email_giocatore) VALUES ( :nomepg, :initpx, :initpc, :email )";
 		$new_pg_params = array( 
@@ -227,6 +278,65 @@ class CharactersManager
 	public function eliminaPG( $pgid )
 	{
 		
+	}
+
+	public function loginPG( $pgid )
+	{
+	    global $MAPPA_COSTO_CLASSI_CIVILI;
+
+        $query_pg = "SELECT id_personaggio, 
+                            nome_personaggio, 
+                            background_personaggio, 
+                            px_personaggio, 
+                            pc_personaggio, 
+                            credito_personaggio, 
+                            data_creazione_personaggio, 
+                            giocatori_email_giocatore 
+                    FROM personaggi WHERE id_personaggio = :idpg AND giocatori_email_giocatore = :email";
+        $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid, ":email" => $this->session->email_giocatore ), False );
+
+        if( count( $res_pg ) == 0 )
+            throw new Exception( "Non puoi scaricare i dati di un giocatore non tuo." );
+
+        $pg_data  = $res_pg[0];
+
+        $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
+        $res_classi    = $this->db->doQuery( $query_classi, array( ":idpg" => $pgid ), False );
+
+        $query_abilita = "SELECT ab.id_abilita, ab.costo_abilita, ab.nome_abilita, ab.prerequisito_abilita, ab.tipo_abilita FROM abilita AS ab WHERE id_abilita IN ( SELECT abilita_id_abilita FROM personaggi_has_abilita WHERE personaggi_id_personaggio = :idpg )";
+        $res_abilita   = $this->db->doQuery( $query_abilita, array( ":idpg" => $pgid ), False );
+
+        $classi  = array( "civile" => array(), "militare" => array() );
+        $abilita = array( "civile" => array(), "militare" => array() );
+
+        foreach( $res_classi as $cl )
+            $classi[ $cl["tipo_classe"] ][] = $cl;
+
+        foreach( $res_abilita as $ab )
+            $abilita[ $ab["tipo_abilita"] ][] = $ab;
+
+        $px_spesi = 0;
+        $pc_spesi = count( $classi["militare"] ) + count( $abilita["militare"] );
+
+        for( $i = 0; $i < count( $classi["civile"] ); $i++ )
+            $px_spesi += $MAPPA_COSTO_CLASSI_CIVILI[$i];
+
+        foreach( $abilita["civile"] as $ac )
+            $px_spesi += $ac["costo_abilita"];
+
+        $px_risparmiati = $pg_data["px_personaggio"] - $px_spesi;
+        $pc_risparmiati = $pg_data["pc_personaggio"] - $pc_spesi;
+
+        $pg_data["classi"] = $classi;
+        $pg_data["abilita"] = $abilita;
+        $pg_data["px_spesi"] = $px_spesi;
+        $pg_data["px_risparmiati"] = $px_risparmiati;
+        $pg_data["pc_spesi"] = $pc_spesi;
+        $pg_data["pc_risparmiati"] = $pc_risparmiati;
+
+        $this->session->pg_loggato = $pg_data;
+
+        return "{\"status\": \"ok\",\"result\": ".json_encode($pg_data)."}";
 	}
 }
 ?>

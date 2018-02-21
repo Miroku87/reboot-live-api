@@ -115,8 +115,8 @@ class UsersManager
 		);
 		
 		$result = $this->db->doQuery( $query, $params );
-		//$this->mailer->sendMail( "registrazione", $mail, $nome, $pass  );
-		
+		//$this->mailer->sendMail( "registrazione", $mail, $nome, $pass  ); //TODO
+
 		return "{\"status\": \"ok\"}";
 	}
 	

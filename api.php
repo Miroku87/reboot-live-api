@@ -30,6 +30,8 @@ class Main
 	
 	public function runAPI()
 	{
+	    global $DEBUG;
+
 		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
@@ -45,7 +47,12 @@ class Main
 		}
 		catch( Exception $e )
 		{
-			return Utils::errorJSON( $e->getMessage() );
+		    $mex = $e->getMessage();
+
+		    if( $DEBUG )
+		        $mex .= " \n".$e->getTraceAsString();
+
+			return Utils::errorJSON( $mex );
 		}
 	}
 }

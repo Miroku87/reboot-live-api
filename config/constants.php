@@ -1,6 +1,10 @@
 <?php
 
+$DEBUG       = True;
+
 $PX_INIZIALI = 100;
 $PC_INIZIALI = 18;
+
+$MAPPA_COSTO_CLASSI_CIVILI = array(30,50,70,100,100,150,200);
 
 ?>

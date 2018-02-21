@@ -40,7 +40,7 @@ class DatabaseBridge extends PDO
 	public function doQuery( $query, $params, $to_json = True )
 	{
 		if( !is_array( $params ) )
-			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO.");
+			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO. Il valore passato non lo è: ".$params);
 
 		try {
             $conn = $this->connect();
