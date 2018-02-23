@@ -1,6 +1,7 @@
 <?php
 
-$DEBUG       = True;
+$DEBUG               = False;
+$DB_ERR_DELIMITATORE = "@@@";
 
 $PX_INIZIALI = 100;
 $PC_INIZIALI = 18;

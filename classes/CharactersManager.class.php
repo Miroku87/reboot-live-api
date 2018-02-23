@@ -27,6 +27,28 @@ class CharactersManager
     {
         return "[CharactersManager]";
     }
+
+    private function registraAzione( $pgid, $azione, $vecchio_valore, $nuovo_valore )
+    {
+        $vecchio = !isset($vecchio_valore) ? "NULL" : ":vecchio";
+        $nuovo   = !isset($nuovo_valore) ? "NULL" : ":nuovo";
+
+        $query_azione = "INSERT INTO storico_azioni ( id_personaggio_azione, giocatori_email_giocatore, tipo_azione, valore_vecchio_azione, valore_nuovo_azione ) 
+		                    VALUES ( :idpg, :email, :azione, $vecchio, $nuovo )";
+        $params       = array(
+            ":idpg"    => $pgid,
+            ":email"   => $this->session->email_giocatore,
+            ":azione"  => $azione
+        );
+
+        if( isset($vecchio_valore) )
+            $params[":vecchio"] = $vecchio_valore;
+
+        if( isset($nuovo_valore) )
+            $params[":nuovo"] = $nuovo_valore;
+
+        $this->db->doQuery( $query_azione, $params, False );
+    }
 	
 	private function recuperaPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL, $extra_where = array(), $extra_param = array() )
 	{		
@@ -130,13 +152,11 @@ class CharactersManager
             $pc = $disponibilita_pc;
 ***REMOVED***
 
-        $marker_abilita      = str_repeat("?,", count($id_abilita) );
-        $marker_abilita      = substr( $marker_abilita,0,strlen($marker_abilita) - 1 );
+        $marker_abilita      = str_repeat("?,", count($id_abilita) - 1 )."?";
         $query_costo_abilita = "SELECT tipo_abilita, SUM(costo_abilita) AS costo FROM abilita WHERE id_abilita IN ($marker_abilita) GROUP BY tipo_abilita";
         $res_costo_abilita   = $this->db->doQuery( $query_costo_abilita, $id_abilita, False);
 
-        $marker_classi    = str_repeat("?,", count($id_classi) );
-        $marker_classi    = substr( $marker_classi,0,strlen($marker_classi) - 1 );
+        $marker_classi    = str_repeat("?,", count($id_classi) - 1 )."?";
         $query_qta_classi = "SELECT tipo_classe, COUNT(id_classe) AS qta FROM classi WHERE id_classe IN ($marker_classi) GROUP BY tipo_classe";
         $res_qta_abilita  = $this->db->doQuery( $query_qta_classi, $id_classi, False);
 
@@ -210,6 +230,7 @@ class CharactersManager
 	{
 		global $PX_INIZIALI;
 		global $PC_INIZIALI;
+		global $DB_ERR_DELIMITATORE;
 
 		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
 			throw new Exception( "Non hai i permessi per compiere questa operazione." );
@@ -225,10 +246,18 @@ class CharactersManager
 		);
 		
 		$new_pg_id = $this->db->doQuery( $new_pg_query, $new_pg_params );
-		
-		$this->aggiungiClassiAlPG( $new_pg_id, $classi );
-		$this->aggiungiAbilitaAlPG( $new_pg_id, $abilita );
-		
+
+		try {
+            $this->aggiungiClassiAlPG($new_pg_id, $classi);
+            $this->aggiungiAbilitaAlPG($new_pg_id, $abilita);
+***REMOVED***
+        catch( Exception $e )
+        {
+            $this->eliminaPG( $new_pg_id, False );
+
+            $err_mex = explode( $DB_ERR_DELIMITATORE, $e->getMessage() );
+            throw new Exception( $err_mex[1] );
+***REMOVED***
 		//$this->mailer->sendMail( "creazionePG", $mail, $nome, $pass  );
 		
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
@@ -265,6 +294,28 @@ class CharactersManager
 		
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
+
+	public function aggiungiPC( $pgid, $qta )
+    {
+        if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+
+        $query_pc = "UPDATE personaggi SET pc_personaggio = pc_personaggio + :qta WHERE id_personaggio = :pgid";
+        $this->db->doQuery( $query_pc, array( ":pgid" => $pgid, ":qta" => $qta ), False );
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
+
+	public function aggiungiPX( $pgid, $qta )
+    {
+        if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+
+        $query_px = "UPDATE personaggi SET px_personaggio = px_personaggio + :qta WHERE id_personaggio = :pgid";
+        $this->db->doQuery( $query_px, array( ":pgid" => $pgid, ":qta" => $qta ), False );
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
 	
 	public function modificaPG( $pgid, $modifiche )
 	{
@@ -274,10 +325,33 @@ class CharactersManager
 				throw new Exception( "Non hai i permessi per compiere questa operazione: <code>".(__FUNCTION__.$campo)."</code>" );
 		}
 	}
+
+    public function modificaBackground( $pgid, $testo )
+    {
+        if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
+            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+
+        $query_vecchio_bg = "SELECT background_personaggio FROM personaggi WHERE id_personaggio = :pgid";
+        $vecchio_bg = $this->db->doQuery( $query_vecchio_bg, array( ":pgid" => $pgid ), False );
+        $vecchio_bg = $vecchio_bg[0]["background_personaggio"];
+
+        $query_bg = "UPDATE personaggi SET background_personaggio = :bg WHERE id_personaggio = :pgid";
+        $this->db->doQuery( $query_bg, array( ":pgid" => $pgid, ":bg" => $testo ), False );
+
+        $this->registraAzione( $pgid, 'UPDATE', $vecchio_bg, $testo );
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
 	
-	public function eliminaPG( $pgid )
+	public function eliminaPG( $pgid, $controlla_permessi = True )
 	{
-		
+        if( $controlla_permessi && ( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) ) )
+            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+
+        $query_canc_pg = "DELETE FROM personaggi WHERE id_personaggio = :idpg";
+        $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 
 	public function loginPG( $pgid )
@@ -303,7 +377,11 @@ class CharactersManager
         $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
         $res_classi    = $this->db->doQuery( $query_classi, array( ":idpg" => $pgid ), False );
 
-        $query_abilita = "SELECT ab.id_abilita, ab.costo_abilita, ab.nome_abilita, ab.prerequisito_abilita, ab.tipo_abilita FROM abilita AS ab WHERE id_abilita IN ( SELECT abilita_id_abilita FROM personaggi_has_abilita WHERE personaggi_id_personaggio = :idpg )";
+        $query_abilita = "SELECT ab.id_abilita, ab.costo_abilita, ab.nome_abilita, ab.prerequisito_abilita, ab.tipo_abilita, ab.distanza_abilita, cl.nome_classe 
+                            FROM abilita AS ab 
+                              JOIN classi AS cl ON ab.classi_id_classe = cl.id_classe 
+                            WHERE id_abilita IN 
+                            ( SELECT abilita_id_abilita FROM personaggi_has_abilita WHERE personaggi_id_personaggio = :idpg )";
         $res_abilita   = $this->db->doQuery( $query_abilita, array( ":idpg" => $pgid ), False );
 
         $classi  = array( "civile" => array(), "militare" => array() );
