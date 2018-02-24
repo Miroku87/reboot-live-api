@@ -203,14 +203,14 @@ class CharactersManager
 	{
         $params = array();
 
-		$query_classi = "SELECT * FROM classi";
+        $query_classi = "SELECT * FROM classi";
 		$res_classi   = $this->db->doQuery( $query_classi, $params, False );
         $lista_classi = array();
 
         foreach( $res_classi as $l )
             $lista_classi[ $l["tipo_classe"] ][] = $l;
 
-		$query_abilita = "SELECT * FROM abilita";
+        $query_abilita = "SELECT * FROM abilita";
 		$res_abilita   = $this->db->doQuery( $query_abilita, $params, False );
         $lista_abilita = array();
 
@@ -273,7 +273,7 @@ class CharactersManager
 		
 		foreach( $class_ids as $ci )
 			$classi_params[] = array( ":idpg" => $pgid, ":idclasse" => $ci );
-		
+
 		$this->db->doMultipleInserts( $classi_query, $classi_params );
 		
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
@@ -294,6 +294,30 @@ class CharactersManager
 		
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
+
+	public function acquista( $pgid, $classi, $abilita )
+    {
+        global $DB_ERR_DELIMITATORE;
+
+        try {
+            if( is_array($classi) ) $this->aggiungiClassiAlPG($pgid, $classi);
+            if( is_array($abilita) ) $this->aggiungiAbilitaAlPG($pgid, $abilita);
+***REMOVED***
+        catch( Exception $e )
+        {
+            $err_mex = explode( $DB_ERR_DELIMITATORE, $e->getMessage() );
+
+            if( count($err_mex) > 1 )
+                $err_mex = $err_mex[1];
+            else
+                $err_mex = $err_mex[0];
+
+            throw new Exception( $err_mex );
+***REMOVED***
+        //$this->mailer->sendMail( "acquisti", $mail, $nome, $pass  );
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
 
 	public function aggiungiPC( $pgid, $qta )
     {

@@ -81,8 +81,9 @@ class UsersManager
 		return "{\"status\": \"ok\", \"user_info\": { \"email_giocatore\":\"".$this->session->email_giocatore."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
 	}
 	
-	public function controllaaccesso( $section )
+	public function controllaaccesso( )
 	{
+	    $section = func_get_arg(0);
 		if( !isset( $this->session ) || ( isset( $this->session ) && !in_array( "visualizza_pagina_".$section, $this->session->permessi_giocatore ) ) )
             throw new Exception( "Impossibile accedere a questa sezione." );
 
