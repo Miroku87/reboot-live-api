@@ -27,7 +27,29 @@ class UsersManager
     {
         return "[UsersManager]";
     }
-	
+
+    static function controllaLogin( $sessione )
+    {
+        if( !isset($sessione->permessi_giocatore) )
+            throw new Exception( "Devi essere loggato per compiere questa operazione." );
+    }
+
+    static function operazionePossibile( $sessione, $funzione, $pgid = NULL )
+    {
+        global $TIPO_GRANT_PG_PROPRIO;
+        global $TIPO_GRANT_PG_ALTRI;
+
+        $tipo_grant = "";
+
+        UsersManager::controllaLogin( $sessione );
+
+        if( isset( $pgid ) )
+            $tipo_grant = in_array($pgid, $sessione->pg_propri) ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
+
+        if( !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
+            throw new Exception( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>" );
+    }
+
 	private function controllaDatiRegistrazione( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni )
 	{
 		$errors = "";
@@ -63,24 +85,29 @@ class UsersManager
 	
 	public function login( $mail, $pass )
 	{
-		$query  = "SELECT gi.email_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
-					LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
-					LEFT OUTER JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
-					WHERE gi.email_giocatore = :mail AND 
-					      gi.password_giocatore = :pass";
+		$query_grants  = "SELECT gi.email_giocatore, gi.nome_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
+                            LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
+                            LEFT OUTER JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
+                            WHERE gi.email_giocatore = :mail AND 
+                                  gi.password_giocatore = :pass";
 
 		$params = array( ":mail" => $mail, ":pass" => sha1( $pass ) );
-		$result = $this->db->doQuery( $query, $params, False );
+		$result = $this->db->doQuery( $query_grants, $params, False );
 		
 		if( count( $result ) === 0 )
 			throw new Exception( "Email utente o password sono errati. Per favore riprovare." );
+
+		$query_pg_propri = "SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :email";
+        $pg_propri       = $this->db->doQuery( $query_pg_propri, array( ":email" => $mail ), False );
 		
 		$this->session->email_giocatore    = $result[0]["email_giocatore"];
+		$this->session->nome_giocatore     = $result[0]["nome_giocatore"];
 		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
-		
-		return "{\"status\": \"ok\", \"user_info\": { \"email_giocatore\":\"".$this->session->email_giocatore."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
+		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
+
+		return "{\"status\": \"ok\", \"user_info\": { \"email_giocatore\":\"".$this->session->email_giocatore."\",\"nome_giocatore\":\"".$result[0]["nome_giocatore"]."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
 	}
-	
+
 	public function controllaaccesso( )
 	{
 	    $section = func_get_arg(0);

@@ -1,5 +1,6 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/Mailer.class.php");
 include_once($path."classes/SessionManager.class.php");
@@ -28,17 +29,19 @@ class CharactersManager
         return "[CharactersManager]";
     }
 
-    private function registraAzione( $pgid, $azione, $vecchio_valore, $nuovo_valore )
+    private function registraAzione( $pgid, $azione, $tabella, $campo, $vecchio_valore, $nuovo_valore )
     {
         $vecchio = !isset($vecchio_valore) ? "NULL" : ":vecchio";
         $nuovo   = !isset($nuovo_valore) ? "NULL" : ":nuovo";
 
-        $query_azione = "INSERT INTO storico_azioni ( id_personaggio_azione, giocatori_email_giocatore, tipo_azione, valore_vecchio_azione, valore_nuovo_azione ) 
-		                    VALUES ( :idpg, :email, :azione, $vecchio, $nuovo )";
+        $query_azione = "INSERT INTO storico_azioni ( id_personaggio_azione, giocatori_email_giocatore, tipo_azione, tabella_azione, campo_azione, valore_vecchio_azione, valore_nuovo_azione ) 
+		                    VALUES ( :idpg, :email, :azione, :tabella, :campo, $vecchio, $nuovo )";
         $params       = array(
             ":idpg"    => $pgid,
             ":email"   => $this->session->email_giocatore,
-            ":azione"  => $azione
+            ":azione"  => $azione,
+            ":tabella"  => $tabella,
+            ":campo"  => $campo
         );
 
         if( isset($vecchio_valore) )
@@ -179,24 +182,26 @@ class CharactersManager
     }
 	
 	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
-	public function mostraMieiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
+	public function mostraPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
 	{
-		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+        UsersManager::controllaLogin( $this->session );
+
+	    $tutti       = in_array( __FUNCTION__."_proprio", $this->session->permessi_giocatore ) && in_array( __FUNCTION__."_altri", $this->session->permessi_giocatore );
+	    $solo_propri = in_array( __FUNCTION__."_proprio", $this->session->permessi_giocatore ) && !in_array( __FUNCTION__."_altri", $this->session->permessi_giocatore );
+
+		if( $solo_propri && !$tutti )
+        {
+            $where  = array( "bj.email_giocatore = :userid" );
+            $params = array( ":userid" => $this->session->email_giocatore );
+            $result = $this->recuperaPersonaggi( $current, $row_count, $sort, $search, $where, $params );
+***REMOVED***
+        else if ( $tutti && !$solo_propri )
+            $result = $this->recuperaPersonaggi( $current, $row_count, $sort, $search );
+		else
+			throw new Exception( "Non hai i permessi per compiere questa operazione: <code>".__FUNCTION__."</code>" );
+
 		
-		$where  = array( "bj.email_giocatore = :userid" );
-		$params = array( ":userid" => $this->session->email_giocatore );
-		
-		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search, $where, $params );
-	}
-	
-	//GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
-	public function mostraTuttiPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
-	{
-		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-			throw new Exception( "Non hai i permessi per compiere questa operazione." );
-		
-		return $this->recuperaPersonaggi( $current, $row_count, $sort, $search );
+		return $result;
 	}
 	
 	public function recuperaInfoClassi( )
@@ -232,8 +237,7 @@ class CharactersManager
 		global $PC_INIZIALI;
 		global $DB_ERR_DELIMITATORE;
 
-		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
 
 		$this->controllaPossibilitaPunti( $classi, $abilita, NULL, $PX_INIZIALI, $PC_INIZIALI );
 
@@ -265,8 +269,7 @@ class CharactersManager
 	
 	public function aggiungiClassiAlPG( $pgid, $class_ids )
 	{
-		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
 		
 		$classi_query  = "INSERT INTO personaggi_has_classi VALUES ( :idpg, :idclasse )";
 		$classi_params = array();
@@ -278,11 +281,10 @@ class CharactersManager
 		
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
-	
+
 	public function aggiungiAbilitaAlPG( $pgid, $ab_ids )
 	{
-		if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-			throw new Exception( "Non hai i permessi per compiere questa operazione." );
+	    UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
 		
 		$abilita_query  = "INSERT INTO personaggi_has_abilita VALUES ( :idpg, :idabilita )";
 		$abilita_params = array();
@@ -321,8 +323,7 @@ class CharactersManager
 
 	public function aggiungiPC( $pgid, $qta )
     {
-        if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
 
         $query_pc = "UPDATE personaggi SET pc_personaggio = pc_personaggio + :qta WHERE id_personaggio = :pgid";
         $this->db->doQuery( $query_pc, array( ":pgid" => $pgid, ":qta" => $qta ), False );
@@ -332,8 +333,7 @@ class CharactersManager
 
 	public function aggiungiPX( $pgid, $qta )
     {
-        if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
 
         $query_px = "UPDATE personaggi SET px_personaggio = px_personaggio + :qta WHERE id_personaggio = :pgid";
         $this->db->doQuery( $query_px, array( ":pgid" => $pgid, ":qta" => $qta ), False );
@@ -345,32 +345,32 @@ class CharactersManager
 	{
 		foreach( $modifiche as $campo => $valore )
 		{
-			if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__.$campo, $this->session->permessi_giocatore ) )
-				throw new Exception( "Non hai i permessi per compiere questa operazione: <code>".(__FUNCTION__.$campo)."</code>" );
+            UsersManager::operazionePossibile( $this->session, __FUNCTION__."_".$campo, $pgid );
+
+			$campi[] = $campo;
+			$valori[] = $valore;
 		}
-	}
+        $campi_virgola = implode(", ", $campi);
 
-    public function modificaBackground( $pgid, $testo )
-    {
-        if( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) )
-            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+        $query_vecchi_dati = "SELECT $campi_virgola FROM personaggi WHERE id_personaggio = :pgid";
+        $vecchi_dati = $this->db->doQuery( $query_vecchi_dati, array( ":pgid" => $pgid ), False );
 
-        $query_vecchio_bg = "SELECT background_personaggio FROM personaggi WHERE id_personaggio = :pgid";
-        $vecchio_bg = $this->db->doQuery( $query_vecchio_bg, array( ":pgid" => $pgid ), False );
-        $vecchio_bg = $vecchio_bg[0]["background_personaggio"];
+        $to_update = implode(" = ?, ", $campi )." = ?";
+        $valori[] = $pgid;
+        $query_bg = "UPDATE personaggi SET $to_update WHERE id_personaggio = ?";
+        $this->db->doQuery( $query_bg, $valori, False );
 
-        $query_bg = "UPDATE personaggi SET background_personaggio = :bg WHERE id_personaggio = :pgid";
-        $this->db->doQuery( $query_bg, array( ":pgid" => $pgid, ":bg" => $testo ), False );
-
-        $this->registraAzione( $pgid, 'UPDATE', $vecchio_bg, $testo );
+        foreach( $vecchi_dati as $vd )
+            foreach( $vd as $k => $val )
+                $this->registraAzione( $pgid, 'UPDATE', 'personaggi', $k, $val, $modifiche[$k] );
 
         return "{\"status\": \"ok\",\"result\": \"true\"}";
-    }
+	}
 	
 	public function eliminaPG( $pgid, $controlla_permessi = True )
 	{
-        if( $controlla_permessi && ( !isset( $this->session->permessi_giocatore ) || !in_array( __FUNCTION__, $this->session->permessi_giocatore ) ) )
-            throw new Exception( "Non hai i permessi per compiere questa operazione." );
+	    if( $controlla_permessi )
+            UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
 
         $query_canc_pg = "DELETE FROM personaggi WHERE id_personaggio = :idpg";
         $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
@@ -381,17 +381,24 @@ class CharactersManager
 	public function loginPG( $pgid )
 	{
 	    global $MAPPA_COSTO_CLASSI_CIVILI;
+	    global $ABILITA_CRAFTING;
 
-        $query_pg = "SELECT id_personaggio, 
-                            nome_personaggio, 
-                            background_personaggio, 
-                            px_personaggio, 
-                            pc_personaggio, 
-                            credito_personaggio, 
-                            data_creazione_personaggio, 
-                            giocatori_email_giocatore 
-                    FROM personaggi WHERE id_personaggio = :idpg AND giocatori_email_giocatore = :email";
-        $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid, ":email" => $this->session->email_giocatore ), False );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
+
+        $query_pg = "SELECT pg.id_personaggio, 
+                            pg.nome_personaggio, 
+                            pg.background_personaggio, 
+                            pg.px_personaggio, 
+                            pg.pc_personaggio, 
+                            pg.credito_personaggio, 
+                            pg.data_creazione_personaggio, 
+                            pg.note_master_personaggio, 
+                            pg.giocatori_email_giocatore,
+                            gi.nome_giocatore 
+                    FROM personaggi AS pg
+                    JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore 
+                    WHERE id_personaggio = :idpg";
+        $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid ), False );
 
         if( count( $res_pg ) == 0 )
             throw new Exception( "Non puoi scaricare i dati di un giocatore non tuo." );
@@ -412,10 +419,25 @@ class CharactersManager
         $abilita = array( "civile" => array(), "militare" => array() );
 
         foreach( $res_classi as $cl )
-            $classi[ $cl["tipo_classe"] ][] = $cl;
+            $classi[$cl["tipo_classe"]][] = $cl;
+
+        $crafting_chimico = False;
+        $crafting_programmazione = False;
+        $crafting_ingegneria = False;
 
         foreach( $res_abilita as $ab )
+        {
             $abilita[ $ab["tipo_abilita"] ][] = $ab;
+
+            if( $ab["id_abilita"] === $ABILITA_CRAFTING["chimico"] )
+                $crafting_chimico = True;
+
+            if( $ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"] )
+                $crafting_programmazione = True;
+
+            if( in_array( $ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"] ) )
+                $crafting_ingegneria = True;
+***REMOVED***
 
         $px_spesi = 0;
         $pc_spesi = count( $classi["militare"] ) + count( $abilita["militare"] );
@@ -435,10 +457,34 @@ class CharactersManager
         $pg_data["px_risparmiati"] = $px_risparmiati;
         $pg_data["pc_spesi"] = $pc_spesi;
         $pg_data["pc_risparmiati"] = $pc_risparmiati;
+        $pg_data["crafting_chimico"] = $crafting_chimico;
+        $pg_data["crafting_programmazione"] = $crafting_programmazione;
+        $pg_data["crafting_ingegneria"] = $crafting_ingegneria;
 
         $this->session->pg_loggato = $pg_data;
 
         return "{\"status\": \"ok\",\"result\": ".json_encode($pg_data)."}";
 	}
+
+    public function recuperaStorico( $pgid )
+    {
+        UsersManager::operazionePossibile($this->session, __FUNCTION__, $pgid);
+
+        $query = "SELECT gi.nome_giocatore, 
+                            st.data_azione, 
+                            st.tipo_azione, 
+                            st.tabella_azione,
+                            st.campo_azione,
+                            st.valore_nuovo_azione, 
+                            st.valore_vecchio_azione
+                        FROM storico_azioni AS st
+                        JOIN giocatori AS gi ON gi.email_giocatore = st.giocatori_email_giocatore
+                    WHERE st.id_personaggio_azione = :idpg
+                    ORDER BY st.data_azione DESC ";
+        $result = $this->db->doQuery( $query, array( ":idpg" => $pgid ) );
+        $result = isset($result) ? $result : "[]";
+
+        return "{\"status\": \"ok\",\"result\": $result}";
+    }
 }
 ?>

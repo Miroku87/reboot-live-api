@@ -12,6 +12,11 @@ class Utils
 		return $item["permessi"];
 	}
 
+	static function mappaPGUtente( $item )
+	{
+		return $item["id_personaggio"];
+	}
+
 	static function mappaRisultatoJson( $item )
 	{
 		return $item["json"];

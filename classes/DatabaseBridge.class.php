@@ -85,7 +85,7 @@ class DatabaseBridge extends PDO
 ***REMOVED***
         catch( Exception $e )
         {
-            throw new Exception($query."<br>".$e->getMessage());
+            throw new Exception(str_replace("\n","",$query )."<br>".$e->getMessage());
 ***REMOVED***
 	}
 }
