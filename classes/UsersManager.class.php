@@ -117,6 +117,20 @@ class UsersManager
 		return "{\"status\": \"ok\"}";
 	}
 
+	public function controllaPWD( $pass )
+	{
+        $query_pwd  = "SELECT * FROM giocatori WHERE email_giocatore = :mail AND password_giocatore = :pass";
+        $params = array( ":mail" => $this->session->email_giocatore, ":pass" => sha1( $pass ) );
+        $result = $this->db->doQuery( $query_pwd, $params, False );
+
+        if( count( $result ) > 0 )
+            $json = "{\"status\": \"ok\"}";
+        else
+            $json = "{\"status\": \"error\", \"message\":\"Password errata.\"}";
+
+		return $json;
+	}
+
 	public function logout( )
 	{
 		$this->session->destroy();

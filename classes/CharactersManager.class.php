@@ -297,6 +297,18 @@ class CharactersManager
 		return "{\"status\": \"ok\",\"result\": \"true\"}";
 	}
 
+	public function rimuoviClassePG( $pgid, $id_classe )
+    {
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
+
+	public function rimuoviAbilitaPG( $pgid, $id_classe )
+    {
+
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
+
 	public function acquista( $pgid, $classi, $abilita )
     {
         global $DB_ERR_DELIMITATORE;
@@ -408,7 +420,7 @@ class CharactersManager
         $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
         $res_classi    = $this->db->doQuery( $query_classi, array( ":idpg" => $pgid ), False );
 
-        $query_abilita = "SELECT ab.id_abilita, ab.costo_abilita, ab.nome_abilita, ab.prerequisito_abilita, ab.tipo_abilita, ab.distanza_abilita, cl.nome_classe 
+        $query_abilita = "SELECT ab.id_abilita, ab.costo_abilita, ab.nome_abilita, ab.prerequisito_abilita, ab.tipo_abilita, ab.distanza_abilita, ab.classi_id_classe, cl.nome_classe 
                             FROM abilita AS ab 
                               JOIN classi AS cl ON ab.classi_id_classe = cl.id_classe 
                             WHERE id_abilita IN 
