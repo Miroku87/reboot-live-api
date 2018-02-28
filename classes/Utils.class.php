@@ -27,6 +27,30 @@ class Utils
 		return $item["id"];
 	}
 
+	static function filtraAbilitaSenzaPrerequisito( $item )
+	{
+		return $item["prerequisito_abilita"] == NULL;
+	}
+
+	static function filtraAbilitaSupportoBase( $item )
+	{
+		global $ID_CLASSE_SUPPORTO_BASE;
+		
+		return $item["classi_id_classe"] === $ID_CLASSE_SUPPORTO_BASE;
+	}
+
+	static function filtraAbilitaSportivo( $item )
+	{
+		global $ID_CLASSE_SPORTIVO;
+		
+		return $item["classi_id_classe"] === $ID_CLASSE_SPORTIVO;
+	}
+
+	static function filtraAbilitaController( $item )
+	{
+		return strpos( strtolower( $item["nome_abilita"] ), "controller" ) !== False;
+	}
+
 	static function ordinaArrayPerPrerequisito( $a, $b )
 	{
         if( $a["pre"] == "null" && $b["pre"] == "null" )

@@ -299,13 +299,71 @@ class CharactersManager
 
 	public function rimuoviClassePG( $pgid, $id_classe )
     {
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
+
+        $query_cl = "SELECT * FROM classi WHERE id_classe = :id";
+        $abilita  = $this->db->doQuery( $query_cl, array( ":id" => $id_classe ), False );
+		$abilita  = $abilita[0];
+
+        $query_pc = "UPDATE personaggi SET pc_personaggio = pc_personaggio + :qta WHERE id_personaggio = :pgid";
+        $this->db->doQuery( $query_pc, array( ":pgid" => $pgid, ":qta" => $qta ), False );
 
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
 
-	public function rimuoviAbilitaPG( $pgid, $id_classe )
+	public function rimuoviAbilitaPG( $pgid, $id_abilita )
     {
+		global $PREREQUISITO_TUTTE_ABILITA;
+		global $PREREQUISITO_F_TERRA_T_SCELTO;
+		global $PREREQUISITO_5_SUPPORTO_BASE;
+		global $PREREQUISITO_3_CONTROLLER;
+		global $PREREQUISITO_4_SPORTIVO;
+		global $ID_ABILITA_F_TERRA;
+		global $ID_ABILITA_T_SCELTO;
+		global $ID_ABILITA_IDOLO;
+		global $ID_CLASSE_SPORTIVO;
+		global $ID_CLASSE_SUPPORTO_BASE;
+		
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
 
+        $query_ab = "SELECT * FROM abilita WHERE id_abilita = :id";
+        $abilita  = $this->db->doQuery( $query_ab, array( ":id" => $id_abilita ), False );
+		$abilita  = $abilita[0];
+
+        $query_info = "SELECT ab.nome_abilita, ab.classi_id_classe, ab.prerequisito_abilita FROM personaggi_has_abilita AS pha
+						JOIN abilita AS ab ON pha.abilita_id_abilita = ab.id_abilita
+						WHERE pha.personaggi_id_personaggio = :pgid AND pha.abilita_id_abilita != :id";
+        $lista_ab   = $this->db->doQuery( $query_info, array( ":pgid" => $pgid, ":id" => $id_abilita ), False );
+		
+		$rimuovere  = array();
+		$ab_prereq  = array_filter( $lista_ab, "Utils::filtraAbilitaSenzaPrerequisito" );
+		
+		if( count( $ab_prerequis ) > 0 )
+		{
+			$qta_sportivo = count( array_filter( $lista_ab, "Utils::filtraAbilitaSportivo" ) );
+			$qta_sup_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaSupportoBase" ) );
+			$qta_controll = count( array_filter( $lista_ab, "Utils::filtraAbilitaController" ) );
+			
+			foreach( $ab_prerequis as $ap )
+			{
+				if ( 
+					   $ap["prerequisito_abilita"] === $id_ab
+					|| $ap["prerequisito_abilita"] === $PREREQUISITO_TUTTE_ABILITA && $abilita["classi_id_classe"] === $ap["classi_id_classe"]
+					|| (
+					     $ap["prerequisito_abilita"] === $PREREQUISITO_F_TERRA_T_SCELTO
+					     && (
+						         $id_abilita === $ID_ABILITA_F_TERRA
+						      || $id_abilita === $ID_ABILITA_T_SCELTO
+					        )
+					   )
+					|| $ap["prerequisito_abilita"] === $PREREQUISITO_5_SUPPORTO_BASE && $qta_sup_base < 5
+					|| $ap["prerequisito_abilita"] === $PREREQUISITO_4_SPORTIVO && $qta_sportivo < 4
+					|| $ap["prerequisito_abilita"] === $PREREQUISITO_3_CONTROLLER && $qta_controll < 3
+				)
+				   $rimuovere[] = $ap;
+			}
+		}
+		
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
 
