@@ -45,7 +45,7 @@ class DatabaseBridge extends PDO
 		try {
             $conn = $this->connect();
             $stmnt = $conn->prepare($query);
-
+            
             $stmnt->execute($params);
 
             if ($stmnt->columnCount() !== 0)

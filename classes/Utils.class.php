@@ -27,9 +27,14 @@ class Utils
 		return $item["id"];
 	}
 
+	static function filtraClasseSenzaPrerequisito( $item )
+	{
+		return $item["prerequisito_classe"] != NULL;
+	}
+
 	static function filtraAbilitaSenzaPrerequisito( $item )
 	{
-		return $item["prerequisito_abilita"] == NULL;
+		return $item["prerequisito_abilita"] != NULL;
 	}
 
 	static function filtraAbilitaSupportoBase( $item )
@@ -50,6 +55,18 @@ class Utils
 	{
 		return strpos( strtolower( $item["nome_abilita"] ), "controller" ) !== False;
 	}
+	
+	static function rimuoviElementoArrayMultidimensionale( $arr, $chiave, $valore )
+    {
+        foreach( $arr as $i => $a )
+        {
+            if( $a[$chiave] === $valore )
+            {
+                array_splice($arr, $i, 1);
+                break;
+***REMOVED***
+***REMOVED***
+    }
 
 	static function ordinaArrayPerPrerequisito( $a, $b )
 	{
