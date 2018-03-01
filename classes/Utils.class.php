@@ -67,21 +67,6 @@ class Utils
 ***REMOVED***
 ***REMOVED***
     }
-
-	static function ordinaArrayPerPrerequisito( $a, $b )
-	{
-        if( $a["pre"] == "null" && $b["pre"] == "null" )
-            return 0;
-
-        if( $a["pre"] != "null" && $b["pre"] == "null" )
-            return 1;
-
-        if( $a["pre"] == "null" && $b["pre"] != "null" )
-            return -1;
-
-        if( $a["pre"] != "null" && $b["pre"] != "null" )
-            return (int)$a["pre"] - (int)$b["pre"];
-	}
 	
 	static function generatePassword( $length = 8 )
 	{

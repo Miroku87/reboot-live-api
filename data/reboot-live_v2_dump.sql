@@ -222,7 +222,7 @@ CREATE TABLE `grants` (
   `nome_grant` varchar(255) NOT NULL,
   `descrizione_grant` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_grant`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -231,7 +231,7 @@ CREATE TABLE `grants` (
 
 LOCK TABLES `grants` WRITE;
 /*!40000 ALTER TABLE `grants` DISABLE KEYS */;
-INSERT INTO `grants` VALUES (1,'mostraMieiPersonaggi','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraTuttiPersonaggi','L\'utente potrà visualizzare tutti i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modifica_personaggio','L\'utente può modificare qualsiasi parametro di un personaggio qualsiasi.'),(10,'cancella_personaggio','L\'utente può eliminare definitivamente un personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassiAlPG','L\'utente può assegnare nuove classi a un personaggio.'),(23,'aggiungiAbilitaAlPG','L\'utente può assegnare nuove abilità ad un personaggio.'),(24,'visualizza_pagina_main','L\'utente può visualizzare la pagina principale del sito.'),(25,'visualizza_pagina_lista_pg','L\'utente può visualizzare la pagina con la lista dei personaggi.'),(26,'visualizza_pagina_crea_pg','L\'utente può visualizzare la pagina per creare un personaggio.'),(27,'visualizza_pagina_dettaglio_pg','L\'utente può visualizzare la pagina con i dettagli di un personaggio.');
+INSERT INTO `grants` VALUES (1,'mostraPersonaggi_proprio','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraPersonaggi_altri','L\'utente potrà visualizzare i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modificaPG_background_personaggio_altri','L\'utente può modificare il background di un personaggio qualsiasi.'),(10,'cancellaPG_altri','L\'utente può eliminare definitivamente un qualsiasi personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassiAlPG_altri','L\'utente può assegnare nuove classi a personaggi non suoi.'),(23,'aggiungiAbilitaAlPG_altri','L\'utente può assegnare nuove abilità a personaggi non suoi.'),(24,'visualizza_pagina_main','L\'utente può visualizzare la pagina principale del sito.'),(25,'visualizza_pagina_lista_pg','L\'utente può visualizzare la pagina con la lista dei personaggi.'),(26,'visualizza_pagina_crea_pg','L\'utente può visualizzare la pagina per creare un personaggio.'),(27,'visualizza_pagina_scheda_pg','L\'utente può visualizzare la pagina con i dettagli di un personaggio.'),(28,'modificaBackground','L\'utente può modificare il background di un personaggio.'),(29,'visualizza_pagina_negozio_abilita','L\'utente può acquistare abilità'),(30,'modificaPG_background_personaggio_proprio','L\'utente può modificare il background di un proprio personaggio'),(31,'aggiungiClassiAlPG_proprio','L\'utente può assegnare nuove classi a un proprio personaggio.'),(32,'aggiungiAbilitaAlPG_proprio','L\'utente può assegnare nuove abilità a un proprio personaggio.'),(33,'cancellaPG_proprio','L\'utente può eliminare definitivamente un proprio personaggio dal database.'),(34,'rimuoviClassePG_altri','L\'utente può eliminare la classe di un personaggio non suo.'),(35,'rimuoviClassePG_proprio','L\'utente può eliminare la classe di un proprio personaggio.'),(36,'rimuoviAbilitaPG_altri','L\'utente può eliminare una abilità di un personaggio non suo.'),(37,'rimuoviAbilitaPG_proprio','L\'utente può eliminare una abilità di un proprio personaggio.'),(38,'loginPG_proprio','L\'utente può loggarsi con un proprio pg.'),(39,'loginPG_altri','L\'utente può loggarsi con il pg di altri utenti.'),(40,'recuperaStorico_proprio','L\'utente può guardare tutte le azioni compiute sul personaggio selezionato.'),(41,'recuperaStorico_altri','L\'utente può guardare tutte le azioni compiute sui personaggi degli altri.'),(42,'modificaPG_background_personaggio_proprio','L\'utente può modificare il proprio background.'),(43,'visualizza_pagina_gestione_eventi','L\'utente può entrare nella sezione per la gestione degli eventi.'),(44,'visualizza_pagina_gestione_giocatori','L\'utente può entrare nella sezione per la modifica dei dati dei giocatori.'),(45,'modificaPG_note_master_personaggio_altri','L\'utente può inserire delle note master.'),(46,'modificaPG_note_master_personaggio_proprio','L\'utente può inserire delle note master ai propri pg');
 /*!40000 ALTER TABLE `grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -304,12 +304,12 @@ CREATE TABLE `personaggi` (
   `pc_personaggio` int(11) NOT NULL DEFAULT '0',
   `credito_personaggio` bigint(255) NOT NULL DEFAULT '0',
   `data_creazione_personaggio` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `note_admin_personaggio` text,
+  `note_master_personaggio` text,
   `giocatori_email_giocatore` varchar(255) NOT NULL,
   PRIMARY KEY (`id_personaggio`),
   KEY `fk_giocatore_personaggio_idx` (`giocatori_email_giocatore`),
   CONSTRAINT `fk_giocatore_pg` FOREIGN KEY (`giocatori_email_giocatore`) REFERENCES `giocatori` (`email_giocatore`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -318,7 +318,7 @@ CREATE TABLE `personaggi` (
 
 LOCK TABLES `personaggi` WRITE;
 /*!40000 ALTER TABLE `personaggi` DISABLE KEYS */;
-INSERT INTO `personaggi` VALUES (38,'John Doe',NULL,NULL,100,18,0,'2017-12-04 23:53:45',NULL,'miroku_87@yahoo.it'),(39,'MArco rossi',NULL,NULL,100,18,0,'2017-12-13 22:05:30',NULL,'miroku_87@yahoo.it'),(42,'Test 123',NULL,NULL,100,18,0,'2018-02-20 23:11:10',NULL,'miroku_87@yahoo.it'),(43,'Nuovo PG',NULL,NULL,100,18,0,'2018-02-20 23:32:14',NULL,'miroku_87@yahoo.it');
+INSERT INTO `personaggi` VALUES (38,'John Doe',NULL,NULL,100,18,0,'2017-12-04 23:53:45',NULL,'miroku_87@yahoo.it'),(39,'MArco rossi',NULL,NULL,100,18,0,'2017-12-13 22:05:30',NULL,'miroku_87@yahoo.it'),(42,'Test 123',NULL,NULL,100,18,0,'2018-02-20 23:11:10',NULL,'b-teo-90@libero.it'),(43,'Nuovo PG',NULL,'Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20YEEEE1111',100,18,0,'2018-02-20 23:32:14','sdfsa%2034%202','miroku_87@yahoo.it');
 /*!40000 ALTER TABLE `personaggi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -345,7 +345,7 @@ CREATE TABLE `personaggi_has_abilita` (
 
 LOCK TABLES `personaggi_has_abilita` WRITE;
 /*!40000 ALTER TABLE `personaggi_has_abilita` DISABLE KEYS */;
-INSERT INTO `personaggi_has_abilita` VALUES (38,1),(38,2),(38,3),(38,91),(38,92),(38,93),(38,94),(38,95),(38,96),(38,97),(38,98),(38,99),(38,102),(39,70),(39,71),(39,155),(39,160),(39,161),(42,1),(42,91),(43,1),(43,92),(43,93),(43,94);
+INSERT INTO `personaggi_has_abilita` VALUES (38,1),(38,2),(38,3),(38,91),(38,92),(38,93),(38,94),(38,95),(38,96),(38,97),(38,98),(38,99),(38,100),(38,101),(38,102),(38,103),(38,104),(38,105),(38,106),(39,70),(39,71),(39,155),(39,160),(39,161),(42,1),(42,91),(43,1),(43,91),(43,92),(43,93),(43,94),(43,95),(43,96),(43,97);
 /*!40000 ALTER TABLE `personaggi_has_abilita` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -525,7 +525,7 @@ CREATE TABLE `ruoli_has_grants` (
 
 LOCK TABLES `ruoli_has_grants` WRITE;
 /*!40000 ALTER TABLE `ruoli_has_grants` DISABLE KEYS */;
-INSERT INTO `ruoli_has_grants` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,21),(1,22),(1,23),(1,24),(1,25),(1,26),(1,27),(3,1),(3,2),(3,3),(3,5),(3,8),(3,22),(3,23);
+INSERT INTO `ruoli_has_grants` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,21),(1,22),(1,23),(1,24),(1,25),(1,26),(1,27),(1,28),(1,29),(1,30),(1,31),(1,32),(1,34),(1,35),(1,36),(1,37),(1,38),(1,39),(1,40),(1,41),(1,42),(1,43),(1,44),(1,45),(1,46),(3,1),(3,2),(3,3),(3,5),(3,8),(3,22),(3,23);
 /*!40000 ALTER TABLE `ruoli_has_grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -539,12 +539,17 @@ DROP TABLE IF EXISTS `storico_azioni`;
 CREATE TABLE `storico_azioni` (
   `id_azione` int(255) NOT NULL AUTO_INCREMENT,
   `id_personaggio_azione` int(255) NOT NULL,
-  `id_esecutore_azione` varchar(255) NOT NULL,
+  `giocatori_email_giocatore` varchar(255) NOT NULL,
+  `data_azione` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `tipo_azione` set('UPDATE','DELETE','INSERT') NOT NULL,
-  `valore_vecchio_azione` text NOT NULL,
-  `valore_nuovo_azione` text NOT NULL,
-  PRIMARY KEY (`id_azione`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `tabella_azione` varchar(255) NOT NULL,
+  `campo_azione` varchar(255) NOT NULL,
+  `valore_vecchio_azione` text,
+  `valore_nuovo_azione` text,
+  PRIMARY KEY (`id_azione`),
+  KEY `fk_esecutore_idx` (`giocatori_email_giocatore`),
+  CONSTRAINT `fk_esecutore` FOREIGN KEY (`giocatori_email_giocatore`) REFERENCES `giocatori` (`email_giocatore`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -553,6 +558,7 @@ CREATE TABLE `storico_azioni` (
 
 LOCK TABLES `storico_azioni` WRITE;
 /*!40000 ALTER TABLE `storico_azioni` DISABLE KEYS */;
+INSERT INTO `storico_azioni` VALUES (12,43,'miroku_87@yahoo.it','2018-02-24 18:21:10','UPDATE','personaggi','background_personaggio','Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20','Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20YEEEE'),(13,43,'miroku_87@yahoo.it','2018-02-24 18:22:54','UPDATE','personaggi','background_personaggio','Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20YEEEE','Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20YEEEE1111'),(14,43,'miroku_87@yahoo.it','2018-02-26 22:30:01','UPDATE','personaggi','note_master_personaggio',NULL,''),(15,43,'miroku_87@yahoo.it','2018-02-26 22:30:54','UPDATE','personaggi','note_master_personaggio','',''),(16,43,'miroku_87@yahoo.it','2018-02-26 22:33:14','UPDATE','personaggi','note_master_personaggio','',''),(17,43,'miroku_87@yahoo.it','2018-02-26 22:34:40','UPDATE','personaggi','note_master_personaggio','',''),(18,43,'miroku_87@yahoo.it','2018-02-26 22:35:22','UPDATE','personaggi','background_personaggio','Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20YEEEE1111','Prova%20di%20%3Cb%3EHTML%3C%2Fb%3E.%20YEEEE1111'),(19,43,'miroku_87@yahoo.it','2018-02-26 22:37:04','UPDATE','personaggi','note_master_personaggio','','sdfsa%2034%202');
 /*!40000 ALTER TABLE `storico_azioni` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -625,7 +631,7 @@ BEGIN
                 WHERE classi_id_classe = @classe
         ) - 1
 	THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Non puoi acquistare questa abilità senza avere tutte le altre della stessa classe.';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '@@@Non puoi acquistare questa abilit&agrave; senza avere tutte le altre della stessa classe.@@@';
         
 	ELSEIF @prerequisito = -2 AND (
 		SELECT COUNT(*) AS num_abilita
@@ -639,7 +645,7 @@ BEGIN
                 )
 		) != 2    
     THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Non puoi acquistare questa abilità senza avere FUOCO A TERRA e TIRATORE SCELTO.';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '@@@Non puoi acquistare questa abilit&agrave; senza avere FUOCO A TERRA e TIRATORE SCELTO.@@@';
         
 	ELSEIF @prerequisito = -3 AND (
 		SELECT COUNT(*) AS num_abilita 
@@ -652,7 +658,7 @@ BEGIN
                 )
 		) < 5
 	THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Non puoi acquistare questa abilità senza almeno 5 abilità di Supporto Base.';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '@@@Non puoi acquistare questa abilit&agrave; senza almeno 5 abilità di Supporto Base.@@@';
         
 	ELSEIF @prerequisito = -4 AND (
 		SELECT COUNT(*) AS num_abilita 
@@ -665,7 +671,7 @@ BEGIN
                 )
 		) < 3
 	THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Non puoi acquistare questa abilità senza almeno 3 abilità CONTROLLER.';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '@@@Non puoi acquistare questa abilit&agrave; senza almeno 3 abilità CONTROLLER.@@@';
         
 	ELSEIF @prerequisito = -5 AND (
 		SELECT COUNT(*) AS num_abilita 
@@ -678,7 +684,7 @@ BEGIN
                 )
 		) < 4
 	THEN
-		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Non puoi acquistare questa abilità senza almeno 4 abilità da Sportivo.';
+		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '@@@Non puoi acquistare questa abilit&agrave; senza almeno 4 abilità da Sportivo.@@@';
         
 	ELSEIF @prerequisito > 0 AND (
 		SELECT COUNT(*) AS num_abilita
@@ -688,7 +694,7 @@ BEGIN
         ) = 0
 	THEN
 		SELECT nome_abilita INTO @nome_abilita FROM abilita WHERE id_abilita = @prerequisito;
-        SET @message = CONCAT('Non puoi acquistare questa abilità senza aver prima acquistato ', CAST(@nome_abilita AS CHAR));
+        SET @message = CONCAT('@@@Non puoi acquistare questa abilit&agrave; senza aver prima acquistato ', CAST(@nome_abilita AS CHAR), '@@@');
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @message;
         
 	END IF;
@@ -722,10 +728,30 @@ BEGIN
         ) = 0
 	THEN
 		SELECT nome_classe INTO @nome_classe FROM classi WHERE id_classe = @prerequisito;
-        SET @message = CONCAT('Non puoi acquistare questa abilità senza aver prima acquistato ', CAST(@nome_classe AS CHAR));
+        SET @message = CONCAT('@@@Non puoi acquistare questa classe senza aver prima acquistato ', CAST(@nome_classe AS CHAR),'@@@');
 		SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = @message;
         
 	END IF;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `registraAzione` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8 */ ;
+/*!50003 SET character_set_results = utf8 */ ;
+/*!50003 SET collation_connection  = utf8_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `registraAzione`( _id_pg VARCHAR(255), _email_giocatore VARCHAR(255), _azione VARCHAR(255), _vecchio VARCHAR(255), _nuovo VARCHAR(255) )
+BEGIN
+	INSERT INTO storico_azioni (id_personaggio_azione, giocatori_email_giocatore, tipo_azione, valore_vecchio_azione, valore_nuovo_azione) 
+		VALUES ( _id_pg, _email_giocatore, _azione, _vecchio, _nuovo );
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -742,4 +768,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-22  0:17:05
+-- Dump completed on 2018-03-01 23:59:32
