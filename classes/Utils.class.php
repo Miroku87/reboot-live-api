@@ -41,14 +41,14 @@ class Utils
 	{
 		global $ID_CLASSE_SUPPORTO_BASE;
 		
-		return $item["classi_id_classe"] === $ID_CLASSE_SUPPORTO_BASE;
+		return (int)$item["classi_id_classe"] === $ID_CLASSE_SUPPORTO_BASE;
 	}
 
 	static function filtraAbilitaSportivo( $item )
 	{
 		global $ID_CLASSE_SPORTIVO;
 		
-		return $item["classi_id_classe"] === $ID_CLASSE_SPORTIVO;
+		return (int)$item["classi_id_classe"] === $ID_CLASSE_SPORTIVO;
 	}
 
 	static function filtraAbilitaController( $item )

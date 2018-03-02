@@ -203,10 +203,11 @@ class CharactersManager
         
         if( count( $ab_prereq ) > 0 )
         {
-            $qta_sportivo = count( array_filter( $lista_ab, "Utils::filtraAbilitaSportivo" ) );
-            $qta_sup_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaSupportoBase" ) );
+			// -1 per non contare anche l'abilita che ha il prerequisito
+            $qta_sportivo = count( array_filter( $lista_ab, "Utils::filtraAbilitaSportivo" ) ) - 1;
+            $qta_sup_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaSupportoBase" ) ) - 1;
             $qta_controll = count( array_filter( $lista_ab, "Utils::filtraAbilitaController" ) );
-            
+			
             foreach( $ab_prereq as $i => $ap )
             {
 				$pre    = (int)$ap["prerequisito_abilita"];
@@ -215,7 +216,7 @@ class CharactersManager
 				
                 if (
                     $pre === $id_abilita
-                    || $pre === $PREREQUISITO_TUTTE_ABILITA && $ab_cl === $pre_cl
+                    || ( $pre === $PREREQUISITO_TUTTE_ABILITA && $ab_cl === $pre_cl )
                     || (
                         $pre === $PREREQUISITO_F_TERRA_T_SCELTO
                         && (
@@ -228,6 +229,7 @@ class CharactersManager
                     || $pre === $PREREQUISITO_3_CONTROLLER && $qta_controll < 3
                 )
                 {
+					echo ">> rimuovere ".$ap["id_abilita"]."\n";
                     $new_params[] = $ap["id_abilita"];
                     Utils::rimuoviElementoArrayMultidimensionale( $lista_ab, "id_abilita", $ap["id_abilita"] );
     ***REMOVED***
@@ -374,7 +376,7 @@ class CharactersManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
         $query_info = "SELECT cl.id_classe, cl.nome_classe, cl.prerequisito_classe FROM personaggi_has_classi AS phc
-						JOIN classi AS cl ON phc.abilita_id_abilita = cl.id_classe
+						JOIN classi AS cl ON phc.classi_id_classe = cl.id_classe
 						WHERE phc.personaggi_id_personaggio = :pgid AND phc.classi_id_classe != :id";
         $lista_cl   = $this->db->doQuery( $query_info, array( ":pgid" => $pgid, ":id" => $id_classe ), False );
         
@@ -389,12 +391,12 @@ class CharactersManager
                     $params[] = $cp["id_classe"];
 ***REMOVED***
 ***REMOVED***
-        
+		
         $marcatori = str_repeat("?,", count($params) - 2 )."?";
         $query_del = "DELETE FROM personaggi_has_classi WHERE personaggi_id_personaggio = ? AND classi_id_classe IN ($marcatori)";
         $this->db->doQuery( $query_del, $params, False );
         
-        $query_del_ab = "DELETE personaggi_has_abilita FROM personaggi_has_abilita AS pha
+        $query_del_ab = "DELETE pha FROM personaggi_has_abilita AS pha
                           JOIN abilita AS ab ON pha.abilita_id_abilita = ab.id_abilita
                           WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori)";
         $this->db->doQuery( $query_del_ab, $params, False );
@@ -413,9 +415,6 @@ class CharactersManager
         
         $params = $this->controllaPrerequisitiPerEliminazioneAbilita( $pgid, $id_abilita, $lista_ab );
         $params = array_merge( array( $pgid, $id_abilita ), $params );
-        
-        var_dump($params);
-        die();
         
         $marcatori = str_repeat("?,", count($params) - 2 )."?";
         $query_del = "DELETE FROM personaggi_has_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori)";
