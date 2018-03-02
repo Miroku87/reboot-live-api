@@ -35,15 +35,16 @@ class Main
 		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
+		$class   = $request[0];
+		$func    = $request[1];
 		//$input   = json_decode( file_get_contents( 'php://input' ), true );
 		//die( var_dump($_POST) );
 		try
 		{
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;
-			//die(var_dump($data));
 			
-			return call_user_func_array( array( $this->$request[0], $request[1] ), $data );
+			return call_user_func_array( array( $this->$class, $func ), $data );
 		}
 		catch( Exception $e )
 		{

@@ -191,12 +191,14 @@ class CharactersManager
         global $ID_ABILITA_F_TERRA;
         global $ID_ABILITA_T_SCELTO;
         
+		$id_abilita = (int)$id_abilita;
+		
         $query_ab = "SELECT * FROM abilita WHERE id_abilita = :id";
         $abilita  = $this->db->doQuery( $query_ab, array( ":id" => $id_abilita ), False );
         $abilita  = $abilita[0];
         
         $ab_prereq  = array_filter( $lista_ab, "Utils::filtraAbilitaSenzaPrerequisito" );
-        
+		
         $new_params = array();
         
         if( count( $ab_prereq ) > 0 )
@@ -207,19 +209,23 @@ class CharactersManager
             
             foreach( $ab_prereq as $i => $ap )
             {
+				$pre    = (int)$ap["prerequisito_abilita"];
+				$pre_cl = (int)$ap["classi_id_classe"];
+				$ab_cl  = (int)$abilita["classi_id_classe"];
+				
                 if (
-                    $ap["prerequisito_abilita"] === $id_abilita
-                    || $ap["prerequisito_abilita"] === $PREREQUISITO_TUTTE_ABILITA && $abilita["classi_id_classe"] === $ap["classi_id_classe"]
+                    $pre === $id_abilita
+                    || $pre === $PREREQUISITO_TUTTE_ABILITA && $ab_cl === $pre_cl
                     || (
-                        $ap["prerequisito_abilita"] === $PREREQUISITO_F_TERRA_T_SCELTO
+                        $pre === $PREREQUISITO_F_TERRA_T_SCELTO
                         && (
                             $id_abilita === $ID_ABILITA_F_TERRA
                             || $id_abilita === $ID_ABILITA_T_SCELTO
                         )
                     )
-                    || $ap["prerequisito_abilita"] === $PREREQUISITO_5_SUPPORTO_BASE && $qta_sup_base < 5
-                    || $ap["prerequisito_abilita"] === $PREREQUISITO_4_SPORTIVO && $qta_sportivo < 4
-                    || $ap["prerequisito_abilita"] === $PREREQUISITO_3_CONTROLLER && $qta_controll < 3
+                    || $pre === $PREREQUISITO_5_SUPPORTO_BASE && $qta_sup_base < 5
+                    || $pre === $PREREQUISITO_4_SPORTIVO && $qta_sportivo < 4
+                    || $pre === $PREREQUISITO_3_CONTROLLER && $qta_controll < 3
                 )
                 {
                     $new_params[] = $ap["id_abilita"];

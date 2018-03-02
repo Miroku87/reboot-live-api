@@ -56,7 +56,7 @@ class Utils
 		return strpos( strtolower( $item["nome_abilita"] ), "controller" ) !== False;
 	}
 	
-	static function rimuoviElementoArrayMultidimensionale( $arr, $chiave, $valore )
+	static function rimuoviElementoArrayMultidimensionale( &$arr, $chiave, $valore )
     {
         foreach( $arr as $i => $a )
         {
