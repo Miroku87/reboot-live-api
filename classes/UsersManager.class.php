@@ -34,7 +34,7 @@ class UsersManager
             throw new Exception( "Devi essere loggato per compiere questa operazione." );
     }
 
-    static function operazionePossibile( $sessione, $funzione, $pgid = NULL )
+    static function operazionePossibile( $sessione, $funzione, $id = NULL )
     {
         global $TIPO_GRANT_PG_PROPRIO;
         global $TIPO_GRANT_PG_ALTRI;
@@ -43,8 +43,11 @@ class UsersManager
 
         UsersManager::controllaLogin( $sessione );
 
-        if( isset( $pgid ) )
-            $tipo_grant = in_array($pgid, $sessione->pg_propri) ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
+        if( isset( $id ) )
+        {
+            $tipo_grant = in_array($id, $sessione->pg_propri) ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
+            $tipo_grant = $tipo_grant && $id === $sessione->email_giocatore ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
+***REMOVED***
 
         if( !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
             throw new Exception( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>" );
@@ -105,7 +108,11 @@ class UsersManager
 		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
 
-		return "{\"status\": \"ok\", \"user_info\": { \"email_giocatore\":\"".$this->session->email_giocatore."\",\"nome_giocatore\":\"".$result[0]["nome_giocatore"]."\", \"permessi\":".json_encode( $this->session->permessi_giocatore )."} }";
+		return "{\"status\": \"ok\", \"user_info\": {
+            \"email_giocatore\":\"".$this->session->email_giocatore."\",
+            \"nome_giocatore\":\"".$result[0]["nome_giocatore"]."\",
+            \"permessi\":".json_encode( $this->session->permessi_giocatore )."
+		}}";
 	}
 
 	public function controllaaccesso( )

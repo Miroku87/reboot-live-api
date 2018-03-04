@@ -130,7 +130,7 @@ class CharactersManager
                 $arr[$i]["abilita"] = array_values($arr[$i]["abilita"]);
 ***REMOVED***
 ***REMOVED***
-        
+    
         return "{\"current\": $current, \"rowCount\": $row_count, \"total\": $total, \"rows\":".json_encode( $arr )."}";
     }
     

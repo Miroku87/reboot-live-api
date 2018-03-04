@@ -15,13 +15,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-DROP SCHEMA IF EXISTS `reboot_live`;
-
-CREATE SCHEMA `reboot_live`
-DEFAULT CHARACTER SET utf8;
-
-USE `reboot_live`;
-
 --
 -- Table structure for table `abilita`
 --
@@ -229,7 +222,7 @@ CREATE TABLE `grants` (
   `nome_grant` varchar(255) NOT NULL,
   `descrizione_grant` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id_grant`)
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -238,7 +231,7 @@ CREATE TABLE `grants` (
 
 LOCK TABLES `grants` WRITE;
 /*!40000 ALTER TABLE `grants` DISABLE KEYS */;
-INSERT INTO `grants` VALUES (1,'mostraPersonaggi_proprio','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraPersonaggi_altri','L\'utente potrà visualizzare i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modificaPG_background_personaggio_altri','L\'utente può modificare il background di un personaggio qualsiasi.'),(10,'cancellaPG_altri','L\'utente può eliminare definitivamente un qualsiasi personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassiAlPG_altri','L\'utente può assegnare nuove classi a personaggi non suoi.'),(23,'aggiungiAbilitaAlPG_altri','L\'utente può assegnare nuove abilità a personaggi non suoi.'),(24,'visualizza_pagina_main','L\'utente può visualizzare la pagina principale del sito.'),(25,'visualizza_pagina_lista_pg','L\'utente può visualizzare la pagina con la lista dei personaggi.'),(26,'visualizza_pagina_crea_pg','L\'utente può visualizzare la pagina per creare un personaggio.'),(27,'visualizza_pagina_scheda_pg','L\'utente può visualizzare la pagina con i dettagli di un personaggio.'),(28,'modificaBackground','L\'utente può modificare il background di un personaggio.'),(29,'visualizza_pagina_negozio_abilita','L\'utente può acquistare abilità'),(30,'modificaPG_background_personaggio_proprio','L\'utente può modificare il background di un proprio personaggio'),(31,'aggiungiClassiAlPG_proprio','L\'utente può assegnare nuove classi a un proprio personaggio.'),(32,'aggiungiAbilitaAlPG_proprio','L\'utente può assegnare nuove abilità a un proprio personaggio.'),(33,'cancellaPG_proprio','L\'utente può eliminare definitivamente un proprio personaggio dal database.'),(34,'rimuoviClassePG_altri','L\'utente può eliminare la classe di un personaggio non suo.'),(35,'rimuoviClassePG_proprio','L\'utente può eliminare la classe di un proprio personaggio.'),(36,'rimuoviAbilitaPG_altri','L\'utente può eliminare una abilità di un personaggio non suo.'),(37,'rimuoviAbilitaPG_proprio','L\'utente può eliminare una abilità di un proprio personaggio.'),(38,'loginPG_proprio','L\'utente può loggarsi con un proprio pg.'),(39,'loginPG_altri','L\'utente può loggarsi con il pg di altri utenti.'),(40,'recuperaStorico_proprio','L\'utente può guardare tutte le azioni compiute sul personaggio selezionato.'),(41,'recuperaStorico_altri','L\'utente può guardare tutte le azioni compiute sui personaggi degli altri.'),(42,'modificaPG_background_personaggio_proprio','L\'utente può modificare il proprio background.'),(43,'visualizza_pagina_gestione_eventi','L\'utente può entrare nella sezione per la gestione degli eventi.'),(44,'visualizza_pagina_gestione_giocatori','L\'utente può entrare nella sezione per la modifica dei dati dei giocatori.'),(45,'modificaPG_note_master_personaggio_altri','L\'utente può inserire delle note master.'),(46,'modificaPG_note_master_personaggio_proprio','L\'utente può inserire delle note master ai propri pg');
+INSERT INTO `grants` VALUES (1,'mostraPersonaggi_proprio','L\'utente potrà visualizzare la pagina dei suoi personaggi.'),(2,'visualizza_pagina_componenti','L\'utente potrà visualizzare la pagina con la lista dei componenti.'),(3,'visualizza_pagina_ricette','L\'utente potrà visualizzare la pagina con la lista delle ricette.'),(4,'visualizza_pagina_gestione_eventi','L\'utente potrà visualizzare la pagina di gestione degli eventi.'),(5,'visualizza_pagina_eventi','L\'utente potrà visualizzare la pagina con la lista degli eventi.'),(6,'visualizza_pagina_giocatori','L\'utente potrà visualizzare la pagina con la lista dei giocatori iscritti.'),(7,'mostraPersonaggi_altri','L\'utente potrà visualizzare i personaggi creati dagli altri utenti.'),(8,'creaPG','L\'utente può creare un nuovo personaggio.'),(9,'modificaPG_background_personaggio_altri','L\'utente può modificare il background di un personaggio qualsiasi.'),(10,'cancellaPG_altri','L\'utente può eliminare definitivamente un qualsiasi personaggio dal database.'),(11,'crea_ruolo_utente','L\'utente può creare un ruolo con date grant.'),(12,'modifica_ruolo_utente','L\'utente può modificare un ruolo utente già esistente.'),(13,'cancella_ruolo_utente','L\'utente può eliminare definitivamente un ruolo dal database. Gli utenti associati diventeranno ospiti.'),(14,'crea_componente','L\'utente può creare un componente crafting.'),(15,'modifica_componente','L\'utente può modificare un componente esistente.'),(16,'elimina_componente','L\'utente può eliminare definitivamente un componente. Tutte le ricette con quel componente vengono eliminate a cascata.'),(17,'crea_evento','L\'utente può creare eventi di gioco.'),(18,'modifica_evento','L\'utente può modificare un evento già creato.'),(19,'elimina_evento','L\'utente può eliminare definitivamente un evento.'),(20,'modifica_giocatore','L\'utente può modificare i dati di un qualsiasi utente del quale può vedere i dati.'),(21,'elimina_giocatore','L\'utente può eliminare definitivamente un qualsiasi utente di cui può visualizzare i dati.'),(22,'aggiungiClassiAlPG_altri','L\'utente può assegnare nuove classi a personaggi non suoi.'),(23,'aggiungiAbilitaAlPG_altri','L\'utente può assegnare nuove abilità a personaggi non suoi.'),(24,'visualizza_pagina_main','L\'utente può visualizzare la pagina principale del sito.'),(25,'visualizza_pagina_lista_pg','L\'utente può visualizzare la pagina con la lista dei personaggi.'),(26,'visualizza_pagina_crea_pg','L\'utente può visualizzare la pagina per creare un personaggio.'),(27,'visualizza_pagina_scheda_pg','L\'utente può visualizzare la pagina con i dettagli di un personaggio.'),(28,'modificaBackground','L\'utente può modificare il background di un personaggio.'),(29,'visualizza_pagina_negozio_abilita','L\'utente può acquistare abilità'),(30,'modificaPG_background_personaggio_proprio','L\'utente può modificare il background di un proprio personaggio'),(31,'aggiungiClassiAlPG_proprio','L\'utente può assegnare nuove classi a un proprio personaggio.'),(32,'aggiungiAbilitaAlPG_proprio','L\'utente può assegnare nuove abilità a un proprio personaggio.'),(33,'cancellaPG_proprio','L\'utente può eliminare definitivamente un proprio personaggio dal database.'),(34,'rimuoviClassePG_altri','L\'utente può eliminare la classe di un personaggio non suo.'),(35,'rimuoviClassePG_proprio','L\'utente può eliminare la classe di un proprio personaggio.'),(36,'rimuoviAbilitaPG_altri','L\'utente può eliminare una abilità di un personaggio non suo.'),(37,'rimuoviAbilitaPG_proprio','L\'utente può eliminare una abilità di un proprio personaggio.'),(38,'loginPG_proprio','L\'utente può loggarsi con un proprio pg.'),(39,'loginPG_altri','L\'utente può loggarsi con il pg di altri utenti.'),(40,'recuperaStorico_proprio','L\'utente può guardare tutte le azioni compiute sul personaggio selezionato.'),(41,'recuperaStorico_altri','L\'utente può guardare tutte le azioni compiute sui personaggi degli altri.'),(42,'modificaPG_background_personaggio_proprio','L\'utente può modificare il proprio background.'),(43,'visualizza_pagina_gestione_eventi','L\'utente può entrare nella sezione per la gestione degli eventi.'),(44,'visualizza_pagina_gestione_giocatori','L\'utente può entrare nella sezione per la modifica dei dati dei giocatori.'),(45,'modificaPG_note_master_personaggio_altri','L\'utente può inserire delle note master.'),(46,'modificaPG_note_master_personaggio_proprio','L\'utente può inserire delle note master ai propri pg'),(47,'visualizza_pagina_messaggi','L\'utente può accedere alla sezione messaggi'),(48,'recuperaMessaggi_proprio','L\'utente può visualizzare i propri messaggi.'),(49,'recuperaMessaggi_altri','L\'utente può visualizzare i messaggi degli altri giocatori.');
 /*!40000 ALTER TABLE `grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -267,6 +260,74 @@ CREATE TABLE `iscrizione_personaggi` (
 LOCK TABLES `iscrizione_personaggi` WRITE;
 /*!40000 ALTER TABLE `iscrizione_personaggi` DISABLE KEYS */;
 /*!40000 ALTER TABLE `iscrizione_personaggi` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `messaggi_fuorigioco`
+--
+
+DROP TABLE IF EXISTS `messaggi_fuorigioco`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `messaggi_fuorigioco` (
+  `id_messaggio` int(255) NOT NULL AUTO_INCREMENT,
+  `mittente_messaggio` varchar(255) NOT NULL,
+  `destinatario_messaggio` varchar(255) NOT NULL,
+  `oggetto_messaggio` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `testo_messaggio` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `letto_messaggio` tinyint(1) NOT NULL DEFAULT '0',
+  `data_messaggio` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `risposta_a_messaggio` int(255) DEFAULT NULL,
+  PRIMARY KEY (`id_messaggio`),
+  KEY `fk_mittente_fg_idx` (`mittente_messaggio`),
+  KEY `fk_destinatario_fg_idx` (`destinatario_messaggio`),
+  CONSTRAINT `fk_destinatario_fg` FOREIGN KEY (`destinatario_messaggio`) REFERENCES `giocatori` (`email_giocatore`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  CONSTRAINT `fk_mittente_fg` FOREIGN KEY (`mittente_messaggio`) REFERENCES `giocatori` (`email_giocatore`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `messaggi_fuorigioco`
+--
+
+LOCK TABLES `messaggi_fuorigioco` WRITE;
+/*!40000 ALTER TABLE `messaggi_fuorigioco` DISABLE KEYS */;
+INSERT INTO `messaggi_fuorigioco` VALUES (1,'miroku_87@yahoo.it','b-teo-90@libero.it','Prova','Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec metus eleifend, maximus tortor vitae, tristique lectus. In hac habitasse platea dictumst. Nulla volutpat enim arcu, et viverra ipsum condimentum a. Interdum et malesuada fames ac ante ipsum primis in faucibus. Donec consequat suscipit congue. Phasellus in arcu a sem lacinia molestie ut ac tortor. Suspendisse egestas ex odio, id sodales sem dictum sit amet. Nunc vitae ipsum a nisl viverra lobortis eget eget dolor.',0,'2018-03-04 16:54:20',NULL),(2,'b-teo-90@libero.it','miroku_87@yahoo.it','Re: Prova','Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec metus eleifend, maximus tortor vitae, tristique lectus. In hac habitasse platea dictumst. Nulla volutpat enim arcu, et viverra ipsum condimentum a. Interdum et malesuada fames ac ante ipsum primis in faucibus. Donec consequat suscipit congue. Phasellus in arcu a sem lacinia molestie ut ac tortor. Suspendisse egestas ex odio, id sodales sem dictum sit amet. Nunc vitae ipsum a nisl viverra lobortis eget eget dolor.',0,'2018-03-04 16:54:20',1),(3,'ehi@la.it','b-teo-90@libero.it','test','Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nec metus eleifend, maximus tortor vitae, tristique lectus. In hac habitasse platea dictumst. Nulla volutpat enim arcu, et viverra ipsum condimentum a. Interdum et malesuada fames ac ante ipsum primis in faucibus. Donec consequat suscipit congue. Phasellus in arcu a sem lacinia molestie ut ac tortor. Suspendisse egestas ex odio, id sodales sem dictum sit amet. Nunc vitae ipsum a nisl viverra lobortis eget eget dolor.',0,'2018-03-04 16:55:01',NULL);
+/*!40000 ALTER TABLE `messaggi_fuorigioco` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `messaggi_ingioco`
+--
+
+DROP TABLE IF EXISTS `messaggi_ingioco`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `messaggi_ingioco` (
+  `id_messaggio` int(255) NOT NULL AUTO_INCREMENT,
+  `mittente_messaggio` int(255) NOT NULL,
+  `destinatario_messaggio` int(255) NOT NULL,
+  `oggetto_messaggio` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `testo_messaggio` text COLLATE utf8_unicode_ci NOT NULL,
+  `letto_messaggio` tinyint(1) NOT NULL DEFAULT '0',
+  `data_messaggio` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `risposta_a_messaggio` int(255) DEFAULT NULL,
+  PRIMARY KEY (`id_messaggio`),
+  KEY `fk_mittente_idx` (`mittente_messaggio`),
+  KEY `fk_destinatario_idx` (`destinatario_messaggio`),
+  CONSTRAINT `fk_destinatario_ig` FOREIGN KEY (`destinatario_messaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  CONSTRAINT `fk_mittente_ig` FOREIGN KEY (`mittente_messaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `messaggi_ingioco`
+--
+
+LOCK TABLES `messaggi_ingioco` WRITE;
+/*!40000 ALTER TABLE `messaggi_ingioco` DISABLE KEYS */;
+INSERT INTO `messaggi_ingioco` VALUES (1,38,42,'Yeah','Aenean id eleifend sapien. Ut tortor sem, iaculis et risus in, rutrum tincidunt eros. Nam vulputate finibus arcu at ultricies. Sed aliquam, enim sodales dapibus tincidunt, ipsum ipsum aliquet orci, a pharetra nulla elit sit amet neque. Phasellus sed nisl eget purus sagittis dapibus ullamcorper et libero. Aliquam id lacus in ante interdum euismod. Pellentesque luctus mauris non velit suscipit, a feugiat nibh vestibulum. Mauris eros justo, ultrices sed tortor id, vehicula pellentesque magna. Nullam molestie consectetur massa, id venenatis enim mattis nec. Donec scelerisque est in orci vehicula semper. Suspendisse placerat ex in erat sagittis, in dignissim ipsum posuere. Nam at mi eget lectus rutrum vestibulum.',0,'2018-03-04 16:59:37',NULL),(2,38,43,'What','Aenean id eleifend sapien. Ut tortor sem, iaculis et risus in, rutrum tincidunt eros. Nam vulputate finibus arcu at ultricies. Sed aliquam, enim sodales dapibus tincidunt, ipsum ipsum aliquet orci, a pharetra nulla elit sit amet neque. Phasellus sed nisl eget purus sagittis dapibus ullamcorper et libero. Aliquam id lacus in ante interdum euismod. Pellentesque luctus mauris non velit suscipit, a feugiat nibh vestibulum. Mauris eros justo, ultrices sed tortor id, vehicula pellentesque magna. Nullam molestie consectetur massa, id venenatis enim mattis nec. Donec scelerisque est in orci vehicula semper. Suspendisse placerat ex in erat sagittis, in dignissim ipsum posuere. Nam at mi eget lectus rutrum vestibulum.',0,'2018-03-04 16:59:37',NULL),(3,42,38,'Non dirlo a nessuno','Aenean id eleifend sapien. Ut tortor sem, iaculis et risus in, rutrum tincidunt eros. Nam vulputate finibus arcu at ultricies. Sed aliquam, enim sodales dapibus tincidunt, ipsum ipsum aliquet orci, a pharetra nulla elit sit amet neque. Phasellus sed nisl eget purus sagittis dapibus ullamcorper et libero. Aliquam id lacus in ante interdum euismod. Pellentesque luctus mauris non velit suscipit, a feugiat nibh vestibulum. Mauris eros justo, ultrices sed tortor id, vehicula pellentesque magna. Nullam molestie consectetur massa, id venenatis enim mattis nec. Donec scelerisque est in orci vehicula semper. Suspendisse placerat ex in erat sagittis, in dignissim ipsum posuere. Nam at mi eget lectus rutrum vestibulum.',0,'2018-03-04 16:59:37',NULL);
+/*!40000 ALTER TABLE `messaggi_ingioco` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -532,7 +593,7 @@ CREATE TABLE `ruoli_has_grants` (
 
 LOCK TABLES `ruoli_has_grants` WRITE;
 /*!40000 ALTER TABLE `ruoli_has_grants` DISABLE KEYS */;
-INSERT INTO `ruoli_has_grants` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,21),(1,22),(1,23),(1,24),(1,25),(1,26),(1,27),(1,28),(1,29),(1,30),(1,31),(1,32),(1,34),(1,35),(1,36),(1,37),(1,38),(1,39),(1,40),(1,41),(1,42),(1,43),(1,44),(1,45),(1,46),(3,1),(3,2),(3,3),(3,5),(3,8),(3,22),(3,23);
+INSERT INTO `ruoli_has_grants` VALUES (1,1),(1,2),(1,3),(1,4),(1,5),(1,6),(1,7),(1,8),(1,9),(1,10),(1,11),(1,12),(1,13),(1,14),(1,15),(1,16),(1,17),(1,18),(1,19),(1,20),(1,21),(1,22),(1,23),(1,24),(1,25),(1,26),(1,27),(1,28),(1,29),(1,30),(1,31),(1,32),(1,34),(1,35),(1,36),(1,37),(1,38),(1,39),(1,40),(1,41),(1,42),(1,43),(1,44),(1,45),(1,46),(1,47),(1,48),(1,49),(3,1),(3,2),(3,3),(3,5),(3,8),(3,22),(3,23);
 /*!40000 ALTER TABLE `ruoli_has_grants` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -775,4 +836,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-03-01 23:59:32
+-- Dump completed on 2018-03-05  0:17:08

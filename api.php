@@ -4,11 +4,13 @@
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
 include_once( $path."classes/UsersManager.class.php" );
 include_once( $path."classes/CharactersManager.class.php" );
+include_once( $path."classes/MessagingManager.class.php" );
 
 class Main
 {
 	protected $usersmanager;
 	protected $charactersmanager;
+	protected $messagingmanager;
 	
 	public function __construct()
 	{
@@ -22,6 +24,7 @@ class Main
 
 		$this->usersmanager      = new UsersManager();
 		$this->charactersmanager = new CharactersManager();
+		$this->messagingmanager  = new MessagingManager();
 	}
 	
 	public function __destruct()
@@ -35,7 +38,7 @@ class Main
 		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
-		$class   = $request[0];
+		$classe  = $request[0];
 		$func    = $request[1];
 		//$input   = json_decode( file_get_contents( 'php://input' ), true );
 		//die( var_dump($_POST) );
@@ -44,7 +47,7 @@ class Main
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;
 			
-			return call_user_func_array( array( $this->$class, $func ), $data );
+			return call_user_func_array( array( $this->$classe, $func ), $data );
 		}
 		catch( Exception $e )
 		{

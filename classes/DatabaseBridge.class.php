@@ -20,7 +20,8 @@ class DatabaseBridge extends PDO
         try
 		{
 			$connection = new PDO( $dns, $DB_DATA["DB_USER"], $DB_DATA["DB_PASS"] );
-			$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+            $connection->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false );
 		} 
 		catch (PDOException $e) 
 		{
@@ -47,6 +48,8 @@ class DatabaseBridge extends PDO
             $stmnt = $conn->prepare($query);
             
             $stmnt->execute($params);
+            
+//            $stmnt->debugDumpParams();
 
             if ($stmnt->columnCount() !== 0)
                 $result = $stmnt->fetchAll(PDO::FETCH_ASSOC);
