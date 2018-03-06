@@ -40,14 +40,41 @@ class MessagingManager
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
     
-    public function messaggioLetto( $idmex )
+    public function recuperaMessaggioSingolo( $idmex, $idu, $tipo, $casella )
     {
-        //TODO;
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $idu );
+    
+        $params     = array( ":idmex" => $idmex );
+        $tabella    = $tipo === "ig" ? "messaggi_ingioco" : "messaggi_fuorigioco";
+        $t_join     = $tipo === "ig" ? "personaggi" : "giocatori";
+        $campo_id   = $tipo === "ig" ? "id_personaggio" : "email_giocatore";
+        $campo_nome = $tipo === "ig" ? "nome_personaggio" : "nome_giocatore";
+    
+        $query_mex = "SELECT mex.*,
+                             t_mitt.$campo_id AS id_mittente,
+                             t_mitt.$campo_nome AS nome_mittente,
+                             t_dest.$campo_id AS id_destinatario,
+                             t_dest.$campo_nome AS nome_destinatario,
+                             '$tipo' AS tipo_messaggio,
+                             '$casella' AS casella_messaggio
+                      FROM $tabella AS mex
+                        JOIN $t_join AS t_mitt ON mex.mittente_messaggio = t_mitt.$campo_id
+                        JOIN $t_join AS t_dest ON mex.destinatario_messaggio = t_dest.$campo_id
+                      WHERE mex.id_messaggio = :idmex";
+        $risultati  = $this->db->doQuery( $query_mex, $params, False );
+        
+        if( $risultati["id_destinatario"] === $this->session->pg_loggato->id_personaggio || $risultati["id_destinatario"] === $this->session->email_giocatore )
+        {
+            $query_letto = "UPDATE $tabella SET letto_messaggio = :letto WHERE id_messaggio = :id";
+            $this->db->doQuery($query_letto, array(":id" => $idmex, ":letto" => 1), False);
+***REMOVED***
+        
+        return "{\"status\": \"ok\",\"result\": ".json_encode($risultati[0])."}";
     }
     
-    public function recuperaMessaggiFg( $draw, $columns, $order, $start, $length, $search, $tipo, $casella, $id )
+    public function recuperaMessaggi( $draw, $columns, $order, $start, $length, $search, $tipo, $casella, $id )
     {
-        UsersManager::operazionePossibile( $this->session, "recuperaMessaggi", $id );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $id );
 
         $params     = array( ":id" => $id );
         $where      = $casella === "inviati" ? "mex.mittente_messaggio = :id" : "mex.destinatario_messaggio = :id";
@@ -79,11 +106,13 @@ class MessagingManager
         $query_mex = "SELECT mex.id_messaggio,
                              mex.oggetto_messaggio,
                              mex.data_messaggio,
+                             mex.letto_messaggio,
                              t_mitt.$campo_id AS id_mittente,
                              t_mitt.$campo_nome AS nome_mittente,
                              t_dest.$campo_id AS id_destinatario,
                              t_dest.$campo_nome AS nome_destinatario,
-                             'fg' AS tipo_messaggio
+                             '$tipo' AS tipo_messaggio,
+                             '$casella' AS casella_messaggio
                       FROM $tabella AS mex
                         JOIN $t_join AS t_mitt ON mex.mittente_messaggio = t_mitt.$campo_id
                         JOIN $t_join AS t_dest ON mex.destinatario_messaggio = t_dest.$campo_id
