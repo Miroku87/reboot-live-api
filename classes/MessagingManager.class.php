@@ -24,17 +24,32 @@ class MessagingManager
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
-        $tabella = $tipo === "fg" ? "messaggi_fuorigioco" : "messaggi_ingioco";
+        $tabella       = $tipo === "fg" ? "messaggi_fuorigioco" : "messaggi_ingioco";
+        $tabella_check = $tipo === "fg" ? "giocatori" : "personaggi";
+        $id_check      = $tipo === "fg" ? "email_giocatore" : "id_personaggio";
+    
+        $query_check = "SELECT $id_check FROM $tabella_check WHERE $id_check = :mitt OR $id_check = :dest";
+        $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt, ":dest" => $dest ), False );
+        
+        if( count( $ris_check ) === 0 )
+            throw new Exception("Il mittente o il destinatario di questo messaggio non esistono.");
         
         $params = array(
             ":mitt" => $mitt,
             ":dest" => $dest,
             ":ogg"  => $ogg,
-            ":mex"  => $mex,
-            ":risp" => $risp_id
+            ":mex"  => $mex
         );
         
-        $query_mex = "INSERT INTO $tabella (mittente_messaggio, destinatario_messaggio, oggetto_messaggio, testo_messaggio, risposta_a_messaggio) VALUES ( :mitt, :dest, :ogg, :mex, :risp )";
+        if( isset( $risp_id ) )
+        {
+            $q_risp = ":risp";
+            $params[":risp"] = $risp_id;
+***REMOVED***
+        else
+            $q_risp = "NULL";
+        
+        $query_mex = "INSERT INTO $tabella (mittente_messaggio, destinatario_messaggio, oggetto_messaggio, testo_messaggio, risposta_a_messaggio) VALUES ( :mitt, :dest, :ogg, :mex, $q_risp )";
         $this->db->doQuery( $query_mex, $params, False );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
@@ -63,7 +78,8 @@ class MessagingManager
                       WHERE mex.id_messaggio = :idmex";
         $risultati  = $this->db->doQuery( $query_mex, $params, False );
         
-        if( $risultati["id_destinatario"] === $this->session->pg_loggato->id_personaggio || $risultati["id_destinatario"] === $this->session->email_giocatore )
+        if(    ( property_exists($this->session, "pg_loggato") && $risultati[0]["id_destinatario"] === $this->session->pg_loggato->id_personaggio )
+            || $risultati[0]["id_destinatario"] === $this->session->email_giocatore )
         {
             $query_letto = "UPDATE $tabella SET letto_messaggio = :letto WHERE id_messaggio = :id";
             $this->db->doQuery($query_letto, array(":id" => $idmex, ":letto" => 1), False);
@@ -139,5 +155,28 @@ class MessagingManager
         );
 
         return json_encode( $output );
+    }
+    
+    private function recuperaDestinatari( $tipo, $term  )
+    {
+        $tabella    = $tipo === "ig" ? "personaggi" : "giocatori";
+        $campo_id   = $tipo === "ig" ? "id_personaggio" : "email_giocatore";
+        $campo_nome = $tipo === "ig" ? "nome_personaggio" : " nome_giocatore";
+        
+        $query_dest = "SELECT $campo_id AS real_value, $campo_nome AS label FROM $tabella WHERE $campo_nome LIKE :term";
+        
+        return $this->db->doQuery( $query_dest, array( ":term" => "%$term%") );
+    }
+    
+    public function recuperaDestinatariIG( $term )
+    {
+//        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+        return $this->recuperaDestinatari( "ig", $term );
+    }
+    
+    public function recuperaDestinatariFG( $term )
+    {
+//        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+        return $this->recuperaDestinatari( "fg", $term );
     }
 }
