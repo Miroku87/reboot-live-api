@@ -51,9 +51,25 @@ class Utils
 		return (int)$item["classi_id_classe"] === $ID_CLASSE_SPORTIVO;
 	}
 
-	static function filtraAbilitaController( $item )
+	static function filtraAbilitaAssaltatoreBase( $item )
 	{
-		return strpos( strtolower( $item["nome_abilita"] ), "controller" ) !== False;
+        global $ID_CLASSE_ASSALTATORE_BASE;
+        
+        return (int)$item["classi_id_classe"] === $ID_CLASSE_ASSALTATORE_BASE;
+	}
+
+	static function filtraAbilitaGuastatoreBase( $item )
+	{
+        global $ID_CLASSE_GUASTATORE_BASE;
+        
+        return (int)$item["classi_id_classe"] === $ID_CLASSE_GUASTATORE_BASE;
+	}
+
+	static function filtraAbilitaGuastatoreAvanzato( $item )
+	{
+        global $ID_CLASSE_GUASTATORE_AVANZATO;
+        
+        return (int)$item["classi_id_classe"] === $ID_CLASSE_GUASTATORE_AVANZATO;
 	}
 	
 	static function rimuoviElementoArrayMultidimensionale( &$arr, $chiave, $valore )

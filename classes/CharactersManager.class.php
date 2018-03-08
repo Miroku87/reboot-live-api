@@ -181,8 +181,10 @@ class CharactersManager
         global $PREREQUISITO_TUTTE_ABILITA;
         global $PREREQUISITO_F_TERRA_T_SCELTO;
         global $PREREQUISITO_5_SUPPORTO_BASE;
-        global $PREREQUISITO_3_CONTROLLER;
+        global $PREREQUISITO_3_GUASTATOR_BASE;
         global $PREREQUISITO_4_SPORTIVO;
+        global $PREREQUISITO_3_ASSALTATA_BASE;
+        global $PREREQUISITO_3_GUASTATOR_AVAN;
         global $ID_ABILITA_F_TERRA;
         global $ID_ABILITA_T_SCELTO;
         
@@ -201,7 +203,9 @@ class CharactersManager
 			// -1 per non contare anche l'abilita che ha il prerequisito
             $qta_sportivo = count( array_filter( $lista_ab, "Utils::filtraAbilitaSportivo" ) ) - 1;
             $qta_sup_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaSupportoBase" ) ) - 1;
-            $qta_controll = count( array_filter( $lista_ab, "Utils::filtraAbilitaController" ) );
+            $qta_ass_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaAssaltatoreBase" ) );
+            $qta_gua_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaGuastatoreBase" ) );
+            $qta_gua_avan = count( array_filter( $lista_ab, "Utils::filtraAbilitaGuastatoreAvanzato" ) );
 			
             foreach( $ab_prereq as $i => $ap )
             {
@@ -221,10 +225,11 @@ class CharactersManager
                     )
                     || $pre === $PREREQUISITO_5_SUPPORTO_BASE && $qta_sup_base < 5
                     || $pre === $PREREQUISITO_4_SPORTIVO && $qta_sportivo < 4
-                    || $pre === $PREREQUISITO_3_CONTROLLER && $qta_controll < 3
+                    || $pre === $PREREQUISITO_3_ASSALTATA_BASE && $qta_ass_base < 3
+                    || $pre === $PREREQUISITO_3_GUASTATOR_BASE && $qta_gua_base < 3
+                    || $pre === $PREREQUISITO_3_GUASTATOR_AVAN && $qta_gua_avan < 3
                 )
                 {
-					echo ">> rimuovere ".$ap["id_abilita"]."\n";
                     $new_params[] = $ap["id_abilita"];
                     Utils::rimuoviElementoArrayMultidimensionale( $lista_ab, "id_abilita", $ap["id_abilita"] );
     ***REMOVED***
