@@ -169,9 +169,64 @@ class UsersManager
 		return "{\"status\": \"ok\"}";
 	}
 	
+	public function recuperaListaGiocatori( $draw, $columns, $order, $start, $length, $search )
+    {
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+        
+        $where = "";
+        $params = array();
+        
+        if( isset( $search ) && $search["value"] != "" )
+        {
+            $params[":search"] = "%$search[value]%";
+            $where = "WHERE (
+						gi2.nome_giocatore LIKE :search OR
+						gi2.email_giocatore LIKE :search OR
+						gi2.nome_ruolo LIKE :search OR
+						gi2.note_giocatore LIKE :search OR
+						gi2.note_staff_giocatore LIKE :search
+					  )";
+***REMOVED***
+        
+        if( isset( $order ) )
+        {
+            $sorting = array();
+            foreach ( $order as $elem )
+                $sorting[] = "gi2.".$columns[$elem["column"]]["data"]." ".$elem["dir"];
+            
+            $order_str = "ORDER BY ".implode( $sorting, "," );
+***REMOVED***
+        
+        $query_players = "SELECT * FROM (
+                            SELECT CONCAT(gi.nome_giocatore, ' ', gi.cognome_giocatore) AS nome_completo, gi.*, ru.nome_ruolo
+                              FROM giocatori AS gi
+                              JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo ) AS gi2 $where $order_str";
+        $risultati = $this->db->doQuery( $query_players, $params, False );
+        $totale    = count($risultati);
+    
+        if( count($risultati) > 0 )
+            $risultati = array_splice($risultati, $start, $length);
+        else
+            $risultati = array();
+    
+        $output     = array(
+            "draw"            => $draw,
+            "columns"         => $columns,
+            "order"           => $order,
+            "start"           => $start,
+            "length"          => $length,
+            "search"          => $search,
+            "recordsTotal"    => $totale,
+            "recordsFiltered" => count($risultati),
+            "data"            => $risultati
+        );
+    
+        return json_encode( $output );
+	}
+	
 	public function aggiornaUtente( $cf, $aggiornamenti )
 	{
-		
+	
 	}
 	
 	public function eliminaUtente( $cf, $aggiornamenti )

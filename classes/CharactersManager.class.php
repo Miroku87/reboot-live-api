@@ -53,85 +53,80 @@ class CharactersManager
         $this->db->doQuery( $query_azione, $params, False );
     }
     
-    private function recuperaPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL, $extra_where = array(), $extra_param = array() )
+    private function recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search, $extra_where = array(), $extra_param = array() )
     {
         $where  = $extra_where;
         $params = $extra_param;
-        $order  = "";
         
-        if( isset( $search ) && $search != "" )
+        if( isset( $search ) && $search["value"] != "" )
         {
-            $params[":search"] = "%$search%";
+            $params[":search"] = "%$search[value]%";
             $where[] = "(
-						bj.nome_personaggio LIKE :search OR 
-						bj.cognome_personaggio LIKE :search OR
-						bj.lista_classi LIKE :search OR
-						bj.lista_abilita LIKE :search OR
+						bj.nome_personaggio LIKE :search OR
+						bj.classi_civili LIKE :search OR
+						bj.classi_militari LIKE :search OR
 						bj.nome_giocatore LIKE :search OR
-						bj.cognome_giocatore LIKE :search OR
-						bj.email_giocatore LIKE :search
+						bj.email_giocatore LIKE :search OR
+						bj.nome_ruolo LIKE :search OR
+						bj.note_giocatore LIKE :search
 					  )";
 ***REMOVED***
-        
-        if( isset( $sort ) )
+    
+        if( isset( $order ) )
         {
-            $sorting = [];
-            foreach ($sort as $col => $value) {
-                $sorting[] = "$col $value";
-***REMOVED***
-            $order = "ORDER BY ".implode( $sorting, "," );
+            $sorting = array();
+            foreach ( $order as $elem )
+                $sorting[] = "bj.".$columns[$elem["column"]]["data"]." ".$elem["dir"];
+        
+            $order_str = "ORDER BY ".implode( $sorting, "," );
 ***REMOVED***
         
-        $big_join = " SELECT pg.*, gi.*, cl.*, ab.* FROM personaggi AS pg
-                            LEFT OUTER JOIN
-                        giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
-                            LEFT OUTER JOIN
-                        personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
-                            LEFT OUTER JOIN
-                        personaggi_has_abilita AS pha ON pha.personaggi_id_personaggio = pg.id_personaggio
-                            LEFT OUTER JOIN
-                        abilita AS ab ON ab.id_abilita = pha.abilita_id_abilita
-                            LEFT OUTER JOIN
-                        classi AS cl ON cl.id_classe = phc.classi_id_classe";
+        $big_join = "SELECT
+                        pg.id_personaggio,
+                        pg.nome_personaggio,
+                        IF( ISNULL(pg.background_personaggio), 0, 1 ) AS bg_personaggio,
+                        pg.px_personaggio,
+                        pg.pc_personaggio,
+                        pg.credito_personaggio,
+                        pg.data_creazione_personaggio,
+                        gi.email_giocatore,
+                        CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
+                        gi.note_giocatore,
+                        ru.nome_ruolo,
+                        GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
+                        GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari
+                    FROM personaggi AS pg
+                        LEFT OUTER JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
+                        LEFT OUTER JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
+                        LEFT OUTER JOIN classi AS cl_m ON cl_m.id_classe = phc.classi_id_classe AND cl_m.tipo_classe = 'militare'
+                        LEFT OUTER JOIN classi AS cl_c ON cl_c.id_classe = phc.classi_id_classe AND cl_c.tipo_classe = 'civile'
+                        LEFT OUTER JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo
+                    GROUP BY pg.id_personaggio";
         
         $where_str = count( $where ) > 0 ? "WHERE ".implode( $where, " AND ") : "";
-        $query     = "SELECT * FROM ( $big_join ) AS bj $where_str $order";
+        $query     = "SELECT * FROM ( $big_join ) AS bj $where_str $order_str";
         
-        $result = $this->db->doQuery( $query, $params, False );
-        $arr    = array();
-        $total  = 0;
+        $risultati = $this->db->doQuery( $query, $params, False );
+        $totale    = count($risultati);
         
-        //echo var_dump($result);
-        //die();
-        
-        if( count( $result ) > 0 )
-        {
-            foreach( $result as $r )
-            {
-                foreach( $r as $k => $v )
-                {
-                    if( strpos( $k, "classe" ) != False )
-                        $arr[ "id".$r["id_personaggio"] ]["classi"][ "id".$r["id_classe"] ][$k] = $v;
-                    else if ( strpos( $k, "abilita" ) != False )
-                        $arr[ "id".$r["id_personaggio"] ]["abilita"][ "id".$r["id_abilita"] ][$k] = $v;
-                    else
-                        $arr[ "id".$r["id_personaggio"] ][$k] = $v;
-    ***REMOVED***
-***REMOVED***
-            
-            $arr = array_values($arr);
-            
-            $total = count($arr);
-            //array_splice( $arr, $row_count );
-            
-            for( $i = 0; $i < count($arr); $i++ )
-            {
-                $arr[$i]["classi"]  = array_values($arr[$i]["classi"]);
-                $arr[$i]["abilita"] = array_values($arr[$i]["abilita"]);
-***REMOVED***
-***REMOVED***
+        if( count($risultati) > 0 )
+            $risultati = array_splice($risultati, $start, $length);
+        else
+            $risultati = array();
     
-        return "{\"current\": $current, \"rowCount\": $row_count, \"total\": $total, \"rows\":".json_encode( $arr )."}";
+        $output     = array(
+            "draw"            => $draw,
+            "columns"         => $columns,
+            "order"           => $order,
+            "start"           => $start,
+            "length"          => $length,
+            "search"          => $search,
+            "recordsTotal"    => $totale,
+            "recordsFiltered" => count($risultati),
+            "data"            => $risultati
+        );
+        
+        return json_encode( $output );
     }
     
     private function controllaPossibilitaPunti( $id_classi, $id_abilita, $pg_id = NULL, $disponibilita_px = NULL, $disponibilita_pc = NULL )
@@ -245,8 +240,7 @@ class CharactersManager
         return array_merge( $new_params, $params );
     }
     
-    //GET query: current=1&rowCount=10&sort[sender]=asc&searchPhrase=
-    public function mostraPersonaggi( $current = 1, $row_count = 10, $sort = NULL, $search = NULL )
+    public function mostraPersonaggi(  $draw, $columns, $order, $start, $length, $search )
     {
         UsersManager::controllaLogin( $this->session );
         
@@ -257,10 +251,10 @@ class CharactersManager
         {
             $where  = array( "bj.email_giocatore = :userid" );
             $params = array( ":userid" => $this->session->email_giocatore );
-            $result = $this->recuperaPersonaggi( $current, $row_count, $sort, $search, $where, $params );
+            $result = $this->recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search, $where, $params );
 ***REMOVED***
         else if ( $tutti && !$solo_propri )
-            $result = $this->recuperaPersonaggi( $current, $row_count, $sort, $search );
+            $result = $this->recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search );
         else
             throw new Exception( "Non hai i permessi per compiere questa operazione: <code>".__FUNCTION__."</code>" );
         
