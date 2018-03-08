@@ -63,5 +63,3 @@ class Main
 
 $main = new Main();
 echo $main->runAPI();
-
-?>

@@ -612,4 +612,3 @@ class CharactersManager
         return "{\"status\": \"ok\",\"result\": $result}";
     }
 }
-?>

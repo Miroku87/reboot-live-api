@@ -119,5 +119,3 @@ class Utils
 		return preg_match( $pattern, $stringa );
 	}
 }
-
-?>

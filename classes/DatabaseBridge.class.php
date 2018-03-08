@@ -92,5 +92,3 @@ class DatabaseBridge extends PDO
 ***REMOVED***
 	}
 }
-
-?>
