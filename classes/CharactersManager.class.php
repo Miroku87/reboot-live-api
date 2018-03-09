@@ -282,14 +282,20 @@ class CharactersManager
         $res_abilita   = $this->db->doQuery( $query_abilita, $params, False );
         $lista_abilita = array();
         
-        foreach( $res_abilita as $l )
+        if( count( $res_abilita ) > 0 )
         {
-            $l["id_classe"] = $l["classi_id_classe"];
-            unset( $l["classi_id_classe"] );
-            $lista_abilita[$l["id_classe"]][] = $l;
+            foreach ($res_abilita as $l)
+            {
+                $l["id_classe"] = $l["classi_id_classe"];
+                unset($l["classi_id_classe"]);
+                $lista_abilita[$l["id_classe"]][] = Utils::utf8ize($l);
 ***REMOVED***
+            $lista_output = json_encode($lista_abilita);
+***REMOVED***
+        else
+            $lista_output = "{}";
         
-        $info_obj = "{\"classi\":".json_encode($lista_classi).", \"abilita\":".json_encode($lista_abilita)."}";
+        $info_obj = "{\"classi\":".json_encode($lista_classi).", \"abilita\":$lista_output}";
         
         return "{\"status\": \"ok\", \"info\": ".html_entity_decode( $info_obj )."}";
     }
@@ -550,18 +556,27 @@ class CharactersManager
         $crafting_programmazione = False;
         $crafting_ingegneria = False;
         
-        foreach( $res_abilita as $ab )
+        if( count( $res_abilita ) > 0 )
         {
-            $abilita[ $ab["tipo_abilita"] ][] = $ab;
-            
-            if( $ab["id_abilita"] === $ABILITA_CRAFTING["chimico"] )
-                $crafting_chimico = True;
-            
-            if( $ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"] )
-                $crafting_programmazione = True;
-            
-            if( in_array( $ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"] ) )
-                $crafting_ingegneria = True;
+            foreach ($res_abilita as $ab)
+            {
+                $abilita[$ab["tipo_abilita"]][] = $ab;
+        
+                if ($ab["id_abilita"] === $ABILITA_CRAFTING["chimico"])
+                    $crafting_chimico = True;
+        
+                if ($ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"])
+                    $crafting_programmazione = True;
+        
+                if (in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]))
+                    $crafting_ingegneria = True;
+***REMOVED***
+***REMOVED***
+        else
+        {
+            $crafting_chimico = False;
+            $crafting_programmazione = False;
+            $crafting_ingegneria = False;
 ***REMOVED***
         
         $px_spesi = 0;
@@ -570,8 +585,9 @@ class CharactersManager
         for( $i = 0; $i < count( $classi["civile"] ); $i++ )
             $px_spesi += $MAPPA_COSTO_CLASSI_CIVILI[$i];
         
-        foreach( $abilita["civile"] as $ac )
-            $px_spesi += $ac["costo_abilita"];
+        if( count( $abilita["civile"] ) > 0 )
+            foreach( $abilita["civile"] as $ac )
+                $px_spesi += $ac["costo_abilita"];
         
         $px_risparmiati = $pg_data["px_personaggio"] - $px_spesi;
         $pc_risparmiati = $pg_data["pc_personaggio"] - $pc_spesi;
