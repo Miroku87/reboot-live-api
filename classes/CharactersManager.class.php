@@ -12,6 +12,7 @@ class CharactersManager
     protected $db;
     protected $grants;
     protected $session;
+    protected $mailer;
     
     public function __construct()
     {
@@ -89,9 +90,11 @@ class CharactersManager
                         pg.pc_personaggio,
                         pg.credito_personaggio,
                         pg.data_creazione_personaggio,
+                        pg.eliminato_personaggio,
                         gi.email_giocatore,
                         CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         gi.note_giocatore,
+                        gi.eliminato_giocatore,
                         ru.nome_ruolo,
                         GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
                         GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari
@@ -103,8 +106,8 @@ class CharactersManager
                         LEFT OUTER JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo
                     GROUP BY pg.id_personaggio";
         
-        $where_str = count( $where ) > 0 ? "WHERE ".implode( $where, " AND ") : "";
-        $query     = "SELECT * FROM ( $big_join ) AS bj $where_str $order_str";
+        $where_str = count( $where ) > 0 ? "AND ".implode( $where, " AND ") : "";
+        $query     = "SELECT * FROM ( $big_join ) AS bj WHERE bj.eliminato_giocatore = 0 AND bj.eliminato_personaggio = 0 $where_str $order_str";
         
         $risultati = $this->db->doQuery( $query, $params, False );
         $totale    = count($risultati);
@@ -297,7 +300,7 @@ class CharactersManager
         
         $info_obj = "{\"classi\":".json_encode($lista_classi).", \"abilita\":$lista_output}";
         
-        return "{\"status\": \"ok\", \"info\": ".html_entity_decode( $info_obj )."}";
+        return "{\"status\": \"ok\", \"info\": $info_obj }";
     }
     
     public function creaPG( $nome, $classi, $abilita )
@@ -320,6 +323,18 @@ class CharactersManager
         
         $new_pg_id = $this->db->doQuery( $new_pg_query, $new_pg_params );
         
+        if( !isset( $this->session->pg_propri ) )
+            $this->session->pg_propri = [];
+        
+        $pg_propri   = $this->session->pg_propri;
+        $pg_propri[] = $new_pg_id;
+        $this->session->pg_propri = $pg_propri;
+        
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "nome_personaggio", NULL, $nome );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "px_personaggio", NULL, $PX_INIZIALI );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "pc_personaggio", NULL, $PC_INIZIALI );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "giocatori_email_giocatore", NULL, $this->session->email_giocatore );
+        
         try {
             $this->aggiungiClassiAlPG($new_pg_id, $classi);
             $this->aggiungiAbilitaAlPG($new_pg_id, $abilita);
@@ -327,11 +342,16 @@ class CharactersManager
         catch( Exception $e )
         {
             $this->eliminaPG( $new_pg_id, False );
+            $pg_propri   = $this->session->pg_propri;
+            array_splice($pg_propri, count( $pg_propri ) - 1, 1);
+            $this->session->pg_propri = $pg_propri;
             
             $err_mex = explode( $DB_ERR_DELIMITATORE, $e->getMessage() );
-            throw new Exception( $err_mex[1] );
+            $err_mex = count( $err_mex ) > 1 ? $err_mex[1] : $err_mex[0];
+            throw new Exception( $err_mex );
 ***REMOVED***
-        //$this->mailer->sendMail( "creazionePG", $mail, $nome, $pass  );
+        
+//        $this->mailer->inviaMailRegistrazione( $mail, $nome, $pass  );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -347,6 +367,9 @@ class CharactersManager
             $classi_params[] = array( ":idpg" => $pgid, ":idclasse" => $ci );
         
         $this->db->doMultipleInserts( $classi_query, $classi_params );
+    
+        foreach( $class_ids as $ci )
+            $this->registraAzione( $pgid, "INSERT", "personaggi_has_classi", "classi_id_classe", NULL, $ci );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -372,6 +395,9 @@ class CharactersManager
             $abilita_params[] = array( ":idpg" => $pgid, ":idabilita" => $ab["id_abilita"] );
         
         $this->db->doMultipleInserts( $abilita_query, $abilita_params );
+    
+        foreach( $ordine_ab as $ab )
+            $this->registraAzione( $pgid, "INSERT", "personaggi_has_abilita", "abilita_id_abilita", NULL, $ab["id_abilita"] );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -385,7 +411,7 @@ class CharactersManager
 						WHERE phc.personaggi_id_personaggio = :pgid AND phc.classi_id_classe != :id";
         $lista_cl   = $this->db->doQuery( $query_info, array( ":pgid" => $pgid, ":id" => $id_classe ), False );
         
-        $params  = array( $pgid, $id_classe );
+        $classi_del = array( $id_classe );
         $cl_prereq  = array_filter( $lista_cl, "Utils::filtraClasseSenzaPrerequisito" );
         
         if( count( $cl_prereq ) > 0 )
@@ -393,18 +419,32 @@ class CharactersManager
             foreach ( $cl_prereq as $cp )
             {
                 if ( $cp["prerequisito_classe"] === $id_classe )
-                    $params[] = $cp["id_classe"];
+                    $classi_del[] = $cp["id_classe"];
 ***REMOVED***
 ***REMOVED***
 		
-        $marcatori = str_repeat("?,", count($params) - 2 )."?";
+        $params = $classi_del;
+        array_unshift($params, $pgid);
+        
+        $marcatori = str_repeat("?,", count($classi_del) - 1 )."?";
         $query_del = "DELETE FROM personaggi_has_classi WHERE personaggi_id_personaggio = ? AND classi_id_classe IN ($marcatori)";
         $this->db->doQuery( $query_del, $params, False );
         
-        $query_del_ab = "DELETE pha FROM personaggi_has_abilita AS pha
+        $query_sel_ab = "SELECT id_abilita FROM personaggi_has_abilita AS pha
                           JOIN abilita AS ab ON pha.abilita_id_abilita = ab.id_abilita
                           WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori)";
-        $this->db->doQuery( $query_del_ab, $params, False );
+        $lista_ab     = $this->db->doQuery( $query_sel_ab, $params, False );
+        
+        $params_ab    = array_unshift( $lista_ab, $pgid );
+        $marcatori_ab = str_repeat("?, ", count($lista_ab) - 2)."?";
+        $query_del_ab = "DELETE FROM personaggi_has_abilita WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori_ab)";
+        $this->db->doQuery( $query_del_ab, $params_ab, False );
+    
+        foreach ($classi_del as $cd)
+            $this->registraAzione( $pgid, "DELETE", "personaggi_has_classi", "personaggi_id_personaggio", $cd, NULL );
+    
+        foreach ($lista_ab as $la)
+            $this->registraAzione( $pgid, "DELETE", "personaggi_has_abilita", "abilita_id_abilita", $la, NULL );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -418,12 +458,18 @@ class CharactersManager
 						WHERE pha.personaggi_id_personaggio = :pgid AND pha.abilita_id_abilita != :id";
         $lista_ab   = $this->db->doQuery( $query_info, array( ":pgid" => $pgid, ":id" => $id_abilita ), False );
         
-        $params = $this->controllaPrerequisitiPerEliminazioneAbilita( $pgid, $id_abilita, $lista_ab );
-        $params = array_merge( array( $pgid, $id_abilita ), $params );
+        $lista_completa = $this->controllaPrerequisitiPerEliminazioneAbilita( $pgid, $id_abilita, $lista_ab );
+        array_unshift( $lista_completa, $id_abilita );
+        
+        $params = $lista_completa;
+        array_unshift( $params, $pgid );
         
         $marcatori = str_repeat("?,", count($params) - 2 )."?";
         $query_del = "DELETE FROM personaggi_has_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori)";
         $this->db->doQuery( $query_del, $params, False );
+        
+        foreach ($lista_completa as $lc)
+            $this->registraAzione( $pgid, "DELETE", "personaggi_has_abilita", "abilita_id_abilita", $lc, NULL );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -448,26 +494,6 @@ class CharactersManager
             throw new Exception( $err_mex );
 ***REMOVED***
         //$this->mailer->sendMail( "acquisti", $mail, $nome, $pass  );
-        
-        return "{\"status\": \"ok\",\"result\": \"true\"}";
-    }
-    
-    public function aggiungiPC( $pgid, $qta )
-    {
-        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
-        
-        $query_pc = "UPDATE personaggi SET pc_personaggio = pc_personaggio + :qta WHERE id_personaggio = :pgid";
-        $this->db->doQuery( $query_pc, array( ":pgid" => $pgid, ":qta" => $qta ), False );
-        
-        return "{\"status\": \"ok\",\"result\": \"true\"}";
-    }
-    
-    public function aggiungiPX( $pgid, $qta )
-    {
-        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
-        
-        $query_px = "UPDATE personaggi SET px_personaggio = px_personaggio + :qta WHERE id_personaggio = :pgid";
-        $this->db->doQuery( $query_px, array( ":pgid" => $pgid, ":qta" => $qta ), False );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -501,10 +527,18 @@ class CharactersManager
     public function eliminaPG( $pgid, $controlla_permessi = True )
     {
         if( $controlla_permessi )
-            UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
-        
-        $query_canc_pg = "DELETE FROM personaggi WHERE id_personaggio = :idpg";
-        $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
+        {
+            UsersManager::operazionePossibile($this->session, __FUNCTION__, $pgid);
+    
+            $query_canc_pg = "UPDATE personaggi SET eliminato_personaggio = 1 WHERE id_personaggio = :idpg";
+            $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
+            $this->registraAzione( $pgid, "DELETE", "personaggi", "eliminato_personaggio", 0, 1 );
+***REMOVED***
+        else
+        {
+            $query_canc_pg = "DELETE FROM personaggi WHERE id_personaggio = :idpg";
+            $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
+***REMOVED***
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -539,7 +573,15 @@ class CharactersManager
         $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
         $res_classi    = $this->db->doQuery( $query_classi, array( ":idpg" => $pgid ), False );
         
-        $query_abilita = "SELECT ab.id_abilita, ab.costo_abilita, ab.nome_abilita, ab.prerequisito_abilita, ab.tipo_abilita, ab.distanza_abilita, ab.classi_id_classe, cl.nome_classe 
+        $query_abilita = "SELECT ab.id_abilita,
+                                 ab.costo_abilita,
+                                 ab.nome_abilita,
+                                 ab.prerequisito_abilita,
+                                 ab.tipo_abilita,
+                                 ab.distanza_abilita,
+                                 ab.classi_id_classe,
+                                 ab.effetto_abilita,
+                                 cl.nome_classe
                             FROM abilita AS ab 
                               JOIN classi AS cl ON ab.classi_id_classe = cl.id_classe 
                             WHERE id_abilita IN 
@@ -552,9 +594,9 @@ class CharactersManager
         foreach( $res_classi as $cl )
             $classi[$cl["tipo_classe"]][] = $cl;
         
-        $crafting_chimico = False;
+        $crafting_chimico        = False;
         $crafting_programmazione = False;
-        $crafting_ingegneria = False;
+        $crafting_ingegneria     = False;
         
         if( count( $res_abilita ) > 0 )
         {
@@ -621,7 +663,7 @@ class CharactersManager
                         FROM storico_azioni AS st
                         JOIN giocatori AS gi ON gi.email_giocatore = st.giocatori_email_giocatore
                     WHERE st.id_personaggio_azione = :idpg
-                    ORDER BY st.data_azione DESC ";
+                    ORDER BY st.data_azione DESC, st.valore_nuovo_azione DESC, st.valore_vecchio_azione DESC";
         $result = $this->db->doQuery( $query, array( ":idpg" => $pgid ) );
         $result = isset($result) ? $result : "[]";
         

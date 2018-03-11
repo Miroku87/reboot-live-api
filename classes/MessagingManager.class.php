@@ -161,22 +161,24 @@ class MessagingManager
     {
         $tabella    = $tipo === "ig" ? "personaggi" : "giocatori";
         $campo_id   = $tipo === "ig" ? "id_personaggio" : "email_giocatore";
-        $campo_nome = $tipo === "ig" ? "nome_personaggio" : " nome_giocatore";
+        $id_no      = $tipo === "ig" ? $this->session->pg_loggato["id_personaggio"] : $this->session->email_giocatore;
+        $campo_nome = $tipo === "ig" ? "nome_personaggio" : "CONCAT( nome_giocatore, ' ', cognome_giocatore )";
         
-        $query_dest = "SELECT $campo_id AS real_value, $campo_nome AS label FROM $tabella WHERE $campo_nome LIKE :term";
+        $query_dest = "SELECT $campo_id AS real_value, $campo_nome AS label FROM $tabella WHERE $campo_nome LIKE :term AND $campo_id != :idno";
         
-        return $this->db->doQuery( $query_dest, array( ":term" => "%$term%") );
+        $ret["status"] = "ok";
+        $ret["results"] = $this->db->doQuery( $query_dest, array( ":term" => "%$term%", ":idno" => $id_no ), False );
+        
+        return json_encode($ret);
     }
     
     public function recuperaDestinatariIG( $term )
     {
-//        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         return $this->recuperaDestinatari( "ig", $term );
     }
     
     public function recuperaDestinatariFG( $term )
     {
-//        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         return $this->recuperaDestinatari( "fg", $term );
     }
 }

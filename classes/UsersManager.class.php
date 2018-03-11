@@ -43,11 +43,10 @@ class UsersManager
 
         UsersManager::controllaLogin( $sessione );
 
-        if( isset( $id ) )
-        {
+        if( isset( $id ) && in_array($id, $sessione->pg_propri) )
             $tipo_grant = in_array($id, $sessione->pg_propri) ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
+        else if ( isset( $id ) && !in_array($id, $sessione->pg_propri) )
             $tipo_grant = $tipo_grant && $id === $sessione->email_giocatore ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
-***REMOVED***
 
         if( !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
             throw new Exception( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>" );
@@ -88,6 +87,9 @@ class UsersManager
 	
 	public function login( $mail, $pass )
 	{
+	    if( !Utils::controllaMail($mail) )
+	        throw new Exception("La mail inserita non &egrave; valida. Riprova con un'altra.");
+	    
 		$query_grants  = "SELECT gi.email_giocatore, gi.nome_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
                             LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
                             LEFT OUTER JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
@@ -102,17 +104,26 @@ class UsersManager
 
 		$query_pg_propri = "SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :email";
         $pg_propri       = $this->db->doQuery( $query_pg_propri, array( ":email" => $mail ), False );
-		
+        
+        if( count($pg_propri) === 0 )
+            $pg_propri = [];
+        
+        $this->session->destroy();
+        $this->session                     = SessionManager::getInstance();
 		$this->session->email_giocatore    = $result[0]["email_giocatore"];
 		$this->session->nome_giocatore     = $result[0]["nome_giocatore"];
 		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
 
-		return "{\"status\": \"ok\", \"user_info\": {
+		$json =  "{\"status\": \"ok\", \"user_info\": {
             \"email_giocatore\":\"".$this->session->email_giocatore."\",
             \"nome_giocatore\":\"".$result[0]["nome_giocatore"]."\",
+            \"pg_propri\":".json_encode( $this->session->pg_propri ).",
             \"permessi\":".json_encode( $this->session->permessi_giocatore )."
 		}}";
+        $json = trim(preg_replace('/\s+/', ' ', $json));
+        
+		return $json;
 	}
 
 	public function controllaaccesso( )
@@ -145,17 +156,17 @@ class UsersManager
 		return "{\"status\": \"ok\"}";
 	}
 	
-	public function registra( $nome, $cognome, $cf, $note, $mail, $pass1, $pass2, $condizioni )
+	public function registra( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni )
 	{
-		$errors = $this->controllaDatiRegistrazione( $nome, $cognome, $cf, $note, $mail, $pass1, $pass2, $condizioni );
+	    //TODO: controllare che non esista già un utente con la mail
+		$errors = $this->controllaDatiRegistrazione( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni );
 		
 		if( isset( $errors ) && $errors !== "" )
 			throw new Exception($errors);
 		
 		$pass   = sha1( $pass1 );
-		$query  = "INSERT INTO giocatori VALUES (:cf,:pass,:nome,:cognome,:mail,NOW(),:note,NULL,4)";
+		$query  = "INSERT INTO giocatori (email_giocatore, password_giocatore, nome_giocatore, cognome_giocatore, note_giocatore) VALUES (:mail,:pass,:nome,:cognome,:note)";
 		$params = array(
-			":cf"      => $cf, 
 			":pass"    => $pass,
 			":nome"    => $nome,
 			":cognome" => $cognome,
@@ -163,8 +174,35 @@ class UsersManager
 			":note"    => $note
 		);
 		
-		$result = $this->db->doQuery( $query, $params );
-		//$this->mailer->sendMail( "registrazione", $mail, $nome, $pass  ); //TODO
+		$this->db->doQuery( $query, $params );
+		
+		$this->mailer->inviaMailRegistrazione( $mail, $nome." ".$cognome, $pass1  );
+
+		return "{\"status\": \"ok\"}";
+	}
+	
+	public function recuperaPassword( $mail )
+	{
+        if( !Utils::controllaMail($mail) )
+            throw new Exception("La mail inserita non &egrave; valida.");
+        
+		$query_check = "SELECT CONCAT(nome_giocatore, ' ', cognome_giocatore) as nome_completo FROM giocatori WHERE email_giocatore = :id";
+		$giocatore = $this->db->doQuery( $query_check, array( ":id" => $mail ), False );
+	 
+		if( count( $giocatore ) < 1 )
+		    throw new Exception("La mail inserita non esiste.");
+				
+	    $new_pass = Utils::generatePassword();
+		
+		$pass   = sha1( $new_pass );
+		$query  = "UPDATE giocatori SET password_giocatore = :pass WHERE email_giocatore = :id";
+		$params = array(
+			":pass" => $pass,
+			":id"   => $mail,
+		);
+		
+		$this->db->doQuery( $query, $params, False );
+		$this->mailer->inviaMailRecuperoPassowrd( $mail, $giocatore[0]["nome_completo"], $new_pass  );
 
 		return "{\"status\": \"ok\"}";
 	}
@@ -179,7 +217,7 @@ class UsersManager
         if( isset( $search ) && $search["value"] != "" )
         {
             $params[":search"] = "%$search[value]%";
-            $where = "WHERE (
+            $where = "AND (
 						gi2.nome_giocatore LIKE :search OR
 						gi2.email_giocatore LIKE :search OR
 						gi2.nome_ruolo LIKE :search OR
@@ -200,7 +238,7 @@ class UsersManager
         $query_players = "SELECT * FROM (
                             SELECT CONCAT(gi.nome_giocatore, ' ', gi.cognome_giocatore) AS nome_completo, gi.*, ru.nome_ruolo
                               FROM giocatori AS gi
-                              JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo ) AS gi2 $where $order_str";
+                              JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo ) AS gi2 WHERE gi2.eliminato_giocatore = 0 $where $order_str";
         $risultati = $this->db->doQuery( $query_players, $params, False );
         $totale    = count($risultati);
     
@@ -224,13 +262,18 @@ class UsersManager
         return json_encode( $output );
 	}
 	
-	public function aggiornaUtente( $cf, $aggiornamenti )
+	public function modificaUtente( $cf, $aggiornamenti )
 	{
 	
 	}
 	
-	public function eliminaUtente( $cf, $aggiornamenti )
+	public function eliminaGiocatore( $id )
 	{
-		
+        UsersManager::operazionePossibile($this->session, __FUNCTION__);
+        
+        $query_canc_pg = "UPDATE giocatori SET eliminato_giocatore = 1 WHERE email_giocatore = :id";
+        $this->db->doQuery( $query_canc_pg, array( ":id" => $id ), False );
+        
+        return "{ \"status\":\"ok\" }";
 	}
 }

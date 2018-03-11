@@ -93,6 +93,8 @@ class SessionManager
         {
             return $_SESSION[$name];
 ***REMOVED***
+        
+        return false;
     }
     
     

@@ -43,6 +43,9 @@ class DatabaseBridge extends PDO
 		if( !is_array( $params ) )
 			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO. Il valore passato non lo è: ".$params);
 
+		$query = str_replace("\n","",$query);
+		$query = str_replace("\r","",$query);
+		
 		try {
             $conn = $this->connect();
             $stmnt = $conn->prepare($query);
