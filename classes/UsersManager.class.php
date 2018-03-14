@@ -99,8 +99,8 @@ class UsersManager
 	    if( !Utils::controllaMail($mail) )
 	        throw new Exception("La mail inserita non &egrave; valida. Riprova con un'altra.");
 	    
-		$query_grants  = "SELECT gi.email_giocatore, gi.nome_giocatore, gi.cognome_giocatore, rhg.grants_nome_grant AS permessi FROM giocatori AS gi
-                            LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
+		$query_grants  = "SELECT gi.email_giocatore, CONCAT(gi.nome_giocatore,' ', gi.cognome_giocatore) AS nome_completo, rhg.grants_nome_grant AS permessi FROM giocatori AS gi
+                            LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_nome_ruolo = rhg.ruoli_nome_ruolo
                             WHERE gi.email_giocatore = :mail AND 
                                   gi.password_giocatore = :pass AND
                                   gi.eliminato_giocatore = 0";
@@ -120,13 +120,13 @@ class UsersManager
         $this->session->destroy();
         $this->session                     = SessionManager::getInstance();
 		$this->session->email_giocatore    = $result[0]["email_giocatore"];
-		$this->session->nome_giocatore     = $result[0]["nome_giocatore"]." ".$result[0]["cognome_giocatore"];
+		$this->session->nome_giocatore     = $result[0]["nome_completo"];
 		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
 
 		$json =  "{\"status\": \"ok\", \"user_info\": {
             \"email_giocatore\":\"".$this->session->email_giocatore."\",
-            \"nome_giocatore\":\"".$result[0]["nome_giocatore"]."\",
+            \"nome_giocatore\":\"".$this->session->nome_giocatore."\",
             \"pg_propri\":".json_encode( $this->session->pg_propri ).",
             \"permessi\":".json_encode( $this->session->permessi_giocatore )."
 		}}";
@@ -233,11 +233,11 @@ class UsersManager
         {
             $params[":search"] = "%$search[value]%";
             $where = "AND (
-						gi2.nome_giocatore LIKE :search OR
-						gi2.email_giocatore LIKE :search OR
-						gi2.nome_ruolo LIKE :search OR
-						gi2.note_giocatore LIKE :search OR
-						gi2.note_staff_giocatore LIKE :search
+						nome_giocatore LIKE :search OR
+						email_giocatore LIKE :search OR
+						ruoli_nome_ruolo LIKE :search OR
+						note_giocatore LIKE :search OR
+						note_staff_giocatore LIKE :search
 					  )";
 ***REMOVED***
         
@@ -245,15 +245,13 @@ class UsersManager
         {
             $sorting = array();
             foreach ( $order as $elem )
-                $sorting[] = "gi2.".$columns[$elem["column"]]["data"]." ".$elem["dir"];
+                $sorting[] = $columns[$elem["column"]]["data"]." ".$elem["dir"];
             
             $order_str = "ORDER BY ".implode( $sorting, "," );
 ***REMOVED***
         
-        $query_players = "SELECT * FROM (
-                            SELECT CONCAT(gi.nome_giocatore, ' ', gi.cognome_giocatore) AS nome_completo, gi.*, ru.nome_ruolo
-                              FROM giocatori AS gi
-                              JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo ) AS gi2 WHERE gi2.eliminato_giocatore = 0 $where $order_str";
+        $query_players = "SELECT giocatori.*, CONCAT(nome_giocatore, ' ', cognome_giocatore) AS nome_completo
+                              FROM giocatori WHERE eliminato_giocatore = 0 $where $order_str";
         $risultati = $this->db->doQuery( $query_players, $params, False );
         $totale    = count($risultati);
     

@@ -68,7 +68,7 @@ class CharactersManager
 						bj.classi_militari LIKE :search OR
 						bj.nome_giocatore LIKE :search OR
 						bj.email_giocatore LIKE :search OR
-						bj.nome_ruolo LIKE :search OR
+						bj.ruoli_nome_ruolo LIKE :search OR
 						bj.note_giocatore LIKE :search
 					  )";
 ***REMOVED***
@@ -95,7 +95,7 @@ class CharactersManager
                         CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         gi.note_giocatore,
                         gi.eliminato_giocatore,
-                        ru.nome_ruolo,
+                        gi.ruoli_nome_ruolo,
                         GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
                         GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari
                     FROM personaggi AS pg
@@ -103,7 +103,6 @@ class CharactersManager
                         LEFT OUTER JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
                         LEFT OUTER JOIN classi AS cl_m ON cl_m.id_classe = phc.classi_id_classe AND cl_m.tipo_classe = 'militare'
                         LEFT OUTER JOIN classi AS cl_c ON cl_c.id_classe = phc.classi_id_classe AND cl_c.tipo_classe = 'civile'
-                        LEFT OUTER JOIN ruoli AS ru ON ru.id_ruolo = gi.ruoli_id_ruolo
                     GROUP BY pg.id_personaggio";
         
         $where_str = count( $where ) > 0 ? "AND ".implode( $where, " AND ") : "";
