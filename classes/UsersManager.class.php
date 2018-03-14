@@ -41,15 +41,34 @@ class UsersManager
 
         $tipo_grant = "";
 
-        UsersManager::controllaLogin( $sessione );
+        self::controllaLogin( $sessione );
 
         if( isset( $id ) && in_array($id, $sessione->pg_propri) )
             $tipo_grant = in_array($id, $sessione->pg_propri) ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
         else if ( isset( $id ) && !in_array($id, $sessione->pg_propri) )
-            $tipo_grant = $tipo_grant && $id === $sessione->email_giocatore ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
+            $tipo_grant = $id === $sessione->email_giocatore ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
 
         if( !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
             throw new Exception( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>" );
+    }
+
+	private function controllaInputPwd( $pass1, $pass2 )
+    {
+        $errors = "";
+        
+        if ( $pass1 === "" || Utils::soloSpazi($pass1) )
+            $errors .= "Il primo campo Password non pu&ograve; essere vuoto.<br>";
+    
+        if ( $pass2 === "" || Utils::soloSpazi($pass2) )
+            $errors .= "Il secondo campo Password non pu&ograve; essere vuoto.<br>";
+    
+        if( $pass1 !== "" && !Utils::soloSpazi($pass1) &&
+            $pass2 !== "" && !Utils::soloSpazi($pass2) &&
+            $pass1 !== $pass2
+        )
+            $errors .= "Le password inserite non combaciano.<br>";
+        
+        return $errors;
     }
 
 	private function controllaDatiRegistrazione( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni )
@@ -67,17 +86,7 @@ class UsersManager
 		else if ( !Utils::controllaMail($mail) )
 			$errors .= "Il campo Mail contiene un indirizzo non valido.<br>";
 
-		if ( $pass1 === "" || Utils::soloSpazi($pass1) )
-			$errors .= "Il primo campo Password non pu&ograve; essere vuoto.<br>";
-
-		if ( $pass2 === "" || Utils::soloSpazi($pass2) )
-			$errors .= "Il secondo campo Password non pu&ograve; essere vuoto.<br>";
-
-		if( $pass1 !== "" && !Utils::soloSpazi($pass1) &&
-			$pass2 !== "" && !Utils::soloSpazi($pass2) &&
-			$pass1 !== $pass2
-		)
-			$errors .= "Le password inserite non combaciano.<br>";
+		$errors .= $this->controllaInputPwd($pass1,$pass2);
 			
 		if( !isset( $condizioni ) || ( isset( $condizioni ) && $condizioni !== "on" ) )
 			$errors .= "Non &egrave; possibile registrarsi senza accettare i termini e le condizioni.";
@@ -90,11 +99,11 @@ class UsersManager
 	    if( !Utils::controllaMail($mail) )
 	        throw new Exception("La mail inserita non &egrave; valida. Riprova con un'altra.");
 	    
-		$query_grants  = "SELECT gi.email_giocatore, gi.nome_giocatore, gr.nome_grant AS permessi FROM giocatori AS gi
+		$query_grants  = "SELECT gi.email_giocatore, gi.nome_giocatore, gi.cognome_giocatore, rhg.grants_nome_grant AS permessi FROM giocatori AS gi
                             LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_id_ruolo = rhg.ruoli_id_ruolo
-                            LEFT OUTER JOIN reboot_live.grants AS gr ON gr.id_grant = rhg.grants_id_grant
                             WHERE gi.email_giocatore = :mail AND 
-                                  gi.password_giocatore = :pass";
+                                  gi.password_giocatore = :pass AND
+                                  gi.eliminato_giocatore = 0";
 
 		$params = array( ":mail" => $mail, ":pass" => sha1( $pass ) );
 		$result = $this->db->doQuery( $query_grants, $params, False );
@@ -111,7 +120,7 @@ class UsersManager
         $this->session->destroy();
         $this->session                     = SessionManager::getInstance();
 		$this->session->email_giocatore    = $result[0]["email_giocatore"];
-		$this->session->nome_giocatore     = $result[0]["nome_giocatore"];
+		$this->session->nome_giocatore     = $result[0]["nome_giocatore"]." ".$result[0]["cognome_giocatore"];
 		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
 
@@ -135,7 +144,7 @@ class UsersManager
 		return "{\"status\": \"ok\"}";
 	}
 
-	public function controllaPWD( $pass )
+	public function controllaPwd( $pass )
 	{
         $query_pwd  = "SELECT * FROM giocatori WHERE email_giocatore = :mail AND password_giocatore = :pass";
         $params = array( ":mail" => $this->session->email_giocatore, ":pass" => sha1( $pass ) );
@@ -163,6 +172,12 @@ class UsersManager
 		
 		if( isset( $errors ) && $errors !== "" )
 			throw new Exception($errors);
+		
+		$query_controllo = "SELECT email_giocatore FROM giocatori WHERE email_giocatore = :mail";
+		$controllo       = $this->db->doQuery( $query_controllo, array( ":mail" => $mail ), False );
+		
+		if( count($controllo) > 0 )
+		    throw new Exception("Esiste gi&agrave; un utente con la mail inserita. Inserirne una differente.");
 		
 		$pass   = sha1( $pass1 );
 		$query  = "INSERT INTO giocatori (email_giocatore, password_giocatore, nome_giocatore, cognome_giocatore, note_giocatore) VALUES (:mail,:pass,:nome,:cognome,:note)";
@@ -202,7 +217,7 @@ class UsersManager
 		);
 		
 		$this->db->doQuery( $query, $params, False );
-		$this->mailer->inviaMailRecuperoPassowrd( $mail, $giocatore[0]["nome_completo"], $new_pass  );
+		$this->mailer->inviaMailDatiAccesso( $mail, $giocatore[0]["nome_completo"], $new_pass  );
 
 		return "{\"status\": \"ok\"}";
 	}
@@ -261,11 +276,53 @@ class UsersManager
     
         return json_encode( $output );
 	}
-	
-	public function modificaUtente( $cf, $aggiornamenti )
-	{
-	
-	}
+    
+    public function recuperaNoteUtente( $id = NULL )
+    {
+        $id = isset( $id ) ? $id : $this->session->email_giocatore;
+        self::operazionePossibile( $this->session, __FUNCTION__, $id );
+        
+        $query_note = "SELECT note_giocatore FROM giocatori WHERE email_giocatore = :id";
+        $result     = $this->db->doQuery( $query_note, array( ":id" => $id ), False );
+        
+        return "{\"status\": \"ok\",\"result\": ".json_encode($result[0])." }";
+    }
+    
+    public function modificaPassword( $vecchia, $pass1, $pass2 )
+    {
+        $pass_check = json_decode( $this->controllaPwd( $vecchia ) );
+        
+        if( $pass_check->status === "error" )
+            throw new Exception("La vecchia password inserita non &egrave; corretta.");
+        
+        $errors = $this->controllaInputPwd( $pass1, $pass2 );
+    
+        if( isset( $errors ) && $errors !== "" )
+            throw new Exception($errors);
+        
+        $this->modificaUtente( array( "password_giocatore" => sha1($pass1) ) );
+        
+        $this->mailer->inviaMailDatiAccesso( $this->session->email_giocatore, $this->session->nome_giocatore, $pass1 );
+        
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
+    
+    public function modificaUtente( $modifiche, $id = NULL )
+    {
+        $id = isset( $id ) ? $id : $this->session->email_giocatore;
+    
+        foreach( $modifiche as $campo => $valore )
+            self::operazionePossibile( $this->session, __FUNCTION__."_".$campo, $id );
+        
+        $to_update = implode(" = ?, ",array_keys($modifiche) )." = ?";
+        $valori = array_values($modifiche);
+        $valori[] = $this->session->email_giocatore;
+        
+        $query_bg = "UPDATE giocatori SET $to_update WHERE email_giocatore = ?";
+        $this->db->doQuery( $query_bg, $valori, False );
+        
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
 	
 	public function eliminaGiocatore( $id )
 	{

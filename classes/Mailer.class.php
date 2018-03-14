@@ -86,22 +86,22 @@ class Mailer
         $mail->send();
     }
     
-    public function inviaMailRecuperoPassowrd( $dest_indirizzo, $dest_nome, $pass )
+    public function inviaMailDatiAccesso( $dest_indirizzo, $dest_nome, $pass )
     {
         $mail = $this->impostaMailer();
         //Set who the message is to be sent to
         $mail->addAddress($dest_indirizzo, $dest_nome);
         //Set the subject line
-        $mail->Subject = 'Reboot Live: Recupero Password';
+        $mail->Subject = 'Reboot Live: Dati Accesso';
         //Read an HTML message body from an external file, convert referenced images to embedded,
         //convert HTML into a basic plain-text alternative body
         $mail->msgHTML( "Gentile giocatore,<br>
-                         qui di seguito troverai i dati da te richiesti:<br><br>
+                         qui di seguito troverai i i tuoi dati di accesso:<br><br>
                          <b>Nome Utente:</b> $dest_indirizzo<br>
                          <b>Password:</b> $pass" );
         //Replace the plain text body with one created manually
         $mail->AltBody = "Gentile giocatore,
-                         qui di seguito troverai i dati da te richiesti:
+                         qui di seguito troverai i tuoi dati di accesso:
                          Nome Utente: $dest_indirizzo
                          Password: $pass";
 
