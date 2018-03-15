@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT'] . "/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
 include_once($path . "classes/SessionManager.class.php");
 include_once($path . "classes/Utils.class.php");
 include_once($path . "config/constants.php");

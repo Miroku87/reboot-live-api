@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/Mailer.class.php");
@@ -290,7 +290,7 @@ class CharactersManager
             {
                 $l["id_classe"] = $l["classi_id_classe"];
                 unset($l["classi_id_classe"]);
-                $lista_abilita[$l["id_classe"]][] = Utils::utf8ize($l);
+                $lista_abilita[$l["id_classe"]][] = $l;
 ***REMOVED***
             $lista_output = json_encode($lista_abilita);
 ***REMOVED***
@@ -329,10 +329,10 @@ class CharactersManager
         $pg_propri[] = $new_pg_id;
         $this->session->pg_propri = $pg_propri;
         
-        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "nome_personaggio", NULL, $nome );
-        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "px_personaggio", NULL, $PX_INIZIALI );
-        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "pc_personaggio", NULL, $PC_INIZIALI );
-        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "giocatori_email_giocatore", NULL, $this->session->email_giocatore );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "nome", NULL, $nome );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "PX", NULL, $PX_INIZIALI );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "PC", NULL, $PC_INIZIALI );
+        $this->registraAzione( $new_pg_id, "INSERT", "personaggi", "email", NULL, $this->session->email_giocatore );
         
         try {
             $this->aggiungiClassiAlPG($new_pg_id, $classi);
@@ -367,8 +367,12 @@ class CharactersManager
         
         $this->db->doMultipleInserts( $classi_query, $classi_params );
     
-        foreach( $class_ids as $ci )
-            $this->registraAzione( $pgid, "INSERT", "personaggi_has_classi", "classi_id_classe", NULL, $ci );
+		$marcatori  = str_repeat("?, ", count($class_ids)-1)." ?";
+		$query_nomi = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
+		$nomi = $this->db->doQuery( $query_nomi, $class_id, False );
+	
+        foreach( $nomi as $n )
+            $this->registraAzione( $pgid, "INSERT", "classi_personaggio", "classe", NULL, $n["nome_classe"] );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -379,11 +383,11 @@ class CharactersManager
         
         $marcatori     = str_repeat("?,", count( $ab_ids ) - 1 )."?";
         $query_prereq  = "SELECT * FROM (
-                            SELECT 1 AS rank, id_abilita, prerequisito_abilita FROM abilita WHERE id_abilita IN ( $marcatori ) AND prerequisito_abilita IS NULL
+                            SELECT 1 AS rank, id_abilita, nome_abilita, prerequisito_abilita FROM abilita WHERE id_abilita IN ( $marcatori ) AND prerequisito_abilita IS NULL
                              UNION ALL
-                            SELECT 2 AS rank, id_abilita, prerequisito_abilita FROM abilita WHERE id_abilita IN ( $marcatori ) AND prerequisito_abilita > 0
+                            SELECT 2 AS rank, id_abilita, nome_abilita, prerequisito_abilita FROM abilita WHERE id_abilita IN ( $marcatori ) AND prerequisito_abilita > 0
                              UNION ALL
-                            SELECT 3 AS rank, id_abilita, prerequisito_abilita FROM abilita WHERE id_abilita IN ( $marcatori ) AND prerequisito_abilita < 0
+                            SELECT 3 AS rank, id_abilita, nome_abilita, prerequisito_abilita FROM abilita WHERE id_abilita IN ( $marcatori ) AND prerequisito_abilita < 0
                           ) AS ab GROUP BY rank, prerequisito_abilita, id_abilita";
         $ordine_ab     = $this->db->doQuery( $query_prereq, array_merge($ab_ids, $ab_ids, $ab_ids), False );
         
@@ -394,9 +398,9 @@ class CharactersManager
             $abilita_params[] = array( ":idpg" => $pgid, ":idabilita" => $ab["id_abilita"] );
         
         $this->db->doMultipleInserts( $abilita_query, $abilita_params );
-    
+		
         foreach( $ordine_ab as $ab )
-            $this->registraAzione( $pgid, "INSERT", "personaggi_has_abilita", "abilita_id_abilita", NULL, $ab["id_abilita"] );
+            $this->registraAzione( $pgid, "INSERT", "abilita_personaggio", "abilita", NULL, $ab["nome_abilita"] );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -425,25 +429,30 @@ class CharactersManager
         $params = $classi_del;
         array_unshift($params, $pgid);
         
-        $marcatori = str_repeat("?,", count($classi_del) - 1 )."?";
-        $query_del = "DELETE FROM personaggi_has_classi WHERE personaggi_id_personaggio = ? AND classi_id_classe IN ($marcatori)";
+        $marcatori_cl = str_repeat("?,", count($classi_del) - 1 )."?";
+        $query_del    = "DELETE FROM personaggi_has_classi WHERE personaggi_id_personaggio = ? AND classi_id_classe IN ($marcatori_cl)";
         $this->db->doQuery( $query_del, $params, False );
         
-        $query_sel_ab = "SELECT id_abilita FROM personaggi_has_abilita AS pha
+        $query_sel_ab = "SELECT id_abilita, nome_abilita FROM personaggi_has_abilita AS pha
                           JOIN abilita AS ab ON pha.abilita_id_abilita = ab.id_abilita
-                          WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori)";
+                          WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori_cl)";
         $lista_ab     = $this->db->doQuery( $query_sel_ab, $params, False );
         
-        $params_ab    = array_unshift( $lista_ab, $pgid );
+        $params_ab    = $lista_ab;
+        array_unshift( $params_ab, $pgid );
+		
         $marcatori_ab = str_repeat("?, ", count($lista_ab) - 2)."?";
         $query_del_ab = "DELETE FROM personaggi_has_abilita WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori_ab)";
         $this->db->doQuery( $query_del_ab, $params_ab, False );
     
-        foreach ($classi_del as $cd)
-            $this->registraAzione( $pgid, "DELETE", "personaggi_has_classi", "personaggi_id_personaggio", $cd, NULL );
+		$query_nomi_cl = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
+		$nomi_cl       = $this->db->doQuery( $query_nomi_cl, $classi_del, False );
+	
+        foreach ($nomi_cl as $n)
+            $this->registraAzione( $pgid, "DELETE", "classi_personaggio", "classe", $n["nome_classe"], NULL );
     
         foreach ($lista_ab as $la)
-            $this->registraAzione( $pgid, "DELETE", "personaggi_has_abilita", "abilita_id_abilita", $la, NULL );
+            $this->registraAzione( $pgid, "DELETE", "abilita_personaggio", "abilita", $la["nome_abilita"], NULL );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -467,8 +476,11 @@ class CharactersManager
         $query_del = "DELETE FROM personaggi_has_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori)";
         $this->db->doQuery( $query_del, $params, False );
         
-        foreach ($lista_completa as $lc)
-            $this->registraAzione( $pgid, "DELETE", "personaggi_has_abilita", "abilita_id_abilita", $lc, NULL );
+		$query_nomi_ab = "SELECT nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
+		$nomi_ab       = $this->db->doQuery( $query_nomi_ab, $lista_completa, False );
+		
+        foreach ($nomi_ab as $n)
+            $this->registraAzione( $pgid, "DELETE", "abilita_personaggio", "abilita", $n["nome_abilita"], NULL );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -566,7 +578,7 @@ class CharactersManager
         
         if( count( $res_pg ) == 0 )
             throw new Exception( "Non puoi scaricare i dati di un giocatore non tuo." );
-        
+		
         $pg_data  = $res_pg[0];
         
         $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
@@ -652,7 +664,7 @@ class CharactersManager
     {
         UsersManager::operazionePossibile($this->session, __FUNCTION__, $pgid);
         
-        $query = "SELECT gi.nome_giocatore, 
+        $query = "SELECT CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore, 
                             st.data_azione, 
                             st.tipo_azione, 
                             st.tabella_azione,

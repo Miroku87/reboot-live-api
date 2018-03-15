@@ -1,2 +1,2 @@
 .idea
-config/config.inc.php
+src/config/config.inc.php

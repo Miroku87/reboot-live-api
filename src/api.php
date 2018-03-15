@@ -1,6 +1,6 @@
 <?php
 //TODO: fare uno script di build che cambia il path
-$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
 include_once( $path."classes/UsersManager.class.php" );
 include_once( $path."classes/CharactersManager.class.php" );
 include_once( $path."classes/MessagingManager.class.php" );

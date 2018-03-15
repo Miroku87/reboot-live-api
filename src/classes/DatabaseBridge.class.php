@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
 include $path."config/config.inc.php";
 
 class DatabaseBridge extends PDO
@@ -65,9 +65,9 @@ class DatabaseBridge extends PDO
 ***REMOVED***
 
             if ($result && !$to_json)
-                return $result;
+                return Utils::utf8ize($result);
             else if ($result && $to_json)
-                return json_encode($result);
+                return json_encode(Utils::utf8ize($result));
 ***REMOVED***
         catch( Exception $e )
         {
