@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/Mailer.class.php");
 include_once($path."classes/SessionManager.class.php");

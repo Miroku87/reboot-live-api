@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/Mailer.class.php");
@@ -369,7 +369,7 @@ class CharactersManager
     
 		$marcatori  = str_repeat("?, ", count($class_ids)-1)." ?";
 		$query_nomi = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
-		$nomi = $this->db->doQuery( $query_nomi, $class_id, False );
+		$nomi = $this->db->doQuery( $query_nomi, $class_ids, False );
 	
         foreach( $nomi as $n )
             $this->registraAzione( $pgid, "INSERT", "classi_personaggio", "classe", NULL, $n["nome_classe"] );
@@ -527,6 +527,8 @@ class CharactersManager
         $valori[] = $pgid;
         $query_bg = "UPDATE personaggi SET $to_update WHERE id_personaggio = ?";
         $this->db->doQuery( $query_bg, $valori, False );
+        
+        //TODO: in caso di background, avvisare lo staff
         
         foreach( $vecchi_dati as $vd )
             foreach( $vd as $k => $val )

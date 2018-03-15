@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/src/reboot-live-api/";
+$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
 include $path."config/config.inc.php";
 
 class DatabaseBridge extends PDO
