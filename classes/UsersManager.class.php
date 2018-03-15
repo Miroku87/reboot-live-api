@@ -87,9 +87,6 @@ class UsersManager
 			$errors .= "Il campo Mail contiene un indirizzo non valido.<br>";
 
 		$errors .= $this->controllaInputPwd($pass1,$pass2);
-			
-		if( !isset( $condizioni ) || ( isset( $condizioni ) && $condizioni !== "on" ) )
-			$errors .= "Non &egrave; possibile registrarsi senza accettare i termini e le condizioni.";
 		
 		return $errors;
 	}

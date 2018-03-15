@@ -1,6 +1,5 @@
 <?php
-//https://www.leaseweb.com/labs/2015/10/creating-a-simple-rest-api-in-php/
-// __FUNCTION__
+//TODO: fare uno script di build che cambia il path
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/";
 include_once( $path."classes/UsersManager.class.php" );
 include_once( $path."classes/CharactersManager.class.php" );
