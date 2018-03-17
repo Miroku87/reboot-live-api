@@ -1,5 +1,6 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
+include_once($path."classes/APIException.class.php");
 include_once($path . "classes/SessionManager.class.php");
 include_once($path . "classes/Utils.class.php");
 include_once($path . "config/constants.php");
@@ -23,6 +24,7 @@ class Mailer
     
     private function impostaMailer()
     {
+        global $MAIL_ACCOUNT;
         global $MAIL_MITTENTE_INDIRIZZO;
         global $MAIL_MITTENTE_NOME;
         global $MAIL_PASSWORD;
@@ -49,8 +51,9 @@ class Mailer
         $mail->SMTPSecure = 'tls';
         //Whether to use SMTP authentication
         $mail->SMTPAuth = true;
+        $mail->AuthType = 'LOGIN';
         //Username to use for SMTP authentication - use full email address for gmail
-        $mail->Username = $MAIL_MITTENTE_INDIRIZZO;
+        $mail->Username = $MAIL_ACCOUNT;
         //Password to use for SMTP authentication
         $mail->Password = $MAIL_PASSWORD;
         //Set who the message is to be sent from
@@ -82,7 +85,7 @@ class Mailer
                          Qui di seguito i dati di accesso:
                          Nome Utente: $dest_indirizzo
                          Password: $pass";
-
+        
         $mail->send();
     }
     
@@ -104,7 +107,35 @@ class Mailer
                          qui di seguito troverai i tuoi dati di accesso:
                          Nome Utente: $dest_indirizzo
                          Password: $pass";
-
+        
+        $mail->send();
+    }
+    
+    public function inviaAvvisoBackground( $pgid )
+    {
+        global $MAIL_MITTENTE_INDIRIZZO;
+        global $MAIL_MITTENTE_NOME;
+        global $SITE_URL ;
+        
+        $pg_url = "$SITE_URL?d=scheda_pg&i=$pgid";
+        
+        $mail = $this->impostaMailer();
+        //Set who the message is to be sent to
+        $mail->addAddress($MAIL_MITTENTE_INDIRIZZO, $MAIL_MITTENTE_NOME);
+        //Set the subject line
+        $mail->Subject = 'Reboot Live: Un personaggio ha aggiunto il proprio background';
+        //Read an HTML message body from an external file, convert referenced images to embedded,
+        //convert HTML into a basic plain-text alternative body
+        $mail->msgHTML( "Ehi Staff!<br>
+                         Un personaggio ha appena aggiunto il proprio background.<br>
+                         Clicca il link seguente per andare direttamente al suo profilo:<br>
+                         <a href='$pg_url'>$pg_url</a>" );
+        //Replace the plain text body with one created manually
+        $mail->AltBody = "Ehi Staff!
+                         Un personaggio ha appena aggiunto il proprio background.
+                         Vai al link seguente per vedere direttamente il suo profilo:
+                         $pg_url";
+    
         $mail->send();
     }
 }

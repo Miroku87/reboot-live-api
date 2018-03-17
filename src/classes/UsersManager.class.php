@@ -1,5 +1,6 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
+include_once($path."classes/APIException.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/Mailer.class.php");
 include_once($path."classes/SessionManager.class.php");
@@ -31,7 +32,7 @@ class UsersManager
     static function controllaLogin( $sessione )
     {
         if( !isset($sessione->permessi_giocatore) )
-            throw new Exception( "Devi essere loggato per compiere questa operazione." );
+            throw new APIException( "Devi essere loggato per compiere questa operazione.", APIException::$LOGIN_ERROR );
     }
 
     static function operazionePossibile( $sessione, $funzione, $id = NULL )
@@ -49,7 +50,7 @@ class UsersManager
             $tipo_grant = $id === $sessione->email_giocatore ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
 
         if( !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
-            throw new Exception( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>" );
+            throw new APIException( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>", APIException::$GRANTS_ERROR );
     }
 
 	private function controllaInputPwd( $pass1, $pass2 )
@@ -94,7 +95,7 @@ class UsersManager
 	public function login( $mail, $pass )
 	{
 	    if( !Utils::controllaMail($mail) )
-	        throw new Exception("La mail inserita non &egrave; valida. Riprova con un'altra.");
+	        throw new APIException("La mail inserita non &egrave; valida. Riprova con un'altra.");
 	    
 		$query_grants  = "SELECT gi.email_giocatore, CONCAT(gi.nome_giocatore,' ', gi.cognome_giocatore) AS nome_completo, rhg.grants_nome_grant AS permessi FROM giocatori AS gi
                             LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_nome_ruolo = rhg.ruoli_nome_ruolo
@@ -106,7 +107,7 @@ class UsersManager
 		$result = $this->db->doQuery( $query_grants, $params, False );
 		
 		if( count( $result ) === 0 )
-			throw new Exception( "Email utente o password sono errati. Per favore riprovare." );
+			throw new APIException( "Email utente o password sono errati. Per favore riprovare." );
 
 		$query_pg_propri = "SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :email";
         $pg_propri       = $this->db->doQuery( $query_pg_propri, array( ":email" => $mail ), False );
@@ -136,7 +137,7 @@ class UsersManager
 	{
 	    $section = func_get_arg(0);
 		if( !isset( $this->session ) || ( isset( $this->session ) && !in_array( "visualizza_pagina_".$section, $this->session->permessi_giocatore ) ) )
-            throw new Exception( "Impossibile accedere a questa sezione." );
+            throw new APIException( "Impossibile accedere a questa sezione." );
 
 		return "{\"status\": \"ok\"}";
 	}
@@ -168,13 +169,13 @@ class UsersManager
 		$errors = $this->controllaDatiRegistrazione( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni );
 		
 		if( isset( $errors ) && $errors !== "" )
-			throw new Exception($errors);
+			throw new APIException($errors);
 		
 		$query_controllo = "SELECT email_giocatore FROM giocatori WHERE email_giocatore = :mail";
 		$controllo       = $this->db->doQuery( $query_controllo, array( ":mail" => $mail ), False );
 		
 		if( count($controllo) > 0 )
-		    throw new Exception("Esiste gi&agrave; un utente con la mail inserita. Inserirne una differente.");
+		    throw new APIException("Esiste gi&agrave; un utente con la mail inserita. Inserirne una differente.");
 		
 		$pass   = sha1( $pass1 );
 		$query  = "INSERT INTO giocatori (email_giocatore, password_giocatore, nome_giocatore, cognome_giocatore, note_giocatore) VALUES (:mail,:pass,:nome,:cognome,:note)";
@@ -196,13 +197,13 @@ class UsersManager
 	public function recuperaPassword( $mail )
 	{
         if( !Utils::controllaMail($mail) )
-            throw new Exception("La mail inserita non &egrave; valida.");
+            throw new APIException("La mail inserita non &egrave; valida.");
         
 		$query_check = "SELECT CONCAT(nome_giocatore, ' ', cognome_giocatore) as nome_completo FROM giocatori WHERE email_giocatore = :id";
 		$giocatore = $this->db->doQuery( $query_check, array( ":id" => $mail ), False );
 	 
 		if( count( $giocatore ) < 1 )
-		    throw new Exception("La mail inserita non esiste.");
+		    throw new APIException("La mail inserita non esiste.");
 				
 	    $new_pass = Utils::generatePassword();
 		
@@ -258,6 +259,7 @@ class UsersManager
             $risultati = array();
     
         $output     = array(
+            "status"          => "ok",
             "draw"            => $draw,
             "columns"         => $columns,
             "order"           => $order,
@@ -288,12 +290,12 @@ class UsersManager
         $pass_check = json_decode( $this->controllaPwd( $vecchia ) );
         
         if( $pass_check->status === "error" )
-            throw new Exception("La vecchia password inserita non &egrave; corretta.");
+            throw new APIException("La vecchia password inserita non &egrave; corretta.");
         
         $errors = $this->controllaInputPwd( $pass1, $pass2 );
     
         if( isset( $errors ) && $errors !== "" )
-            throw new Exception($errors);
+            throw new APIException($errors);
         
         $this->modificaUtente( array( "password_giocatore" => sha1($pass1) ) );
         

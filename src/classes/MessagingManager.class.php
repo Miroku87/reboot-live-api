@@ -1,5 +1,6 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
+include_once($path."classes/APIException.class.php");
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/SessionManager.class.php");
@@ -32,7 +33,7 @@ class MessagingManager
         $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt, ":dest" => $dest ), False );
         
         if( count( $ris_check ) === 0 )
-            throw new Exception("Il mittente o il destinatario di questo messaggio non esistono.");
+            throw new APIException("Il mittente o il destinatario di questo messaggio non esistono.");
         
         $params = array(
             ":mitt" => $mitt,
@@ -143,6 +144,7 @@ class MessagingManager
             $risultati = array();
 
         $output     = array(
+            "status"          => "ok",
             "draw"            => $draw,
             "columns"         => $columns,
             "order"           => $order,

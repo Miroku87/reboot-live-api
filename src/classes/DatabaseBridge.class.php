@@ -1,6 +1,7 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
-include $path."config/config.inc.php";
+include_once($path."classes/APIException.class.php");
+include_once($path."config/config.inc.php");
 
 class DatabaseBridge extends PDO
 {
@@ -41,7 +42,7 @@ class DatabaseBridge extends PDO
 	public function doQuery( $query, $params, $to_json = True )
 	{
 		if( !is_array( $params ) )
-			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO. Il valore passato non lo è: ".$params);
+			throw new APIException("I parametri passati devono essere sotto forma di array di traduzione PDO. Il valore passato non lo è: ".$params, APIException::$DATABASE_ERROR);
 
 		$query = str_replace("\n","",$query);
 		$query = str_replace("\r","",$query);
@@ -71,14 +72,14 @@ class DatabaseBridge extends PDO
 ***REMOVED***
         catch( Exception $e )
         {
-            throw new Exception($query."<br>".$e->getMessage());
+            throw new APIException($query."<br>".$e->getMessage(),APIException::$DATABASE_ERROR);
 ***REMOVED***
 	}
 	
 	public function doMultipleInserts( $query, $params, $to_json = True )
 	{
 		if( !is_array( $params ) || ( is_array( $params ) && !is_array( $params[0] ) ) )
-			throw new Exception("I parametri passati devono essere sotto forma di array di traduzione PDO a due dimensioni.");
+			throw new APIException("I parametri passati devono essere sotto forma di array di traduzione PDO a due dimensioni.", APIException::$DATABASE_ERROR);
 
         try {
             $conn   = $this->connect();
@@ -91,7 +92,7 @@ class DatabaseBridge extends PDO
 ***REMOVED***
         catch( Exception $e )
         {
-            throw new Exception(str_replace("\n","",$query )."<br>".$e->getMessage());
+            throw new APIException(str_replace("\n","",$query )."<br>".$e->getMessage(), APIException::$DATABASE_ERROR);
 ***REMOVED***
 	}
 }

@@ -1,10 +1,15 @@
 <?php
-
 class Utils
 {	
-	static function errorJSON( $msg )
+	static function errorJSON( $msg, $type = "genericError" )
 	{
-		return "{\"status\":\"error\", \"message\":\"".$msg."\"}";
+	    $json = array(
+	        "status"  => "error",
+            "type"    => $type,
+            "message" => $msg
+        );
+	    
+		return json_encode($json);
 	}
 	
 	static function mappaPermessiUtente( $item )

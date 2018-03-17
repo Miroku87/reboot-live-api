@@ -1,5 +1,6 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
+include_once($path."classes/APIException.class.php");
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/Mailer.class.php");
@@ -117,6 +118,7 @@ class CharactersManager
             $risultati = array();
     
         $output     = array(
+            "status"          => "ok",
             "draw"            => $draw,
             "columns"         => $columns,
             "order"           => $order,
@@ -172,10 +174,10 @@ class CharactersManager
         $costo["militare"] += $qta["militare"];
         
         if( $px < $costo["civile"] )
-            throw new Exception( "Non hai abbastanza Punti Esperienza per effettuare questi acquisti." );
+            throw new APIException( "Non hai abbastanza Punti Esperienza per effettuare questi acquisti." );
         
         if( $pc < $costo["militare"] )
-            throw new Exception( "Non hai abbastanza Punti Combattimento per effettuare questi acquisti." );
+            throw new APIException( "Non hai abbastanza Punti Combattimento per effettuare questi acquisti." );
     }
     
     private function controllaPrerequisitiPerEliminazioneAbilita( $pgid, $id_abilita, $lista_ab, $params = array() )
@@ -263,7 +265,7 @@ class CharactersManager
         else if ( $tutti && !$solo_propri )
             $result = $this->recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search );
         else
-            throw new Exception( "Non hai i permessi per compiere questa operazione: <code>".__FUNCTION__."</code>" );
+            throw new APIException( "Non hai i permessi per compiere questa operazione: <code>".__FUNCTION__."</code>", APIException::$GRANTS_ERROR );
         
         
         return $result;
@@ -347,7 +349,7 @@ class CharactersManager
             
             $err_mex = explode( $DB_ERR_DELIMITATORE, $e->getMessage() );
             $err_mex = count( $err_mex ) > 1 ? $err_mex[1] : $err_mex[0];
-            throw new Exception( $err_mex );
+            throw new APIException( $err_mex );
 ***REMOVED***
         
 //        $this->mailer->inviaMailRegistrazione( $mail, $nome, $pass  );
@@ -502,14 +504,14 @@ class CharactersManager
             else
                 $err_mex = $err_mex[0];
             
-            throw new Exception( $err_mex );
+            throw new APIException( $err_mex );
 ***REMOVED***
         //$this->mailer->sendMail( "acquisti", $mail, $nome, $pass  );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
     
-    public function modificaPG( $pgid, $modifiche )
+    public function modificaPG( $pgid, $modifiche, $is_offset = False )
     {
         foreach( $modifiche as $campo => $valore )
         {
@@ -522,17 +524,43 @@ class CharactersManager
         
         $query_vecchi_dati = "SELECT $campi_virgola FROM personaggi WHERE id_personaggio = :pgid";
         $vecchi_dati = $this->db->doQuery( $query_vecchi_dati, array( ":pgid" => $pgid ), False );
+    
+        $to_update = "";
         
-        $to_update = implode(" = ?, ", $campi )." = ?";
+        if( $is_offset )
+        {
+            foreach ($campi as $c)
+                $to_update .= "$c = $c + ?, ";
+    
+            $to_update = substr( $to_update,0, -2 );
+***REMOVED***
+        else
+            $to_update = implode(" = ?, ", $campi )." = ?";
+        
         $valori[] = $pgid;
         $query_bg = "UPDATE personaggi SET $to_update WHERE id_personaggio = ?";
         $this->db->doQuery( $query_bg, $valori, False );
         
         //TODO: in caso di background, avvisare lo staff
+        if( in_array("background_personaggio", $campi ) )
+            $this->mailer->inviaAvvisoBackground($pgid);
         
         foreach( $vecchi_dati as $vd )
             foreach( $vd as $k => $val )
-                $this->registraAzione( $pgid, 'UPDATE', 'personaggi', $k, $val, $modifiche[$k] );
+            {
+                $nuovo_val = !$is_offset ? $modifiche[$k] : $val + $modifiche[$k];
+                
+                if( $nuovo_val !== $val )
+                    $this->registraAzione($pgid, 'UPDATE', 'personaggi', $k, $val, $nuovo_val);
+***REMOVED***
+        
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
+    
+    public function modificaMoltiPG( $pgids, $modifiche, $is_offset = False )
+    {
+        foreach( $pgids as $id )
+            $this->modificaPG($id,$modifiche,$is_offset);
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -578,8 +606,8 @@ class CharactersManager
                     WHERE id_personaggio = :idpg";
         $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid ), False );
         
-        if( count( $res_pg ) == 0 )
-            throw new Exception( "Non puoi scaricare i dati di un giocatore non tuo." );
+        if( count( $res_pg ) === 0 )
+            throw new APIException( "Non puoi scaricare i dati di un giocatore non tuo." );
 		
         $pg_data  = $res_pg[0];
         

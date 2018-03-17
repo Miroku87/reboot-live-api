@@ -3,11 +3,14 @@
 $DEBUG                         = False;
 $RETE_LOCALE                   = False;
 
+$MAIL_ACCOUNT                  = "rebootlivegrv@gmail.com";
 $MAIL_MITTENTE_INDIRIZZO       = "rebootlivegrv@gmail.com";
 $MAIL_MITTENTE_NOME            = "Reboot GRV";
 $MAIL_PASSWORD                 = "Reboot1234";
 $MAIL_HOST                     = "smtp.gmail.com";
 $MAIL_PORT                     = 587;
+
+$SITE_URL                      = "http://localhost:9000";
 
 $DB_ERR_DELIMITATORE           = "@@@";
 $TIPO_GRANT_PG_PROPRIO         = "_proprio";
