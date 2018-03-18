@@ -2,3 +2,4 @@
 src/config/config.inc.php
 node_modules
 dist
+gruntconfig.json

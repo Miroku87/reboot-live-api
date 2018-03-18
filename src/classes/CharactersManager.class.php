@@ -72,7 +72,7 @@ class CharactersManager
 						bj.ruoli_nome_ruolo LIKE :search OR
 						bj.note_giocatore LIKE :search
 					  )";
-***REMOVED***
+        }
     
         if( isset( $order ) )
         {
@@ -81,7 +81,7 @@ class CharactersManager
                 $sorting[] = "bj.".$columns[$elem["column"]]["data"]." ".$elem["dir"];
         
             $order_str = "ORDER BY ".implode( $sorting, "," );
-***REMOVED***
+        }
         
         $big_join = "SELECT
                         pg.id_personaggio,
@@ -147,12 +147,12 @@ class CharactersManager
             
             if( !isset( $disponibilita_pc ) )
                 $pc = $res_punti[0]["pc_personaggio"];
-***REMOVED***
+        }
         else if ( isset( $disponibilita_px ) && isset( $disponibilita_pc ) )
         {
             $px = $disponibilita_px;
             $pc = $disponibilita_pc;
-***REMOVED***
+        }
         
         $marker_abilita      = str_repeat("?,", count($id_abilita) - 1 )."?";
         $query_costo_abilita = "SELECT tipo_abilita, SUM(costo_abilita) AS costo FROM abilita WHERE id_abilita IN ($marker_abilita) GROUP BY tipo_abilita";
@@ -236,15 +236,15 @@ class CharactersManager
                 {
                     $new_params[] = $ap["id_abilita"];
                     Utils::rimuoviElementoArrayMultidimensionale( $lista_ab, "id_abilita", $ap["id_abilita"] );
-    ***REMOVED***
-***REMOVED***
-***REMOVED***
+                }
+            }
+        }
         
         if( count( $new_params ) > 0 )
         {
             foreach( $new_params as $p )
                 $params = $this->controllaPrerequisitiPerEliminazioneAbilita( $pgid, $p, $lista_ab, $params );
-***REMOVED***
+        }
         
         return array_merge( $new_params, $params );
     }
@@ -261,7 +261,7 @@ class CharactersManager
             $where  = array( "bj.email_giocatore = :userid" );
             $params = array( ":userid" => $this->session->email_giocatore );
             $result = $this->recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search, $where, $params );
-***REMOVED***
+        }
         else if ( $tutti && !$solo_propri )
             $result = $this->recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search );
         else
@@ -293,9 +293,9 @@ class CharactersManager
                 $l["id_classe"] = $l["classi_id_classe"];
                 unset($l["classi_id_classe"]);
                 $lista_abilita[$l["id_classe"]][] = $l;
-***REMOVED***
+            }
             $lista_output = json_encode($lista_abilita);
-***REMOVED***
+        }
         else
             $lista_output = "{}";
         
@@ -339,7 +339,7 @@ class CharactersManager
         try {
             $this->aggiungiClassiAlPG($new_pg_id, $classi);
             $this->aggiungiAbilitaAlPG($new_pg_id, $abilita);
-***REMOVED***
+        }
         catch( Exception $e )
         {
             $this->eliminaPG( $new_pg_id, False );
@@ -350,7 +350,7 @@ class CharactersManager
             $err_mex = explode( $DB_ERR_DELIMITATORE, $e->getMessage() );
             $err_mex = count( $err_mex ) > 1 ? $err_mex[1] : $err_mex[0];
             throw new APIException( $err_mex );
-***REMOVED***
+        }
         
 //        $this->mailer->inviaMailRegistrazione( $mail, $nome, $pass  );
         
@@ -425,8 +425,8 @@ class CharactersManager
             {
                 if ( $cp["prerequisito_classe"] === $id_classe )
                     $classi_del[] = $cp["id_classe"];
-***REMOVED***
-***REMOVED***
+            }
+        }
 		
         $params = $classi_del;
         array_unshift($params, $pgid);
@@ -494,7 +494,7 @@ class CharactersManager
         try {
             if( is_array($classi) ) $this->aggiungiClassiAlPG($pgid, $classi);
             if( is_array($abilita) ) $this->aggiungiAbilitaAlPG($pgid, $abilita);
-***REMOVED***
+        }
         catch( Exception $e )
         {
             $err_mex = explode( $DB_ERR_DELIMITATORE, $e->getMessage() );
@@ -505,7 +505,7 @@ class CharactersManager
                 $err_mex = $err_mex[0];
             
             throw new APIException( $err_mex );
-***REMOVED***
+        }
         //$this->mailer->sendMail( "acquisti", $mail, $nome, $pass  );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
@@ -519,7 +519,7 @@ class CharactersManager
             
             $campi[] = $campo;
             $valori[] = $valore;
-***REMOVED***
+        }
         $campi_virgola = implode(", ", $campi);
         
         $query_vecchi_dati = "SELECT $campi_virgola FROM personaggi WHERE id_personaggio = :pgid";
@@ -533,7 +533,7 @@ class CharactersManager
                 $to_update .= "$c = $c + ?, ";
     
             $to_update = substr( $to_update,0, -2 );
-***REMOVED***
+        }
         else
             $to_update = implode(" = ?, ", $campi )." = ?";
         
@@ -552,7 +552,7 @@ class CharactersManager
                 
                 if( $nuovo_val !== $val )
                     $this->registraAzione($pgid, 'UPDATE', 'personaggi', $k, $val, $nuovo_val);
-***REMOVED***
+            }
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -574,12 +574,12 @@ class CharactersManager
             $query_canc_pg = "UPDATE personaggi SET eliminato_personaggio = 1 WHERE id_personaggio = :idpg";
             $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
             $this->registraAzione( $pgid, "DELETE", "personaggi", "eliminato_personaggio", 0, 1 );
-***REMOVED***
+        }
         else
         {
             $query_canc_pg = "DELETE FROM personaggi WHERE id_personaggio = :idpg";
             $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
-***REMOVED***
+        }
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -653,14 +653,14 @@ class CharactersManager
         
                 if (in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]))
                     $crafting_ingegneria = True;
-***REMOVED***
-***REMOVED***
+            }
+        }
         else
         {
             $crafting_chimico = False;
             $crafting_programmazione = False;
             $crafting_ingegneria = False;
-***REMOVED***
+        }
         
         $px_spesi = 0;
         $pc_spesi = count( $classi["militare"] ) + count( $abilita["militare"] );

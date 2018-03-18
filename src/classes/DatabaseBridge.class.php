@@ -60,20 +60,20 @@ class DatabaseBridge extends PDO
             else if ($stmnt->columnCount() === 0 && $conn->lastInsertId() !== 0) {
                 $result = $conn->lastInsertId();
                 $to_json = False;
-***REMOVED*** else if ($stmnt->columnCount() === 0 && $conn->lastInsertId() === 0) {
+            } else if ($stmnt->columnCount() === 0 && $conn->lastInsertId() === 0) {
                 $result = True;
                 $to_json = False;
-***REMOVED***
+            }
 
             if ($result && !$to_json)
                 return Utils::utf8ize($result);
             else if ($result && $to_json)
                 return json_encode(Utils::utf8ize($result));
-***REMOVED***
+        }
         catch( Exception $e )
         {
             throw new APIException($query."<br>".$e->getMessage(),APIException::$DATABASE_ERROR);
-***REMOVED***
+        }
 	}
 	
 	public function doMultipleInserts( $query, $params, $to_json = True )
@@ -89,10 +89,10 @@ class DatabaseBridge extends PDO
                 $stmnt->execute( $p );
 
             return True;
-***REMOVED***
+        }
         catch( Exception $e )
         {
             throw new APIException(str_replace("\n","",$query )."<br>".$e->getMessage(), APIException::$DATABASE_ERROR);
-***REMOVED***
+        }
 	}
 }

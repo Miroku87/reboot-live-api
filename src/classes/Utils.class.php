@@ -85,8 +85,8 @@ class Utils
             {
                 array_splice($arr, $i, 1);
                 break;
-***REMOVED***
-***REMOVED***
+            }
+        }
     }
 	
 	static function generatePassword( $length = 8 )
@@ -131,12 +131,12 @@ class Utils
             foreach ($d as $k => $v)
             {
                 $d[$k] = self::utf8ize($v);
-***REMOVED***
-***REMOVED***
+            }
+        }
         else if (is_string($d))
         {
             return utf8_encode($d);
-***REMOVED***
+        }
         return $d;
     }
 }

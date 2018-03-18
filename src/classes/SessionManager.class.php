@@ -39,7 +39,7 @@ class SessionManager
         if ( !isset(self::$instance))
         {
             self::$instance = new self;
-***REMOVED***
+        }
         
         self::$instance->startSession();
         
@@ -58,7 +58,7 @@ class SessionManager
         if ( $this->sessionState == self::SESSION_NOT_STARTED )
         {
             $this->sessionState = session_start();
-***REMOVED***
+        }
         
         return $this->sessionState;
     }
@@ -92,7 +92,7 @@ class SessionManager
         if ( isset($_SESSION[$name]))
         {
             return $_SESSION[$name];
-***REMOVED***
+        }
         
         return false;
     }
@@ -124,7 +124,7 @@ class SessionManager
             unset( $_SESSION );
             
             return !$this->sessionState;
-***REMOVED***
+        }
         
         return False;
     }

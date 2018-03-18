@@ -99,7 +99,7 @@ class Mailer
         //Read an HTML message body from an external file, convert referenced images to embedded,
         //convert HTML into a basic plain-text alternative body
         $mail->msgHTML( "Gentile giocatore,<br>
-                         qui di seguito troverai i i tuoi dati di accesso:<br><br>
+                         qui di seguito troverai i tuoi dati di accesso:<br><br>
                          <b>Nome Utente:</b> $dest_indirizzo<br>
                          <b>Password:</b> $pass" );
         //Replace the plain text body with one created manually

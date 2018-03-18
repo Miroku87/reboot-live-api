@@ -46,7 +46,7 @@ class MessagingManager
         {
             $q_risp = ":risp";
             $params[":risp"] = $risp_id;
-***REMOVED***
+        }
         else
             $q_risp = "NULL";
         
@@ -84,7 +84,7 @@ class MessagingManager
         {
             $query_letto = "UPDATE $tabella SET letto_messaggio = :letto WHERE id_messaggio = :id";
             $this->db->doQuery($query_letto, array(":id" => $idmex, ":letto" => 1), False);
-***REMOVED***
+        }
         
         return "{\"status\": \"ok\",\"result\": ".json_encode($risultati[0])."}";
     }
@@ -109,7 +109,7 @@ class MessagingManager
 						mex.oggetto_messaggio LIKE :search OR
 						mex.testo_messaggio LIKE :search
 					  )";
-***REMOVED***
+        }
 
         if( isset( $order ) )
         {
@@ -118,7 +118,7 @@ class MessagingManager
                 $sorting[] = $columns[$elem["column"]]["data"]." ".$elem["dir"];
     
             $order_str = "ORDER BY ".implode( $sorting, "," );
-***REMOVED***
+        }
         
         $query_mex = "SELECT mex.id_messaggio,
                              mex.oggetto_messaggio,

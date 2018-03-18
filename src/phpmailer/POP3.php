@@ -175,15 +175,15 @@ class POP3
         // If no port value provided, use default
         if (false === $port) {
             $this->port = static::DEFAULT_PORT;
-***REMOVED*** else {
+        } else {
             $this->port = (int) $port;
-***REMOVED***
+        }
         // If no timeout value provided, use default
         if (false === $timeout) {
             $this->tval = static::DEFAULT_TIMEOUT;
-***REMOVED*** else {
+        } else {
             $this->tval = (int) $timeout;
-***REMOVED***
+        }
         $this->do_debug = $debug_level;
         $this->username = $username;
         $this->password = $password;
@@ -197,8 +197,8 @@ class POP3
                 $this->disconnect();
 
                 return true;
-***REMOVED***
-***REMOVED***
+            }
+        }
         // We need to disconnect regardless of whether the login succeeded
         $this->disconnect();
 
@@ -219,7 +219,7 @@ class POP3
         //  Are we already connected?
         if ($this->connected) {
             return true;
-***REMOVED***
+        }
 
         //On Windows this will raise a PHP Warning error if the hostname doesn't exist.
         //Rather than suppress it with @fsockopen, capture it cleanly instead
@@ -227,7 +227,7 @@ class POP3
 
         if (false === $port) {
             $port = static::DEFAULT_PORT;
-***REMOVED***
+        }
 
         //  connect to the POP3 server
         $this->pop_conn = fsockopen(
@@ -248,7 +248,7 @@ class POP3
             );
 
             return false;
-***REMOVED***
+        }
 
         //  Increase the stream time-out
         stream_set_timeout($this->pop_conn, $tval, 0);
@@ -261,7 +261,7 @@ class POP3
             $this->connected = true;
 
             return true;
-***REMOVED***
+        }
 
         return false;
     }
@@ -279,13 +279,13 @@ class POP3
     {
         if (!$this->connected) {
             $this->setError('Not connected to POP3 server');
-***REMOVED***
+        }
         if (empty($username)) {
             $username = $this->username;
-***REMOVED***
+        }
         if (empty($password)) {
             $password = $this->password;
-***REMOVED***
+        }
 
         // Send the Username
         $this->sendString("USER $username" . static::LE);
@@ -296,8 +296,8 @@ class POP3
             $pop3_response = $this->getResponse();
             if ($this->checkResponse($pop3_response)) {
                 return true;
-***REMOVED***
-***REMOVED***
+            }
+        }
 
         return false;
     }
@@ -312,9 +312,9 @@ class POP3
         //So ignore errors here
         try {
             @fclose($this->pop_conn);
-***REMOVED*** catch (Exception $e) {
+        } catch (Exception $e) {
             //Do nothing
-***REMOVED***
+        }
     }
 
     /**
@@ -329,7 +329,7 @@ class POP3
         $response = fgets($this->pop_conn, $size);
         if ($this->do_debug >= 1) {
             echo 'Server -> Client: ', $response;
-***REMOVED***
+        }
 
         return $response;
     }
@@ -346,10 +346,10 @@ class POP3
         if ($this->pop_conn) {
             if ($this->do_debug >= 2) { //Show client messages when debug >= 2
                 echo 'Client -> Server: ', $string;
-***REMOVED***
+            }
 
             return fwrite($this->pop_conn, $string, strlen($string));
-***REMOVED***
+        }
 
         return 0;
     }
@@ -368,7 +368,7 @@ class POP3
             $this->setError("Server reported an error: $string");
 
             return false;
-***REMOVED***
+        }
 
         return true;
     }
@@ -386,9 +386,9 @@ class POP3
             echo '<pre>';
             foreach ($this->errors as $e) {
                 print_r($e);
-***REMOVED***
+            }
             echo '</pre>';
-***REMOVED***
+        }
     }
 
     /**

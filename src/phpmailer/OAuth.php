@@ -125,7 +125,7 @@ class OAuth
         // Get a new token if it's not available or has expired
         if (null === $this->oauthToken or $this->oauthToken->hasExpired()) {
             $this->oauthToken = $this->getToken();
-***REMOVED***
+        }
 
         return base64_encode(
             'user=' .

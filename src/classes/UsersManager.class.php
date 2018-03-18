@@ -237,7 +237,7 @@ class UsersManager
 						note_giocatore LIKE :search OR
 						note_staff_giocatore LIKE :search
 					  )";
-***REMOVED***
+        }
         
         if( isset( $order ) )
         {
@@ -246,7 +246,7 @@ class UsersManager
                 $sorting[] = $columns[$elem["column"]]["data"]." ".$elem["dir"];
             
             $order_str = "ORDER BY ".implode( $sorting, "," );
-***REMOVED***
+        }
         
         $query_players = "SELECT giocatori.*, CONCAT(nome_giocatore, ' ', cognome_giocatore) AS nome_completo
                               FROM giocatori WHERE eliminato_giocatore = 0 $where $order_str";
