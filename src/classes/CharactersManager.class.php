@@ -92,6 +92,7 @@ class CharactersManager
                         pg.credito_personaggio,
                         pg.data_creazione_personaggio,
                         pg.eliminato_personaggio,
+                        pg.contattabile_personaggio,
                         gi.email_giocatore,
                         CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         gi.note_giocatore,
@@ -541,7 +542,6 @@ class CharactersManager
         $query_bg = "UPDATE personaggi SET $to_update WHERE id_personaggio = ?";
         $this->db->doQuery( $query_bg, $valori, False );
         
-        //TODO: in caso di background, avvisare lo staff
         if( in_array("background_personaggio", $campi ) )
             $this->mailer->inviaAvvisoBackground($pgid);
         

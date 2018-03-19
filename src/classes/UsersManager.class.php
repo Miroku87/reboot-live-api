@@ -165,7 +165,6 @@ class UsersManager
 	
 	public function registra( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni )
 	{
-	    //TODO: controllare che non esista già un utente con la mail
 		$errors = $this->controllaDatiRegistrazione( $nome, $cognome, $note, $mail, $pass1, $pass2, $condizioni );
 		
 		if( isset( $errors ) && $errors !== "" )

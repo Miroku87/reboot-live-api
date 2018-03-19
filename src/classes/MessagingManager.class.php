@@ -18,7 +18,6 @@ class MessagingManager
     
     public function __destruct()
     {
-        // TODO: Implement __destruct() method.
     }
     
     public function inviaMessaggio( $tipo, $mitt, $dest, $ogg, $mex, $risp_id = NULL  )
@@ -161,12 +160,15 @@ class MessagingManager
     
     private function recuperaDestinatari( $tipo, $term  )
     {
-        $tabella    = $tipo === "ig" ? "personaggi" : "giocatori";
-        $campo_id   = $tipo === "ig" ? "id_personaggio" : "email_giocatore";
-        $id_no      = $tipo === "ig" ? $this->session->pg_loggato["id_personaggio"] : $this->session->email_giocatore;
-        $campo_nome = $tipo === "ig" ? "nome_personaggio" : "CONCAT( nome_giocatore, ' ', cognome_giocatore )";
+        $id_no = $tipo === "ig" ? $this->session->pg_loggato["id_personaggio"] : $this->session->email_giocatore;
         
-        $query_dest = "SELECT $campo_id AS real_value, $campo_nome AS label FROM $tabella WHERE $campo_nome LIKE :term AND $campo_id != :idno";
+        if( $tipo === "ig" )
+            $query_dest = "SELECT id_personaggio AS real_value, nome_personaggio AS label FROM personaggi WHERE nome_personaggio LIKE :term AND id_personaggio != :idno AND contattabile_personaggio = 1";
+        else if( $tipo === "ig" )
+            $query_dest = "SELECT email_giocatore AS real_value,
+                                  CONCAT( nome_giocatore, ' ', cognome_giocatore ) AS label
+                           FROM giocatori
+                           WHERE CONCAT( nome_giocatore, ' ', cognome_giocatore ) LIKE :term AND email_giocatore != :idno";
         
         $ret["status"] = "ok";
         $ret["results"] = $this->db->doQuery( $query_dest, array( ":term" => "%$term%", ":idno" => $id_no ), False );
