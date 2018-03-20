@@ -11,7 +11,6 @@ include_once($path."config/constants.php");
 class CharactersManager
 {
     protected $db;
-    protected $grants;
     protected $session;
     protected $mailer;
     
@@ -59,9 +58,11 @@ class CharactersManager
     {
         $where  = $extra_where;
         $params = $extra_param;
+        $filter = False;
         
         if( isset( $search ) && $search["value"] != "" )
         {
+            $filter = True;
             $params[":search"] = "%$search[value]%";
             $where[] = "(
 						bj.nome_personaggio LIKE :search OR
@@ -127,7 +128,7 @@ class CharactersManager
             "length"          => $length,
             "search"          => $search,
             "recordsTotal"    => $totale,
-            "recordsFiltered" => count($risultati),
+            "recordsFiltered" => $filter ? count($risultati) : $totale,
             "data"            => $risultati
         );
         

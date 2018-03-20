@@ -116,7 +116,7 @@ module.exports = function (grunt) {
         }
     });
 
-    grunt.registerTask('buildPreProd', [
+    grunt.registerTask('preprod', [
         'clean:build',
         'copy:build',
         'replace:import_paths',
@@ -125,7 +125,7 @@ module.exports = function (grunt) {
         'replace:site_url_preprod'
     ]);
 
-    grunt.registerTask('buildProd', [
+    grunt.registerTask('prod', [
         'clean:build',
         'copy:build',
         'replace:import_paths',

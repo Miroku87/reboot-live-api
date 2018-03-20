@@ -36,6 +36,8 @@ class Main
 	public function runAPI()
 	{
 	    global $DEBUG;
+	    global $MAINTENANCE;
+	    global $IP_MAINTAINER;
 
 		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
@@ -46,6 +48,9 @@ class Main
 		//die( var_dump($_POST) );
 		try
 		{
+            if( $MAINTENANCE && Utils::getUserIP() !== $IP_MAINTAINER)
+                throw new APIException("Ci scusiamo, ma al momento il database &egrave; in manutenzione. Per favore, riprova tra un'ora.");
+            
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;
 			

@@ -222,12 +222,14 @@ class UsersManager
 	public function recuperaListaGiocatori( $draw, $columns, $order, $start, $length, $search )
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
-        
-        $where = "";
+    
+        $filter = False;
+        $where  = "";
         $params = array();
         
         if( isset( $search ) && $search["value"] != "" )
         {
+            $filter = True;
             $params[":search"] = "%$search[value]%";
             $where = "AND (
 						nome_giocatore LIKE :search OR
@@ -266,7 +268,7 @@ class UsersManager
             "length"          => $length,
             "search"          => $search,
             "recordsTotal"    => $totale,
-            "recordsFiltered" => count($risultati),
+            "recordsFiltered" => $filter ? count($risultati) : $totale,
             "data"            => $risultati
         );
     

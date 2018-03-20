@@ -117,7 +117,7 @@ class Mailer
         global $MAIL_MITTENTE_NOME;
         global $SITE_URL ;
         
-        $pg_url = "$SITE_URL?d=scheda_pg&i=$pgid";
+        $pg_url = "$SITE_URL?r=scheda_pg&i=$pgid";
         
         $mail = $this->impostaMailer();
         //Set who the message is to be sent to

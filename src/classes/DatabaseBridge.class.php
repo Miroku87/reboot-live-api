@@ -16,14 +16,15 @@ class DatabaseBridge extends PDO
 	private function connect()
 	{
 		global $DB_DATA;
-		$dns = $DB_DATA["DB_DRIVER"] . ':host=' . $DB_DATA["DB_HOST"] . ';dbname=' . $DB_DATA["DB_NAME"];
+		$dns = $DB_DATA["DB_DRIVER"] . ':host=' . $DB_DATA["DB_HOST"] . ';dbname=' . $DB_DATA["DB_NAME"] . ';charset=utf8';
 		
         try
 		{
 			$connection = new PDO( $dns, $DB_DATA["DB_USER"], $DB_DATA["DB_PASS"] );
 			$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
             $connection->setAttribute(PDO::ATTR_STRINGIFY_FETCHES, false );
-		} 
+            $connection->setAttribute(PDO::MYSQL_ATTR_INIT_COMMAND, "SET NAMES 'utf8'" );
+		}
 		catch (PDOException $e) 
 		{
 			die( "{\"status\":\"error\", \"message\":\"".$e->getMessage()."\"}" );
@@ -66,9 +67,9 @@ class DatabaseBridge extends PDO
             }
 
             if ($result && !$to_json)
-                return Utils::utf8ize($result);
+                return $result;
             else if ($result && $to_json)
-                return json_encode(Utils::utf8ize($result));
+                return json_encode($result);
         }
         catch( Exception $e )
         {

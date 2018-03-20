@@ -92,6 +92,7 @@ class MessagingManager
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $id );
 
+        $filter     = False;
         $params     = array( ":id" => $id );
         $where      = $casella === "inviati" ? "mex.mittente_messaggio = :id" : "mex.destinatario_messaggio = :id";
         $tabella    = $tipo === "ig" ? "messaggi_ingioco" : "messaggi_fuorigioco";
@@ -101,6 +102,7 @@ class MessagingManager
 
         if( isset( $search ) && $search["value"] != "" )
         {
+            $filter = True;
             $params[":search"] = "%$search[value]%";
             $where .= " AND (
 						t_mitt.$campo_nome LIKE :search OR
@@ -151,7 +153,7 @@ class MessagingManager
             "length"          => $length,
             "search"          => $search,
             "recordsTotal"    => $totale,
-            "recordsFiltered" => count($risultati),
+            "recordsFiltered" => $filter ? count($risultati) : $totale,
             "data"            => $risultati
         );
 
