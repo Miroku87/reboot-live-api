@@ -135,6 +135,21 @@ class CharactersManager
         return json_encode( $output );
     }
     
+    private function controllaOpzioniDuplicate( $opzioni, $pgid = NULL )
+    {
+        if( isset($pgid) )
+        {
+            $query_opzioni = "SELECT opzioni_abilita_opzione FROM personaggi_has_opzioni_abilita WHERE personaggi_id_personaggio = :pgid";
+            $opzioni_db    = $this->db->doQuery($query_opzioni, array(":pgid"=>$pgid), False);
+            
+            foreach( $opzioni_db as $o )
+                $opzioni[] = $o["opzioni_abilita_opzione"];
+        }
+        
+        if( count($opzioni) !== count(array_unique($opzioni)) )
+            throw new APIException("Non &egrave; possibile selezionare due opzioni uguali per abilit&agrave; diverse.");
+    }
+    
     private function controllaPossibilitaPunti( $id_classi, $id_abilita, $pg_id = NULL, $disponibilita_px = NULL, $disponibilita_pc = NULL )
     {
         global $MAPPA_COSTO_CLASSI_CIVILI;
@@ -306,7 +321,7 @@ class CharactersManager
         return "{\"status\": \"ok\", \"info\": $info_obj }";
     }
     
-    public function creaPG( $nome, $classi, $abilita )
+    public function creaPG( $nome, $classi, $abilita, $opzioni )
     {
         global $PX_INIZIALI;
         global $PC_INIZIALI;
@@ -315,6 +330,7 @@ class CharactersManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
         $this->controllaPossibilitaPunti( $classi, $abilita, NULL, $PX_INIZIALI, $PC_INIZIALI );
+        $this->controllaOpzioniDuplicate( $opzioni );
         
         $new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_email_giocatore) VALUES ( :nomepg, :initpx, :initpc, :email )";
         $new_pg_params = array(
@@ -341,6 +357,7 @@ class CharactersManager
         try {
             $this->aggiungiClassiAlPG($new_pg_id, $classi);
             $this->aggiungiAbilitaAlPG($new_pg_id, $abilita);
+            $this->aggiungiOpzioniAbilita($new_pg_id, $opzioni);
         }
         catch( Exception $e )
         {
@@ -405,6 +422,28 @@ class CharactersManager
 		
         foreach( $ordine_ab as $ab )
             $this->registraAzione( $pgid, "INSERT", "abilita_personaggio", "abilita", NULL, $ab["nome_abilita"] );
+        
+        return "{\"status\": \"ok\",\"result\": \"true\"}";
+    }
+    
+    public function aggiungiOpzioniAbilita( $pgid, $opzioni )
+    {
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
+        
+        $query_opzioni  = "INSERT INTO personaggi_has_opzioni_abilita VALUES ( :idpg, :idabilita, :opzione )";
+        $params_opzioni = array();
+        
+        foreach( $opzioni as $id_ab => $opz )
+            $params_opzioni[] = array( ":idpg" => $pgid, ":idabilita" => $id_ab, ":opzione" => $opz );
+        
+        $this->db->doMultipleInserts( $query_opzioni, $params_opzioni );
+        
+        $marcatori     = str_repeat("?,", count( $opzioni ) - 1 )."?";
+        $query_abilita = "SELECT id_abilita, nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
+        $lista_abilita = $this->db->doQuery($query_abilita, array_keys($opzioni), False);
+    
+        foreach( $lista_abilita as $ab )
+            $this->registraAzione( $pgid, "INSERT", "opzioni_abilita", "abilita - opzione", NULL, $ab["nome_abilita"]." - ".$opzioni[$ab["id_abilita"]] );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -489,13 +528,16 @@ class CharactersManager
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
     
-    public function acquista( $pgid, $classi, $abilita )
+    public function acquista( $pgid, $classi, $abilita, $opzioni )
     {
         global $DB_ERR_DELIMITATORE;
+    
+        $this->controllaOpzioniDuplicate($opzioni,$pgid);
         
         try {
             if( is_array($classi) ) $this->aggiungiClassiAlPG($pgid, $classi);
             if( is_array($abilita) ) $this->aggiungiAbilitaAlPG($pgid, $abilita);
+            if( is_array($opzioni) ) $this->aggiungiOpzioniAbilita($pgid, $opzioni);
         }
         catch( Exception $e )
         {
@@ -508,7 +550,6 @@ class CharactersManager
             
             throw new APIException( $err_mex );
         }
-        //$this->mailer->sendMail( "acquisti", $mail, $nome, $pass  );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -676,6 +717,17 @@ class CharactersManager
         $px_risparmiati = $pg_data["px_personaggio"] - $px_spesi;
         $pc_risparmiati = $pg_data["pc_personaggio"] - $pc_spesi;
         
+        //recupero le opzioni
+        $query = "SELECT phoa.*, ab.nome_abilita
+                    FROM personaggi_has_opzioni_abilita AS phoa
+                    JOIN abilita AS ab ON ab.id_abilita = phoa.abilita_id_abilita
+                  WHERE personaggi_id_personaggio = :pgid";
+        $result = $this->db->doQuery( $query, array( ":pgid" => $pgid ), False );
+        $opzioni = array();
+    
+        foreach( $result as $r )
+            $opzioni[$r["abilita_id_abilita"]] = [ "nome_abilita" => $r["nome_abilita"], "opzione" => $r["opzioni_abilita_opzione"] ];
+        
         $pg_data["classi"] = $classi;
         $pg_data["abilita"] = $abilita;
         $pg_data["px_spesi"] = $px_spesi;
@@ -685,6 +737,7 @@ class CharactersManager
         $pg_data["crafting_chimico"] = $crafting_chimico;
         $pg_data["crafting_programmazione"] = $crafting_programmazione;
         $pg_data["crafting_ingegneria"] = $crafting_ingegneria;
+        $pg_data["opzioni"] = $opzioni;
         
         $this->session->pg_loggato = $pg_data;
         
@@ -710,5 +763,25 @@ class CharactersManager
         $result = isset($result) ? $result : "[]";
         
         return "{\"status\": \"ok\",\"result\": $result}";
+    }
+    
+    public function recuperaOpzioniAbilita( )
+    {
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+        
+        $query = "SELECT * FROM opzioni_abilita";
+        $result = $this->db->doQuery( $query, array( ), False );
+        
+        $ret = array();
+        
+        foreach( $result as $r )
+        {
+            if( !isset( $ret[$r["abilita_id_abilita"]] ) )
+                $ret[$r["abilita_id_abilita"]] = [];
+    
+            $ret[$r["abilita_id_abilita"]][] = $r["opzione"];
+        }
+        
+        return "{\"status\": \"ok\",\"result\": ".json_encode($ret)."}";
     }
 }
