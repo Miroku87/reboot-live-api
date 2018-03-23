@@ -4,6 +4,7 @@ include_once( $path."classes/APIException.class.php" );
 include_once( $path."classes/UsersManager.class.php" );
 include_once( $path."classes/CharactersManager.class.php" );
 include_once( $path."classes/MessagingManager.class.php" );
+include_once( $path."classes/EventsManager.class.php" );
 include_once( $path."config/constants.php" );
 
 class Main
@@ -11,6 +12,7 @@ class Main
 	protected $usersmanager;
 	protected $charactersmanager;
 	protected $messagingmanager;
+	protected $eventsmanager;
 	
 	public function __construct()
 	{
@@ -27,6 +29,7 @@ class Main
 		$this->usersmanager      = new UsersManager();
 		$this->charactersmanager = new CharactersManager();
 		$this->messagingmanager  = new MessagingManager();
+		$this->eventsmanager     = new EventsManager();
 	}
 	
 	public function __destruct()

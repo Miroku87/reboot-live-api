@@ -92,7 +92,7 @@ module.exports = function (grunt) {
                     {cwd: './dist', expand:true, src: ['config/constants.php'], dest: './dist'}
                 ]
             },
-            db_config: {
+            db_config_prod: {
                 options: {
                     patterns: [
                         {
@@ -112,6 +112,27 @@ module.exports = function (grunt) {
                 files: [
                     {cwd: './dist', expand:true, src: ['config/config.inc.php'], dest: './dist'}
                 ]
+            },
+            db_config_preprod: {
+                options: {
+                    patterns: [
+                        {
+                            match: /("DB_NAME"\s*?=>\s*?)"[\s\S]*?,/,
+                            replacement: '$1"<%= config.preprod.db_name %>",'
+                        },
+                        {
+                            match: /("DB_USER"\s*?=>\s*?)"[\s\S]*?,/,
+                            replacement: '$1"<%= config.preprod.db_user %>",'
+                        },
+                        {
+                            match: /("DB_PASS"\s*?=>\s*?)"[\s\S]*?"/,
+                            replacement: '$1"<%= config.preprod.db_pass %>"'
+                        }
+                    ]
+                },
+                files: [
+                    {cwd: './dist', expand:true, src: ['config/config.inc.php'], dest: './dist'}
+                ]
             }
         }
     });
@@ -121,7 +142,7 @@ module.exports = function (grunt) {
         'copy:build',
         'replace:import_paths',
         'replace:mail_settings',
-        'replace:db_config',
+        'replace:db_config_preprod',
         'replace:site_url_preprod'
     ]);
 
@@ -130,7 +151,7 @@ module.exports = function (grunt) {
         'copy:build',
         'replace:import_paths',
         'replace:mail_settings',
-        'replace:db_config',
+        'replace:db_config_prod',
         'replace:site_url_prod'
     ]);
 };

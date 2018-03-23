@@ -471,8 +471,7 @@ class CharactersManager
 		
         $params = $classi_del;
         array_unshift($params, $pgid);
-        
-        $marcatori_cl = str_repeat("?,", count($classi_del) - 1 )."?";
+        $marcatori_cl = str_repeat("?,", count($params) - 2 )."?";
         $query_del    = "DELETE FROM personaggi_has_classi WHERE personaggi_id_personaggio = ? AND classi_id_classe IN ($marcatori_cl)";
         $this->db->doQuery( $query_del, $params, False );
         
@@ -481,14 +480,17 @@ class CharactersManager
                           WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori_cl)";
         $lista_ab     = $this->db->doQuery( $query_sel_ab, $params, False );
         
-        $params_ab    = $lista_ab;
+        $params_ab    = array_map("Utils::mappaIdAbilita",$lista_ab);
         array_unshift( $params_ab, $pgid );
 		
-        $marcatori_ab = str_repeat("?, ", count($lista_ab) - 2)."?";
-        $query_del_ab = "DELETE FROM personaggi_has_abilita WHERE pha.personaggi_id_personaggio = ? AND ab.classi_id_classe IN ($marcatori_ab)";
+        $marcatori_ab = str_repeat("?, ", count($params_ab) - 2)."?";
+        $query_del_ab = "DELETE FROM personaggi_has_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori_ab)";
         $this->db->doQuery( $query_del_ab, $params_ab, False );
     
-		$query_nomi_cl = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
+        $query_del_opzioni = "DELETE FROM personaggi_has_opzioni_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori_ab)";
+        $this->db->doQuery( $query_del_opzioni, $params_ab, False );
+    
+		$query_nomi_cl = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori_cl)";
 		$nomi_cl       = $this->db->doQuery( $query_nomi_cl, $classi_del, False );
 	
         foreach ($nomi_cl as $n)
@@ -512,12 +514,15 @@ class CharactersManager
         $lista_completa = $this->controllaPrerequisitiPerEliminazioneAbilita( $pgid, $id_abilita, $lista_ab );
         array_unshift( $lista_completa, $id_abilita );
         
-        $params = $lista_completa;
+        $params    = $lista_completa;
         array_unshift( $params, $pgid );
         
         $marcatori = str_repeat("?,", count($params) - 2 )."?";
         $query_del = "DELETE FROM personaggi_has_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori)";
         $this->db->doQuery( $query_del, $params, False );
+        
+        $query_del_opzioni = "DELETE FROM personaggi_has_opzioni_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori)";
+        $this->db->doQuery( $query_del_opzioni, $params, False );
         
 		$query_nomi_ab = "SELECT nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
 		$nomi_ab       = $this->db->doQuery( $query_nomi_ab, $lista_completa, False );
@@ -718,15 +723,16 @@ class CharactersManager
         $pc_risparmiati = $pg_data["pc_personaggio"] - $pc_spesi;
         
         //recupero le opzioni
-        $query = "SELECT phoa.*, ab.nome_abilita
-                    FROM personaggi_has_opzioni_abilita AS phoa
-                    JOIN abilita AS ab ON ab.id_abilita = phoa.abilita_id_abilita
-                  WHERE personaggi_id_personaggio = :pgid";
-        $result = $this->db->doQuery( $query, array( ":pgid" => $pgid ), False );
+        $query_opz = "SELECT phoa.*, ab.nome_abilita
+                        FROM personaggi_has_opzioni_abilita AS phoa
+                        JOIN abilita AS ab ON ab.id_abilita = phoa.abilita_id_abilita
+                      WHERE personaggi_id_personaggio = :pgid";
+        $result_opz = $this->db->doQuery( $query_opz, array( ":pgid" => $pgid ), False );
         $opzioni = array();
     
-        foreach( $result as $r )
-            $opzioni[$r["abilita_id_abilita"]] = [ "nome_abilita" => $r["nome_abilita"], "opzione" => $r["opzioni_abilita_opzione"] ];
+        if( count($result_opz) > 0 )
+            foreach( $result_opz as $r )
+                $opzioni[$r["abilita_id_abilita"]] = [ "nome_abilita" => $r["nome_abilita"], "opzione" => $r["opzioni_abilita_opzione"] ];
         
         $pg_data["classi"] = $classi;
         $pg_data["abilita"] = $abilita;
@@ -744,16 +750,29 @@ class CharactersManager
         return "{\"status\": \"ok\",\"result\": ".json_encode($pg_data)."}";
     }
     
+    public function recuperaPropriPg( )
+    {
+        UsersManager::controllaLogin($this->session);
+        
+        $query_pg = "SELECT id_personaggio, nome_personaggio
+                        FROM personaggi
+                    WHERE giocatori_email_giocatore = :id";
+        $result = $this->db->doQuery( $query_pg, array( ":id" => $this->session->email_giocatore ) );
+        $result = isset($result) ? $result : "[]";
+        
+        return "{\"status\": \"ok\",\"result\": $result}";
+    }
+    
     public function recuperaStorico( $pgid )
     {
         UsersManager::operazionePossibile($this->session, __FUNCTION__, $pgid);
         
-        $query = "SELECT CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore, 
-                            st.data_azione, 
-                            st.tipo_azione, 
+        $query = "SELECT CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
+                            st.data_azione,
+                            st.tipo_azione,
                             st.tabella_azione,
                             st.campo_azione,
-                            st.valore_nuovo_azione, 
+                            st.valore_nuovo_azione,
                             st.valore_vecchio_azione
                         FROM storico_azioni AS st
                         JOIN giocatori AS gi ON gi.email_giocatore = st.giocatori_email_giocatore

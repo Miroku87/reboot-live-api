@@ -32,6 +32,11 @@ class Utils
 		return $item["id"];
 	}
 
+	static function mappaIdAbilita( $item )
+	{
+		return $item["id_abilita"];
+	}
+
 	static function filtraClasseSenzaPrerequisito( $item )
 	{
 		return $item["prerequisito_classe"] != NULL;
