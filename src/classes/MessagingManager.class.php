@@ -187,4 +187,26 @@ class MessagingManager
     {
         return $this->recuperaDestinatari( "fg", $term );
     }
+    
+    public function recuperaNonLetti( )
+    {
+        UsersManager::controllaLogin( $this->session );
+    
+        $output = ["result" => []];
+        
+        $query_new_fg = "SELECT COUNT(id_messaggio) AS nuovi_fg FROM messaggi_fuorigioco WHERE letto_messaggio = 0 AND destinatario_messaggio = :mail";
+        $valore_fg    = $this->db->doQuery($query_new_fg, [ ":mail" => $this->session->email_giocatore ], False);
+        $output["result"]["fg"] = $valore_fg[0]["nuovi_fg"];
+    
+        if ( isset( $this->session->pg_loggato ) )
+        {
+            $query_new_ig = "SELECT COUNT(id_messaggio) AS nuovi_ig FROM messaggi_ingioco WHERE letto_messaggio = 0 AND destinatario_messaggio = :pgid";
+            $valore_ig = $this->db->doQuery($query_new_ig, [":pgid" => $this->session->pg_loggato["id_personaggio"] ], False);
+            $output["result"]["ig"] = $valore_ig[0]["nuovi_ig"];
+        }
+        
+        $output["status"] = "ok";
+        
+        return json_encode($output);
+    }
 }

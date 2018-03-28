@@ -745,6 +745,13 @@ class CharactersManager
         if( in_array("background_personaggio", $campi ) )
             $this->mailer->inviaAvvisoBackground($pgid);
         
+        if( in_array("pc_personaggio", $campi ) && in_array("px_personaggio", $campi ) )
+            $this->mailer->inviaAvvisoPunti($pgid, $vecchi_dati[0]["pc_personaggio"], (int)$vecchi_dati[0]["pc_personaggio"] + (int)$modifiche["pc_personaggio"], $vecchi_dati[0]["px_personaggio"], (int)$vecchi_dati[0]["px_personaggio"] + (int)$modifiche["px_personaggio"]);
+        else if( in_array("pc_personaggio", $campi ) && !in_array("px_personaggio", $campi ) )
+            $this->mailer->inviaAvvisoPunti($pgid, $vecchi_dati[0]["pc_personaggio"], (int)$vecchi_dati[0]["pc_personaggio"] + (int)$modifiche["pc_personaggio"] );
+        else if( !in_array("pc_personaggio", $campi ) && in_array("px_personaggio", $campi ) )
+            $this->mailer->inviaAvvisoPunti($pgid, NULL, NULL, $vecchi_dati[0]["px_personaggio"], (int)$vecchi_dati[0]["px_personaggio"] + (int)$modifiche["px_personaggio"]);
+        
         foreach( $vecchi_dati as $vd )
             foreach( $vd as $k => $val )
             {
@@ -929,7 +936,7 @@ class CharactersManager
         
         $query_pg = "SELECT id_personaggio, nome_personaggio, anno_nascita_personaggio
                         FROM personaggi
-                    WHERE giocatori_email_giocatore = :id";
+                    WHERE giocatori_email_giocatore = :id AND eliminato_personaggio = 0";
         $result = $this->db->doQuery( $query_pg, array( ":id" => $this->session->email_giocatore ) );
         $result = isset($result) ? $result : "[]";
         

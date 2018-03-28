@@ -3,7 +3,7 @@
 $DEBUG                          = False;
 $MAINTENANCE                    = False;
 $RETE_LOCALE                    = False;
-$IP_MAINTAINER                  = "80.116.4.94";
+$IP_MAINTAINER                  = ["82.48.82.184"];
 
 $MAIL_ACCOUNT                   = "rebootlivegrv@gmail.com";
 $MAIL_MITTENTE_INDIRIZZO        = "rebootlivegrv@gmail.com";

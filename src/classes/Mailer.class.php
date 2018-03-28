@@ -1,7 +1,8 @@
 <?php
 $path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
-include_once($path."classes/APIException.class.php");
+include_once($path . "classes/APIException.class.php");
 include_once($path . "classes/SessionManager.class.php");
+include_once($path . "classes/DatabaseBridge.class.php");
 include_once($path . "classes/Utils.class.php");
 include_once($path . "config/constants.php");
 include_once($path . "phpmailer/Exception.php");
@@ -13,9 +14,12 @@ use PHPMailer\PHPMailer\PHPMailer;
 class Mailer
 {
     protected $session;
+    protected $db;
     
     public function __construct()
     {
+        $this->session = SessionManager::getInstance();
+        $this->db = new DatabaseBridge();
     }
     
     public function __destruct()
@@ -111,6 +115,47 @@ class Mailer
         $mail->send();
     }
     
+    public function inviaAvvisoPunti( $pg_id, $old_pc = NULL, $new_pc = NULL, $old_px = NULL, $new_px = NULL )
+    {
+        if( !isset($old_pc) && !isset($new_pc) && !isset($old_px) && !isset($new_px) )
+            return False;
+        
+        $info_dest = "SELECT gi.email_giocatore, CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_completo FROM personaggi AS pg
+                      JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore
+                      WHERE id_personaggio = :pgid";
+        $info      = $this->db->doQuery($info_dest, [":pgid"=>$pg_id], False);
+        
+        $mail = $this->impostaMailer();
+        //Set who the message is to be sent to
+        $mail->addAddress($info[0]["email_giocatore"], $info[0]["nome_completo"]);
+        //Set the subject line
+        $mail->Subject = 'Reboot Live: Punteggi Modificati';
+        //Read an HTML message body from an external file, convert referenced images to embedded,
+        //convert HTML into a basic plain-text alternative body
+        $html = "Gentile giocatore,<br>
+                         ti avvisiamo che i tuoi punteggi sono stati modificati:<br>";
+        $txt = "Gentile giocatore,
+                         ti avvisiamo che i tuoi punteggi sono stati modificati:\n";
+        
+        if(isset($old_pc) && isset($new_pc))
+        {
+            $html .= "<br><b>Punti Combattimento:</b> da $old_pc a $new_pc";
+            $txt .= "\nPunti Combattimento: da $old_pc a $new_pc";
+        }
+        
+        if(isset($old_px) && isset($new_px))
+        {
+            $html .= "<br><b>Punti Esperienza:</b> da $old_px a $new_px";
+            $txt .= "\nPunti Combattimento: da $old_px a $new_px";
+        }
+        
+        $mail->msgHTML( $html );
+        //Replace the plain text body with one created manually
+        $mail->AltBody = $txt;
+        
+        $mail->send();
+    }
+    
     public function inviaAvvisoBackground( $pgid )
     {
         global $MAIL_MITTENTE_INDIRIZZO;
@@ -136,6 +181,67 @@ class Mailer
                          Vai al link seguente per vedere direttamente il suo profilo:
                          $pg_url";
     
+        $mail->send();
+    }
+    
+    public function inviaAvvisoEvento( )
+    {
+        $query_mails = "SELECT email_giocatore, CONCAT(nome_giocatore,' ',cognome_giocatore) AS nome_completo FROM giocatori WHERE eliminato_giocatore = 0";
+        $lista       = $this->db->doQuery($query_mails, [], False );
+        
+        $mail = $this->impostaMailer();
+        //Set who the message is to be sent to
+        if( isset($lista) && count($lista) > 0 )
+        {
+            foreach ($lista as $l)
+                $mail->addBCC($l["email_giocatore"], $l["nome_completo"]);
+    
+            //Set the subject line
+            $mail->Subject = 'Reboot Live: E\' stato pubblicato un evento live!';
+            //Read an HTML message body from an external file, convert referenced images to embedded,
+            //convert HTML into a basic plain-text alternative body
+            $mail->msgHTML("Gentile Giocatore,<br>
+                         ti comunichiamo che lo staff di Reboot Live ha appena pubblicato un nuovo evento.<br>
+                         Sappi che da ora in poi potrai iscriverti nell'apposita sezione del database.");
+            //Replace the plain text body with one created manually
+            $mail->AltBody = "Gentile Giocatore,
+                         ti comunichiamo che lo staff di Reboot Live ha appena pubblicato un nuovo evento.
+                         Sappi che da ora in poi potrai iscriverti nell'apposita sezione del database.";
+    
+            $mail->send();
+        }
+    }
+    
+    public function inviaAvvisoIscrizione( $giocatore, $pg_nome, $note, $pg_id, $nome_evento )
+    {
+        global $MAIL_MITTENTE_INDIRIZZO;
+        global $MAIL_MITTENTE_NOME;
+        
+        $mail = $this->impostaMailer();
+        //Set who the message is to be sent to
+        $mail->addAddress($MAIL_MITTENTE_INDIRIZZO, $MAIL_MITTENTE_NOME);
+        //Set who the message is to be sent to
+        //Set the subject line
+        $mail->Subject = "Reboot Live: $giocatore si e\' iscritto a $nome_evento";
+        //Read an HTML message body from an external file, convert referenced images to embedded,
+        //convert HTML into a basic plain-text alternative body
+        $html = "Ehi Staff!<br>
+                     <strong>$giocatore</strong> ha appena iscritto il suo personaggio <strong>$pg_nome</strong> con id <strong>$pg_id</strong><br>
+                     all'evento <strong>$nome_evento</strong>.";
+        $txt  = "Ehi Staff!
+                     $giocatore ha appena iscritto il suo personaggio $pg_nome con id $pg_id
+                     all'evento $nome_evento.";
+        
+        if( isset($note) && !empty($note) )
+        {
+            $html .= "<br><br>ATTENZIONE: questo giocatore ha inserito delle note in fase di registrazione:<br>$note";
+            $txt  .= "\n\nATTENZIONE: questo giocatore ha inserito delle note in fase di registrazione:\n$note";
+        }
+        
+        $mail->msgHTML($html);
+        //Replace the plain text body with one created manually
+        $mail->AltBody = $txt;
+
         $mail->send();
     }
 }

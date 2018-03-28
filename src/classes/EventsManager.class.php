@@ -142,11 +142,11 @@ class EventsManager
     public function impostaPuntiAssegnatiEvento( $id )
     {
         UsersManager::operazionePossibile( $this->session, "modificaEvento" );
-    
+        
         $query_pt = "UPDATE eventi SET punti_assegnati_evento = :punti
                         WHERE id_evento = :id";
         $this->db->doQuery( $query_pt, [":punti"=>1, ":id" => $id], False );
-    
+        
         return json_encode([ "status" => "ok", "result" => "true" ]);
     }
     
@@ -233,12 +233,22 @@ class EventsManager
     
     public function iscriviPg( $id_evento, $id_pg, $pagato, $tipo_pagamento, $note )
     {
+        if( !isset($id_pg) || empty($id_pg) )
+            throw new APIException("Devi selezionare un personaggio da iscrivere.");
+        
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $id_pg );
+        
+        $query_pub = "SELECT id_evento, pubblico_evento, titolo_evento FROM eventi
+                        WHERE id_evento = :idev";
+        $res_pub   = $this->db->doQuery($query_pub, [ ":idev" => $id_evento ], False);
+        
+        if( $res_pub[0]["pubblico_evento"] == 0 )
+            throw new APIException("Non puoi iscrivere un personaggio ad un evento non pubblico.");
         
         $query_check = "SELECT personaggi_id_personaggio, eventi_id_evento FROM iscrizione_personaggi
                         WHERE eventi_id_evento = :idev AND personaggi_id_personaggio IN ( SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :mail)";
         $res_check   = $this->db->doQuery($query_check, [ ":idev" => $id_evento, ":mail" => $this->session->email_giocatore ], False);
-        
+    
         if( isset($res_check) && count($res_check) > 0 )
             throw new APIException("Non puoi iscrivere pi&ugrave; di un personaggio ad uno stesso evento.");
         
@@ -252,6 +262,14 @@ class EventsManager
         
         $query_ev = "INSERT INTO iscrizione_personaggi VALUES ( :id_ev, :id_pg, :pagato, :tipo_pag, :note)";
         $evento = $this->db->doQuery( $query_ev, $params, False );
+        
+        $query_gi = "SELECT pg.nome_personaggio, CONCAT(gi.nome_giocatore, ' ', gi.cognome_giocatore) as nome_completo, gi.note_giocatore
+                        FROM personaggi AS pg
+                        JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore
+                     WHERE id_personaggio = :idpg";
+        $info     = $this->db->doQuery($query_gi, [":idpg"=>$id_pg], False);
+        
+        $this->mailer->inviaAvvisoIscrizione( $info[0]["nome_completo"], $info[0]["nome_personaggio"], $info[0]["note_giocatore"], $id_pg, $res_pub[0]["titolo_evento"] );
         
         return json_encode([ "status" => "ok", "result" => $evento[0] ]);
     }
@@ -303,6 +321,8 @@ class EventsManager
         
         $query_pub = "UPDATE eventi SET pubblico_evento = :pub WHERE id_evento = :id_ev";
         $this->db->doQuery( $query_pub, $params, False );
+    
+        $this->mailer->inviaAvvisoEvento();
         
         return json_encode([ "status" => "ok", "result" => true ]);
     }
