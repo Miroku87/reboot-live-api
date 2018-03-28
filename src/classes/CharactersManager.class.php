@@ -54,8 +54,137 @@ class CharactersManager
         $this->db->doQuery( $query_azione, $params, False );
     }
     
+    private function controllaInputCreaPG( $nome, $eta, $classi, $abilita )
+    {
+        $error = "";
+        
+        if( !isset($nome) || empty($nome) || Utils::soloSpazi($nome) )
+            $error .= "<li>Il campo Nome non pu&ograve; essere lasciato vuoto.</li>";
+        if( !isset($eta) || empty($eta) || Utils::soloSpazi($eta) || $eta === "0" || !preg_match( "/^\d+$/", $eta ) )
+            $error .= "<li>Il campo Et&agrave; non pu&ograve; essere vuoto, contenere lettere o essere uguale a 0.</li>";
+        if( count($classi) < 2 )
+            $error .= "<li>&Egrave; obbligatorio scegliere almeno una classe militare e una civile.</li>";
+        if( count($abilita) < 2 )
+            $error .= "<li>&Egrave; obbligatorio scegliere almeno una abilit&agrave; militare e una civile.</li>";
+        
+        if( !empty($error) )
+            throw new APIException("Sono stati rilevati i seguenti errori:<ul>".$error."</ul>");
+    }
+    
+    /*
+    96
+    Il punteggio di Difesa Mentale del personaggio è aumentato permanentemente di 1.
+
+    172
+    Il personaggio aumenta permanentemente di 1 il suo punteggio di Difesa Mentale.
+
+    173
+    Il personaggio aumenta permanentemente di 2 il suo punteggio di Difesa Mentale (quest'abilità va a<br>sostituire "Protezione Firmware Avanzata - 172").
+
+    202
+    Il valore di Difesa mentale del personaggio aumenta di 1.
+
+    206
+    Il valore di Difesa Mentale del personaggio aumenta di 2. (Sostituisce il bonus dato da Schermatura Cerebrale - 202)
+    */
+    private function calcolaDifesaMentale( $base, $abilita )
+    {
+        $punti = [];
+        $id_offset_costante = [96,172,202];
+        
+        foreach ($abilita as $a)
+        {
+            if( in_array( (int)$a["id_abilita"], $id_offset_costante ) )
+                $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
+            else if( (int)$a["id_abilita"] === 173 )
+            {
+                $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
+                if( isset($punti["172"]) ) unset($punti["172"]);
+            }
+            else if (  (int)$a["id_abilita"] === 206  )
+            {
+                $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
+                if( isset($punti["202"]) ) unset($punti["202"]);
+            }
+        }
+        
+        return $base + array_sum( $punti );
+    }
+    
+    /*
+    98
+    Se il personaggio ha almeno un Punto Shield base, guadagna +2 punti al suo valore globale.
+    
+    100
+    Il valore base dei punti Shield garantiti dalle locazioni equipaggiate con una tuta da combattimento<br>corazzata (come indicato a pag. 17) è moltiplicato per 1,5.
+    
+    101
+    Il valore base dei punti Shield garantiti dalle locazioni equipaggiate con una tuta da combattimento<br>corazzata (come indicato a pag. 17) è raddoppiato. Questa abilità sostituisce TUTA CORAZZATA MK2 - 100.
+    
+    102
+    Se il personaggio ha almeno un Punto Shield base, guadagna +4 punti al suo valore globale. Questa<br>abilità sostituisce SHIELD MK2 - 98
+    
+    119
+    Il massimale base del valore di Shield del personaggio non è mai inferiore a 3 punti quando indossa una tuta da combattimento corazzata, neanche a seguito di oggetti equipaggiati.
+    
+    125
+    Il punteggio di Shield totale garantito dalla tuta da combattimento equipaggiata aumenta di 1, se la tuta fornisce al personaggio almeno un punto Shield Base.
+    
+    158
+    Il valore base dei punti Shield garantiti dalle locazioni equipaggiate con una tuta da combattimento<br>corazzata (come indicato a pag. 17) è moltiplicato per 1,5.
+    
+    159
+    Se il personaggio ha almeno un Punto Shield base, guadagna +2 punti al suo valore globale.
+    
+    174
+    Il personaggio se equipaggiato con una tuta da combattimento corazzata aumenta di 2 il punteggio di<br>Shield ottenuto dalla suddetta tuta.<br>Una volta per giornata di gioco il personaggio, quando entra in status di Coma, può subire GUARIGIONE<br>5! Subendo quindi BLOCCO! CONTINUO! allo Shield.
+    
+    190
+    Il punteggio di Shield garantito da una tuta da combattimento equipaggiata aumenta di 1, se la tuta<br>fornisce al personaggio almeno un punto Shield Base.
+    
+    191
+    Se il personaggio ha almeno un Punto Shield base, guadagna +2 punti al suo valore globale.
+    */
+    private function calcolaShield( $base, $abilita )
+    {
+        $punti               = [];
+        $moltiplicatore_base = 1;
+        $min                 = 0;
+        $id_offset_costante  = [98,125,159,174,190,191];
+        
+        foreach ($abilita as $a)
+        {
+            if( in_array( (int)$a["id_abilita"], $id_offset_costante ) )
+                $punti[$a["id_abilita"]] = $a["offset_shield_abilita"];
+            else if( (int)$a["id_abilita"] === 100 )
+                $moltiplicatore_base = 1.5;
+            else if (  (int)$a["id_abilita"] === 101  )
+                $moltiplicatore_base = 2;
+            else if (  (int)$a["id_abilita"] === 102  )
+            {
+                $punti[$a["id_abilita"]] = $a["offset_shield_abilita"];
+                if( isset($punti["98"]) ) unset($punti["98"]);
+            }
+            else if (  (int)$a["id_abilita"] === 119  )
+                $min = 3;
+            else if (  (int)$a["id_abilita"] === 158  )
+                $moltiplicatore_base = 1.5;
+        }
+        
+        return max( $min, ( $moltiplicatore_base * $base ) + array_sum( $punti ) );
+    }
+    
+    private function calcolaPF( $base, $abilita )
+    {
+        $punti = array_map("Utils::mappaOffsetPFAbilita", $abilita);
+        
+        return $base  + array_sum( $punti );
+    }
+    
     private function recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search, $extra_where = array(), $extra_param = array() )
     {
+        global $PF_INIZIALI;
+        
         $where  = $extra_where;
         $params = $extra_param;
         $filter = False;
@@ -74,13 +203,13 @@ class CharactersManager
 						bj.note_giocatore LIKE :search
 					  )";
         }
-    
+        
         if( isset( $order ) )
         {
             $sorting = array();
             foreach ( $order as $elem )
                 $sorting[] = "bj.".$columns[$elem["column"]]["data"]." ".$elem["dir"];
-        
+            
             $order_str = "ORDER BY ".implode( $sorting, "," );
         }
         
@@ -94,16 +223,20 @@ class CharactersManager
                         pg.data_creazione_personaggio,
                         pg.eliminato_personaggio,
                         pg.contattabile_personaggio,
+                        pg.anno_nascita_personaggio,
                         gi.email_giocatore,
                         CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         gi.note_giocatore,
                         gi.eliminato_giocatore,
                         gi.ruoli_nome_ruolo,
                         GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
-                        GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari
+                        GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari,
+                        MAX(cl_m.mente_base_classe) as mente_base_personaggio,
+                        MAX(cl_m.shield_max_base_classe) as scudo_base_personaggio
                     FROM personaggi AS pg
-                        LEFT OUTER JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
-                        LEFT OUTER JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
+                        JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
+                        JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
+                        JOIN personaggi_has_abilita AS pha ON pha.personaggi_id_personaggio = pg.id_personaggio
                         LEFT OUTER JOIN classi AS cl_m ON cl_m.id_classe = phc.classi_id_classe AND cl_m.tipo_classe = 'militare'
                         LEFT OUTER JOIN classi AS cl_c ON cl_c.id_classe = phc.classi_id_classe AND cl_c.tipo_classe = 'civile'
                     GROUP BY pg.id_personaggio";
@@ -115,10 +248,23 @@ class CharactersManager
         $totale    = count($risultati);
         
         if( count($risultati) > 0 )
+        {
             $risultati = array_splice($risultati, $start, $length);
+            
+            for ($i = 0; $i < count($risultati); $i++)
+            {
+                $query_ab = "SELECT id_abilita, offset_pf_abilita, offset_shield_abilita, offset_mente_abilita
+                              FROM abilita
+                              WHERE id_abilita IN ( SELECT abilita_id_abilita FROM personaggi_has_abilita WHERE personaggi_id_personaggio = :pgid )";
+                $abilita  = $this->db->doQuery($query_ab, [":pgid"=>$risultati[$i]["id_personaggio"]], False);
+                $risultati[$i]["pf_personaggio"]     = $this->calcolaPF( $PF_INIZIALI, $abilita );
+                $risultati[$i]["shield_personaggio"] = $this->calcolaShield( $risultati[$i]["scudo_base_personaggio"], $abilita );
+                $risultati[$i]["mente_personaggio"]  = $this->calcolaDifesaMentale( $risultati[$i]["mente_base_personaggio"], $abilita );
+            }
+        }
         else
             $risultati = array();
-    
+        
         $output     = array(
             "status"          => "ok",
             "draw"            => $draw,
@@ -146,7 +292,7 @@ class CharactersManager
                 $opzioni[] = $o["opzioni_abilita_opzione"];
         }
         
-        if( count($opzioni) !== count(array_unique($opzioni)) )
+        if( count($opzioni) > 0 && count($opzioni) !== count(array_unique($opzioni)) )
             throw new APIException("Non &egrave; possibile selezionare due opzioni uguali per abilit&agrave; diverse.");
     }
     
@@ -209,31 +355,31 @@ class CharactersManager
         global $ID_ABILITA_F_TERRA;
         global $ID_ABILITA_T_SCELTO;
         
-		$id_abilita = (int)$id_abilita;
-		
+        $id_abilita = (int)$id_abilita;
+        
         $query_ab = "SELECT * FROM abilita WHERE id_abilita = :id";
         $abilita  = $this->db->doQuery( $query_ab, array( ":id" => $id_abilita ), False );
         $abilita  = $abilita[0];
         
         $ab_prereq  = array_filter( $lista_ab, "Utils::filtraAbilitaSenzaPrerequisito" );
-		
+        
         $new_params = array();
         
         if( count( $ab_prereq ) > 0 )
         {
-			// -1 per non contare anche l'abilita che ha il prerequisito
+            // -1 per non contare anche l'abilita che ha il prerequisito
             $qta_sportivo = count( array_filter( $lista_ab, "Utils::filtraAbilitaSportivo" ) ) - 1;
             $qta_sup_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaSupportoBase" ) ) - 1;
             $qta_ass_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaAssaltatoreBase" ) );
             $qta_gua_base = count( array_filter( $lista_ab, "Utils::filtraAbilitaGuastatoreBase" ) );
             $qta_gua_avan = count( array_filter( $lista_ab, "Utils::filtraAbilitaGuastatoreAvanzato" ) );
-			
+            
             foreach( $ab_prereq as $i => $ap )
             {
-				$pre    = (int)$ap["prerequisito_abilita"];
-				$pre_cl = (int)$ap["classi_id_classe"];
-				$ab_cl  = (int)$abilita["classi_id_classe"];
-				
+                $pre    = (int)$ap["prerequisito_abilita"];
+                $pre_cl = (int)$ap["classi_id_classe"];
+                $ab_cl  = (int)$abilita["classi_id_classe"];
+                
                 if (
                     $pre === $id_abilita
                     || ( $pre === $PREREQUISITO_TUTTE_ABILITA && $ab_cl === $pre_cl )
@@ -321,20 +467,23 @@ class CharactersManager
         return "{\"status\": \"ok\", \"info\": $info_obj }";
     }
     
-    public function creaPG( $nome, $classi, $abilita, $opzioni )
+    public function creaPG( $nome, $eta, $classi, $abilita, $opzioni = [] )
     {
         global $PX_INIZIALI;
         global $PC_INIZIALI;
         global $DB_ERR_DELIMITATORE;
+        global $ANNO_PRIMO_LIVE;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
+        $this->controllaInputCreaPG( $nome, $eta, $classi, $abilita );
         $this->controllaPossibilitaPunti( $classi, $abilita, NULL, $PX_INIZIALI, $PC_INIZIALI );
         $this->controllaOpzioniDuplicate( $opzioni );
         
-        $new_pg_query  = "INSERT INTO personaggi (nome_personaggio, px_personaggio, pc_personaggio, giocatori_email_giocatore) VALUES ( :nomepg, :initpx, :initpc, :email )";
+        $new_pg_query  = "INSERT INTO personaggi (nome_personaggio, anno_nascita_personaggio, px_personaggio, pc_personaggio, giocatori_email_giocatore) VALUES ( :nomepg, :anno, :initpx, :initpc, :email )";
         $new_pg_params = array(
             ":nomepg"    => $nome,
+            ":anno"      => $ANNO_PRIMO_LIVE - (int)$eta,
             ":initpx"    => $PX_INIZIALI,
             ":initpc"    => $PC_INIZIALI,
             ":email"     => $this->session->email_giocatore
@@ -370,7 +519,7 @@ class CharactersManager
             $err_mex = count( $err_mex ) > 1 ? $err_mex[1] : $err_mex[0];
             throw new APIException( $err_mex );
         }
-        
+
 //        $this->mailer->inviaMailRegistrazione( $mail, $nome, $pass  );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
@@ -387,11 +536,11 @@ class CharactersManager
             $classi_params[] = array( ":idpg" => $pgid, ":idclasse" => $ci );
         
         $this->db->doMultipleInserts( $classi_query, $classi_params );
-    
-		$marcatori  = str_repeat("?, ", count($class_ids)-1)." ?";
-		$query_nomi = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
-		$nomi = $this->db->doQuery( $query_nomi, $class_ids, False );
-	
+        
+        $marcatori  = str_repeat("?, ", count($class_ids)-1)." ?";
+        $query_nomi = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
+        $nomi = $this->db->doQuery( $query_nomi, $class_ids, False );
+        
         foreach( $nomi as $n )
             $this->registraAzione( $pgid, "INSERT", "classi_personaggio", "classe", NULL, $n["nome_classe"] );
         
@@ -419,31 +568,35 @@ class CharactersManager
             $abilita_params[] = array( ":idpg" => $pgid, ":idabilita" => $ab["id_abilita"] );
         
         $this->db->doMultipleInserts( $abilita_query, $abilita_params );
-		
+        
         foreach( $ordine_ab as $ab )
             $this->registraAzione( $pgid, "INSERT", "abilita_personaggio", "abilita", NULL, $ab["nome_abilita"] );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
     
-    public function aggiungiOpzioniAbilita( $pgid, $opzioni )
+    public function aggiungiOpzioniAbilita( $pgid, $opzioni = [] )
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
-        $query_opzioni  = "INSERT INTO personaggi_has_opzioni_abilita VALUES ( :idpg, :idabilita, :opzione )";
-        $params_opzioni = array();
-        
-        foreach( $opzioni as $id_ab => $opz )
-            $params_opzioni[] = array( ":idpg" => $pgid, ":idabilita" => $id_ab, ":opzione" => $opz );
-        
-        $this->db->doMultipleInserts( $query_opzioni, $params_opzioni );
-        
-        $marcatori     = str_repeat("?,", count( $opzioni ) - 1 )."?";
-        $query_abilita = "SELECT id_abilita, nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
-        $lista_abilita = $this->db->doQuery($query_abilita, array_keys($opzioni), False);
-    
-        foreach( $lista_abilita as $ab )
-            $this->registraAzione( $pgid, "INSERT", "opzioni_abilita", "abilita - opzione", NULL, $ab["nome_abilita"]." - ".$opzioni[$ab["id_abilita"]] );
+        if( count($opzioni) > 0 )
+        {
+            $query_opzioni = "INSERT INTO personaggi_has_opzioni_abilita VALUES ( :idpg, :idabilita, :opzione )";
+            $params_opzioni = array();
+            
+            foreach ($opzioni as $id_ab => $opz)
+                $params_opzioni[] = array(":idpg" => $pgid, ":idabilita" => $id_ab, ":opzione" => $opz);
+            
+            $this->db->doMultipleInserts($query_opzioni, $params_opzioni);
+            
+            $marcatori = str_repeat("?,", count($opzioni) - 1) . "?";
+            $query_abilita = "SELECT id_abilita, nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
+            $lista_abilita = $this->db->doQuery($query_abilita, array_keys($opzioni), False);
+            
+            foreach ($lista_abilita as $ab)
+                $this->registraAzione($pgid, "INSERT", "opzioni_abilita", "abilita - opzione", NULL, $ab["nome_abilita"] . " - " . $opzioni[$ab["id_abilita"]]);
+            $this->registraAzione($pgid, "INSERT", "opzioni_abilita", "abilita - opzione", NULL, $ab["nome_abilita"] . " - " . $opzioni[$ab["id_abilita"]]);
+        }
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -468,7 +621,7 @@ class CharactersManager
                     $classi_del[] = $cp["id_classe"];
             }
         }
-		
+        
         $params = $classi_del;
         array_unshift($params, $pgid);
         $marcatori_cl = str_repeat("?,", count($params) - 2 )."?";
@@ -482,20 +635,20 @@ class CharactersManager
         
         $params_ab    = array_map("Utils::mappaIdAbilita",$lista_ab);
         array_unshift( $params_ab, $pgid );
-		
+        
         $marcatori_ab = str_repeat("?, ", count($params_ab) - 2)."?";
         $query_del_ab = "DELETE FROM personaggi_has_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori_ab)";
         $this->db->doQuery( $query_del_ab, $params_ab, False );
-    
+        
         $query_del_opzioni = "DELETE FROM personaggi_has_opzioni_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori_ab)";
         $this->db->doQuery( $query_del_opzioni, $params_ab, False );
-    
-		$query_nomi_cl = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori_cl)";
-		$nomi_cl       = $this->db->doQuery( $query_nomi_cl, $classi_del, False );
-	
+        
+        $query_nomi_cl = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori_cl)";
+        $nomi_cl       = $this->db->doQuery( $query_nomi_cl, $classi_del, False );
+        
         foreach ($nomi_cl as $n)
             $this->registraAzione( $pgid, "DELETE", "classi_personaggio", "classe", $n["nome_classe"], NULL );
-    
+        
         foreach ($lista_ab as $la)
             $this->registraAzione( $pgid, "DELETE", "abilita_personaggio", "abilita", $la["nome_abilita"], NULL );
         
@@ -524,9 +677,9 @@ class CharactersManager
         $query_del_opzioni = "DELETE FROM personaggi_has_opzioni_abilita WHERE personaggi_id_personaggio = ? AND abilita_id_abilita IN ($marcatori)";
         $this->db->doQuery( $query_del_opzioni, $params, False );
         
-		$query_nomi_ab = "SELECT nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
-		$nomi_ab       = $this->db->doQuery( $query_nomi_ab, $lista_completa, False );
-		
+        $query_nomi_ab = "SELECT nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
+        $nomi_ab       = $this->db->doQuery( $query_nomi_ab, $lista_completa, False );
+        
         foreach ($nomi_ab as $n)
             $this->registraAzione( $pgid, "DELETE", "abilita_personaggio", "abilita", $n["nome_abilita"], NULL );
         
@@ -536,7 +689,7 @@ class CharactersManager
     public function acquista( $pgid, $classi, $abilita, $opzioni )
     {
         global $DB_ERR_DELIMITATORE;
-    
+        
         $this->controllaOpzioniDuplicate($opzioni,$pgid);
         
         try {
@@ -572,14 +725,14 @@ class CharactersManager
         
         $query_vecchi_dati = "SELECT $campi_virgola FROM personaggi WHERE id_personaggio = :pgid";
         $vecchi_dati = $this->db->doQuery( $query_vecchi_dati, array( ":pgid" => $pgid ), False );
-    
+        
         $to_update = "";
         
         if( $is_offset )
         {
             foreach ($campi as $c)
                 $to_update .= "$c = $c + ?, ";
-    
+            
             $to_update = substr( $to_update,0, -2 );
         }
         else
@@ -612,12 +765,19 @@ class CharactersManager
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
     
+    public function modificaEtaPG( $pgid, $eta_pg )
+    {
+        global $ANNO_PRIMO_LIVE;
+        
+        return $this->modificaPG( $pgid, [ "anno_nascita_personaggio" => $ANNO_PRIMO_LIVE - (int)$eta_pg ] );
+    }
+    
     public function eliminaPG( $pgid, $controlla_permessi = True )
     {
         if( $controlla_permessi )
         {
             UsersManager::operazionePossibile($this->session, __FUNCTION__, $pgid);
-    
+            
             $query_canc_pg = "UPDATE personaggi SET eliminato_personaggio = 1 WHERE id_personaggio = :idpg";
             $this->db->doQuery( $query_canc_pg, array( ":idpg" => $pgid ), False );
             $this->registraAzione( $pgid, "DELETE", "personaggi", "eliminato_personaggio", 0, 1 );
@@ -635,27 +795,33 @@ class CharactersManager
     {
         global $MAPPA_COSTO_CLASSI_CIVILI;
         global $ABILITA_CRAFTING;
+        global $PF_INIZIALI;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
-        $query_pg = "SELECT pg.id_personaggio, 
-                            pg.nome_personaggio, 
-                            pg.background_personaggio, 
-                            pg.px_personaggio, 
-                            pg.pc_personaggio, 
-                            pg.credito_personaggio, 
-                            pg.data_creazione_personaggio, 
-                            pg.note_master_personaggio, 
+        $query_pg = "SELECT pg.id_personaggio,
+                            pg.nome_personaggio,
+                            pg.background_personaggio,
+                            pg.px_personaggio,
+                            pg.pc_personaggio,
+                            pg.credito_personaggio,
+                            pg.data_creazione_personaggio,
+                            pg.note_master_personaggio,
                             pg.giocatori_email_giocatore,
-                            gi.nome_giocatore 
+                            pg.anno_nascita_personaggio,
+                            gi.nome_giocatore,
+                            MAX(COALESCE(cl.mente_base_classe,0)) as mente_base_personaggio,
+                            MAX(COALESCE(cl.shield_max_base_classe,0)) as scudo_base_personaggio
                     FROM personaggi AS pg
-                    JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore 
+                        JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore
+                        JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
+                        JOIN classi AS cl ON phc.classi_id_classe = cl.id_classe
                     WHERE id_personaggio = :idpg";
         $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid ), False );
         
         if( count( $res_pg ) === 0 )
             throw new APIException( "Non puoi scaricare i dati di un giocatore non tuo." );
-		
+        
         $pg_data  = $res_pg[0];
         
         $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
@@ -669,6 +835,9 @@ class CharactersManager
                                  ab.distanza_abilita,
                                  ab.classi_id_classe,
                                  ab.effetto_abilita,
+                                 ab.offset_pf_abilita,
+                                 COALESCE(ab.offset_mente_abilita,0) AS offset_mente_abilita,
+                                 COALESCE(ab.offset_shield_abilita,0) AS offset_shield_abilita,
                                  cl.nome_classe
                             FROM abilita AS ab 
                               JOIN classi AS cl ON ab.classi_id_classe = cl.id_classe 
@@ -691,13 +860,13 @@ class CharactersManager
             foreach ($res_abilita as $ab)
             {
                 $abilita[$ab["tipo_abilita"]][] = $ab;
-        
+                
                 if ($ab["id_abilita"] === $ABILITA_CRAFTING["chimico"])
                     $crafting_chimico = True;
-        
+                
                 if ($ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"])
                     $crafting_programmazione = True;
-        
+                
                 if (in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]))
                     $crafting_ingegneria = True;
             }
@@ -729,21 +898,25 @@ class CharactersManager
                       WHERE personaggi_id_personaggio = :pgid";
         $result_opz = $this->db->doQuery( $query_opz, array( ":pgid" => $pgid ), False );
         $opzioni = array();
-    
+        
         if( count($result_opz) > 0 )
             foreach( $result_opz as $r )
                 $opzioni[$r["abilita_id_abilita"]] = [ "nome_abilita" => $r["nome_abilita"], "opzione" => $r["opzioni_abilita_opzione"] ];
         
-        $pg_data["classi"] = $classi;
-        $pg_data["abilita"] = $abilita;
-        $pg_data["px_spesi"] = $px_spesi;
-        $pg_data["px_risparmiati"] = $px_risparmiati;
-        $pg_data["pc_spesi"] = $pc_spesi;
-        $pg_data["pc_risparmiati"] = $pc_risparmiati;
-        $pg_data["crafting_chimico"] = $crafting_chimico;
+        $pg_data["pf_personaggio"]     = $this->calcolaPF( $PF_INIZIALI, $res_abilita );
+        $pg_data["shield_personaggio"] = $this->calcolaShield( $pg_data["scudo_base_personaggio"], $res_abilita );
+        $pg_data["mente_personaggio"]  = $this->calcolaDifesaMentale( $pg_data["mente_base_personaggio"], $res_abilita );
+        
+        $pg_data["classi"]                  = $classi;
+        $pg_data["abilita"]                 = $abilita;
+        $pg_data["px_spesi"]                = $px_spesi;
+        $pg_data["px_risparmiati"]          = $px_risparmiati;
+        $pg_data["pc_spesi"]                = $pc_spesi;
+        $pg_data["pc_risparmiati"]          = $pc_risparmiati;
+        $pg_data["crafting_chimico"]        = $crafting_chimico;
         $pg_data["crafting_programmazione"] = $crafting_programmazione;
-        $pg_data["crafting_ingegneria"] = $crafting_ingegneria;
-        $pg_data["opzioni"] = $opzioni;
+        $pg_data["crafting_ingegneria"]     = $crafting_ingegneria;
+        $pg_data["opzioni"]                 = $opzioni;
         
         $this->session->pg_loggato = $pg_data;
         
@@ -754,7 +927,7 @@ class CharactersManager
     {
         UsersManager::controllaLogin($this->session);
         
-        $query_pg = "SELECT id_personaggio, nome_personaggio
+        $query_pg = "SELECT id_personaggio, nome_personaggio, anno_nascita_personaggio
                         FROM personaggi
                     WHERE giocatori_email_giocatore = :id";
         $result = $this->db->doQuery( $query_pg, array( ":id" => $this->session->email_giocatore ) );
@@ -797,7 +970,7 @@ class CharactersManager
         {
             if( !isset( $ret[$r["abilita_id_abilita"]] ) )
                 $ret[$r["abilita_id_abilita"]] = [];
-    
+            
             $ret[$r["abilita_id_abilita"]][] = $r["opzione"];
         }
         

@@ -37,6 +37,11 @@ class Utils
 		return $item["id_abilita"];
 	}
 
+	static function mappaOffsetPFAbilita( $item )
+	{
+		return $item["offset_pf_abilita"];
+	}
+
 	static function filtraClasseSenzaPrerequisito( $item )
 	{
 		return $item["prerequisito_classe"] != NULL;

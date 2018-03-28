@@ -20,6 +20,8 @@ $TIPO_GRANT_PG_ALTRI            = "_altri";
 
 $PX_INIZIALI                    = 100;
 $PC_INIZIALI                    = 4;
+$PF_INIZIALI                    = 2;
+$ANNO_PRIMO_LIVE                = 271;
 
 $ABILITA_CRAFTING               = array( "chimico"  => 61, "programmazione"  => 29, "ingegneria"  => array( 48, 49, 50, 51 ) );
 
