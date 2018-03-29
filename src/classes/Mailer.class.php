@@ -120,7 +120,7 @@ class Mailer
         if( !isset($old_pc) && !isset($new_pc) && !isset($old_px) && !isset($new_px) )
             return False;
         
-        $info_dest = "SELECT gi.email_giocatore, CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_completo FROM personaggi AS pg
+        $info_dest = "SELECT pg.nome_personaggio, gi.email_giocatore, CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_completo FROM personaggi AS pg
                       JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore
                       WHERE id_personaggio = :pgid";
         $info      = $this->db->doQuery($info_dest, [":pgid"=>$pg_id], False);
@@ -133,7 +133,7 @@ class Mailer
         //Read an HTML message body from an external file, convert referenced images to embedded,
         //convert HTML into a basic plain-text alternative body
         $html = "Gentile giocatore,<br>
-                         ti avvisiamo che i tuoi punteggi sono stati modificati:<br>";
+                         ti avvisiamo che i punteggi per il tuo personaggio <b>".$info[0]["nome_personaggio"]."</b> con id <b>$pg_id</b> sono stati modificati:<br>";
         $txt = "Gentile giocatore,
                          ti avvisiamo che i tuoi punteggi sono stati modificati:\n";
         
