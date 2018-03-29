@@ -22,7 +22,7 @@ class EventsManager
         $this->mailer  = new Mailer();
     }
     
-    private function controllaErrori( $titolo, $data_inizio, $ora_inizio, $data_fine, $ora_fine, $luogo, $costo, $costo_max, $note )
+    private function controllaErrori( $titolo, $data_inizio, $ora_inizio, $data_fine, $ora_fine, $luogo, $costo, $costo_max )
     {
         $error       = "";
         
@@ -40,7 +40,7 @@ class EventsManager
             $d_fine = DateTime::createFromFormat("d/m/Y", $data_fine);
         if( !$ora_fine || Utils::soloSpazi($ora_fine) )
             $error .= "<li>Il campo Ora Fine non pu&ograve; essere lasciato vuoto.</li>";
-        if( $costo && !Utils::soloSpazi($costo) && !preg_match( "/^\d+$/", $costo ) )
+        if( $costo && !Utils::soloSpazi($costo) && !preg_match( "/^\d+(\.\d+)?$/", $costo ) )
             $error .= "<li>Il campo Costo pu&ograve; contenere solo numeri.</li>";
         if( $costo_max && Utils::soloSpazi($costo_max) && !preg_match( "/^\d+$/", $costo_max ) )
             $error .= "<li>Il campo Costo Maggiorato pu&ograve; contenere solo numeri.</li>";
@@ -75,7 +75,7 @@ class EventsManager
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
-        $errori = $this->controllaErrori($titolo, $data_inizio, $ora_inizio, $data_fine, $ora_fine, $luogo, $costo, $costo_max, $note);
+        $errori = $this->controllaErrori($titolo, $data_inizio, $ora_inizio, $data_fine, $ora_fine, $luogo, $costo, $costo_max );
         
         if( !empty($errori) )
             throw new APIException("Sono stati rilevati i seguenti errori:<ul>".$errori."</ul>");
@@ -90,7 +90,7 @@ class EventsManager
             ":costo"     => $costo,
             ":costo_max" => $costo_max,
             ":creatore"  => $this->session->email_giocatore,
-            ":note"      => $note
+            ":note"      => nl2br($note)
         ];
         
         

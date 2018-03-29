@@ -13,10 +13,13 @@ $MAIL_HOST                      = "smtp.gmail.com";
 $MAIL_PORT                      = 587;
 
 $SITE_URL                       = "http://localhost:9000";
+$ALLOWED_ORIGINS                = [$SITE_URL];
 
+$MYSQL_DUPLICATE_ENTRY_ERRCODE  = "1062";
 $DB_ERR_DELIMITATORE            = "@@@";
 $TIPO_GRANT_PG_PROPRIO          = "_proprio";
 $TIPO_GRANT_PG_ALTRI            = "_altri";
+$RUOLO_ADMIN                    = "admin";
 
 $PX_INIZIALI                    = 100;
 $PC_INIZIALI                    = 4;

@@ -5,6 +5,7 @@ include_once( $path."classes/UsersManager.class.php" );
 include_once( $path."classes/CharactersManager.class.php" );
 include_once( $path."classes/MessagingManager.class.php" );
 include_once( $path."classes/EventsManager.class.php" );
+include_once( $path."classes/GrantsManager.class.php" );
 include_once( $path."config/constants.php" );
 
 class Main
@@ -13,23 +14,27 @@ class Main
 	protected $charactersmanager;
 	protected $messagingmanager;
 	protected $eventsmanager;
+	protected $grantsmanager;
 	
 	public function __construct()
 	{
-	    global $SITE_URL;
+	    global $ALLOWED_ORIGINS;
 	    
 		ini_set( 'html_errors', false );
 
 		date_default_timezone_set( 'Europe/Rome' );
 
 		header( 'Content-Type: application/json;charset=UTF-8' );
-		header( 'Access-Control-Allow-Origin: '.$SITE_URL );
 		header( 'Access-Control-Allow-Credentials: true' );
+		
+		if( in_array( $_SERVER["HTTP_ORIGIN"], $ALLOWED_ORIGINS ) )
+            header( 'Access-Control-Allow-Origin: '.$_SERVER["HTTP_ORIGIN"] );
 
 		$this->usersmanager      = new UsersManager();
 		$this->charactersmanager = new CharactersManager();
 		$this->messagingmanager  = new MessagingManager();
 		$this->eventsmanager     = new EventsManager();
+		$this->grantsmanager     = new GrantsManager();
 	}
 	
 	public function __destruct()
@@ -42,17 +47,15 @@ class Main
 	    global $MAINTENANCE;
 	    global $IP_MAINTAINER;
 
-		// get the HTTP method, path and body of the request
 		$method  = $_SERVER['REQUEST_METHOD'];
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
 		$classe  = $request[0];
 		$func    = $request[1];
-		//$input   = json_decode( file_get_contents( 'php://input' ), true );
-		//die( var_dump($_POST) );
+		
 		try
 		{
             if( $MAINTENANCE && !in_array( Utils::getUserIP(), $IP_MAINTAINER) )
-                throw new APIException("Ci scusiamo, ma al momento il database &egrave; in manutenzione. Per favore, riprova tra un'ora.");
+                throw new APIException("Ci scusiamo, ma al momento il database &egrave; in manutenzione. Per favore attendi comunicazioni dallo Staff.");
             
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;

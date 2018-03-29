@@ -194,6 +194,7 @@ class CharactersManager
             $filter = True;
             $params[":search"] = "%$search[value]%";
             $where[] = "(
+						bj.id_personaggio LIKE :search OR
 						bj.nome_personaggio LIKE :search OR
 						bj.classi_civili LIKE :search OR
 						bj.classi_militari LIKE :search OR
