@@ -248,7 +248,7 @@ class EventsManager
         $query_check = "SELECT personaggi_id_personaggio, eventi_id_evento FROM iscrizione_personaggi
                         WHERE eventi_id_evento = :idev AND personaggi_id_personaggio IN ( SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :mail)";
         $res_check   = $this->db->doQuery($query_check, [ ":idev" => $id_evento, ":mail" => $this->session->email_giocatore ], False);
-    
+        
         if( isset($res_check) && count($res_check) > 0 )
             throw new APIException("Non puoi iscrivere pi&ugrave; di un personaggio ad uno stesso evento.");
         
@@ -269,7 +269,7 @@ class EventsManager
                      WHERE id_personaggio = :idpg";
         $info     = $this->db->doQuery($query_gi, [":idpg"=>$id_pg], False);
         
-        $this->mailer->inviaAvvisoIscrizione( $info[0]["nome_completo"], $info[0]["nome_personaggio"], $info[0]["note_giocatore"], $id_pg, $res_pub[0]["titolo_evento"] );
+        $this->mailer->inviaAvvisoIscrizione( $info[0]["nome_completo"], $info[0]["nome_personaggio"], $info[0]["note_giocatore"], $id_pg, $res_pub[0]["titolo_evento"], $note );
         
         return json_encode([ "status" => "ok", "result" => $evento[0] ]);
     }
@@ -321,7 +321,7 @@ class EventsManager
         
         $query_pub = "UPDATE eventi SET pubblico_evento = :pub WHERE id_evento = :id_ev";
         $this->db->doQuery( $query_pub, $params, False );
-    
+        
         $this->mailer->inviaAvvisoEvento();
         
         return json_encode([ "status" => "ok", "result" => true ]);

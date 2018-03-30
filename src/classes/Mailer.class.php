@@ -180,7 +180,7 @@ class Mailer
                          Un personaggio ha appena aggiunto il proprio background.
                          Vai al link seguente per vedere direttamente il suo profilo:
                          $pg_url";
-    
+        
         $mail->send();
     }
     
@@ -195,7 +195,7 @@ class Mailer
         {
             foreach ($lista as $l)
                 $mail->addBCC($l["email_giocatore"], $l["nome_completo"]);
-    
+            
             //Set the subject line
             $mail->Subject = 'Reboot Live: E\' stato pubblicato un evento live!';
             //Read an HTML message body from an external file, convert referenced images to embedded,
@@ -207,12 +207,12 @@ class Mailer
             $mail->AltBody = "Gentile Giocatore,
                          ti comunichiamo che lo staff di Reboot Live ha appena pubblicato un nuovo evento.
                          Sappi che da ora in poi potrai iscriverti nell'apposita sezione del database.";
-    
+            
             $mail->send();
         }
     }
     
-    public function inviaAvvisoIscrizione( $giocatore, $pg_nome, $note, $pg_id, $nome_evento )
+    public function inviaAvvisoIscrizione( $giocatore, $pg_nome, $note, $pg_id, $nome_evento, $note_iscr = NULL )
     {
         global $MAIL_MITTENTE_INDIRIZZO;
         global $MAIL_MITTENTE_NOME;
@@ -238,10 +238,16 @@ class Mailer
             $txt  .= "\n\nATTENZIONE: questo giocatore ha inserito delle note in fase di registrazione:\n$note";
         }
         
+        if( isset($note_iscr) && !empty($note_iscr) )
+        {
+            $html .= "<br><br>ATTENZIONE: questo giocatore ha inserito delle note in fase di <b>iscrizione</b>:<br>$note_iscr";
+            $txt  .= "\n\nATTENZIONE: questo giocatore ha inserito delle note in fase di iscrizione:\n$note_iscr";
+        }
+        
         $mail->msgHTML($html);
         //Replace the plain text body with one created manually
         $mail->AltBody = $txt;
-
+        
         $mail->send();
     }
 }

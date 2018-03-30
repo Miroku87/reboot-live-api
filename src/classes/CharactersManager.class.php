@@ -720,7 +720,7 @@ class CharactersManager
             UsersManager::operazionePossibile( $this->session, __FUNCTION__."_".$campo, $pgid );
             
             $campi[] = $campo;
-            $valori[] = $valore;
+            $valori[] = nl2br($valore);
         }
         $campi_virgola = implode(", ", $campi);
         
@@ -817,6 +817,7 @@ class CharactersManager
                             pg.note_master_personaggio,
                             pg.giocatori_email_giocatore,
                             pg.anno_nascita_personaggio,
+                            pg.motivazioni_olocausto_inserite_personaggio AS motivazioni,
                             gi.nome_giocatore,
                             MAX(COALESCE(cl.mente_base_classe,0)) as mente_base_personaggio,
                             MAX(COALESCE(cl.shield_max_base_classe,0)) as scudo_base_personaggio
