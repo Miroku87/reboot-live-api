@@ -133,6 +133,19 @@ module.exports = function (grunt) {
                 files: [
                     {cwd: './dist', expand:true, src: ['config/config.inc.php'], dest: './dist'}
                 ]
+            },
+            preprod_no_mails: {
+                options: {
+                    patterns: [
+                        {
+                            match: /(\$mail->send\(\);)/g,
+                            replacement: '\/\/$1'
+                        }
+                    ]
+                },
+                files: [
+                    {cwd: './dist', expand:true, src: ['classes/Mailer.class.php'], dest: './dist'}
+                ]
             }
         }
     });
@@ -141,6 +154,7 @@ module.exports = function (grunt) {
         'clean:build',
         'copy:build',
         'replace:import_paths',
+        'replace:preprod_no_mails',
         'replace:mail_settings',
         'replace:db_config_preprod',
         'replace:site_url_preprod'

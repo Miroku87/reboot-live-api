@@ -366,13 +366,14 @@ class EventsManager
         $filter     = False;
         $extra_sel  = $tipo === "avanzato" ? "ip.pagato_iscrizione, ip.tipo_pagamento_iscrizione, ip.note_iscrizione," : "";
         $where      = "";
+        $order_str  = "";
         
         if( $quando === "prossimo" )
             $where .= "t1.pubblico_evento = 1 AND t1.data_inizio_evento > NOW()";
         else if ( $quando === "precedente" )
             $where .= "t1.id_evento = (SELECT id_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento < NOW() ORDER BY data_inizio_evento DESC LIMIT 1)";
         
-        if( isset( $search ) && $search["value"] != "" )
+        if( isset( $search ) && isset($search["value"]) > 0 && $search["value"] != "" )
         {
             $filter = True;
             $params[":search"] = "%$search[value]%";
@@ -390,7 +391,7 @@ class EventsManager
             $where .= ")";
         }
         
-        if( isset( $order ) )
+        if( isset( $order ) && count($order) > 0 && !empty($order) )
         {
             $sorting = array();
             foreach ( $order as $elem )

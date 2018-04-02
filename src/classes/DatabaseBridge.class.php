@@ -80,7 +80,7 @@ class DatabaseBridge extends PDO
         }
 	}
 	
-	public function doMultipleInserts( $query, $params, $to_json = True )
+	public function doMultipleManipulations( $query, $params, $to_json = True )
 	{
 		if( !is_array( $params ) || ( is_array( $params ) && !is_array( $params[0] ) ) )
 			throw new APIException("I parametri passati devono essere sotto forma di array di traduzione PDO a due dimensioni.", APIException::$DATABASE_ERROR);

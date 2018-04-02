@@ -91,20 +91,23 @@ class CharactersManager
     {
         $punti = [];
         $id_offset_costante = [96,172,202];
-        
-        foreach ($abilita as $a)
+    
+        if (isset($abilita) && count($abilita) > 0)
         {
-            if( in_array( (int)$a["id_abilita"], $id_offset_costante ) )
-                $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
-            else if( (int)$a["id_abilita"] === 173 )
+            foreach ($abilita as $a)
             {
-                $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
-                if( isset($punti["172"]) ) unset($punti["172"]);
-            }
-            else if (  (int)$a["id_abilita"] === 206  )
-            {
-                $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
-                if( isset($punti["202"]) ) unset($punti["202"]);
+                if (in_array((int)$a["id_abilita"], $id_offset_costante))
+                    $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
+                else if ((int)$a["id_abilita"] === 173)
+                {
+                    $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
+                    if (isset($punti["172"])) unset($punti["172"]);
+                }
+                else if ((int)$a["id_abilita"] === 206)
+                {
+                    $punti[$a["id_abilita"]] = $a["offset_mente_abilita"];
+                    if (isset($punti["202"])) unset($punti["202"]);
+                }
             }
         }
         
@@ -147,28 +150,31 @@ class CharactersManager
     */
     private function calcolaShield( $base, $abilita )
     {
-        $punti               = [];
+        $punti               = [0];
         $moltiplicatore_base = 1;
         $min                 = 0;
         $id_offset_costante  = [98,125,159,174,190,191];
-        
-        foreach ($abilita as $a)
+    
+        if (isset($abilita) && count($abilita) > 0)
         {
-            if( in_array( (int)$a["id_abilita"], $id_offset_costante ) )
-                $punti[$a["id_abilita"]] = $a["offset_shield_abilita"];
-            else if( (int)$a["id_abilita"] === 100 )
-                $moltiplicatore_base = 1.5;
-            else if (  (int)$a["id_abilita"] === 101  )
-                $moltiplicatore_base = 2;
-            else if (  (int)$a["id_abilita"] === 102  )
+            foreach ($abilita as $a)
             {
-                $punti[$a["id_abilita"]] = $a["offset_shield_abilita"];
-                if( isset($punti["98"]) ) unset($punti["98"]);
+                if (in_array((int)$a["id_abilita"], $id_offset_costante))
+                    $punti[$a["id_abilita"]] = $a["offset_shield_abilita"];
+                else if ((int)$a["id_abilita"] === 100)
+                    $moltiplicatore_base = 1.5;
+                else if ((int)$a["id_abilita"] === 101)
+                    $moltiplicatore_base = 2;
+                else if ((int)$a["id_abilita"] === 102)
+                {
+                    $punti[$a["id_abilita"]] = $a["offset_shield_abilita"];
+                    if (isset($punti["98"])) unset($punti["98"]);
+                }
+                else if ((int)$a["id_abilita"] === 119)
+                    $min = 3;
+                else if ((int)$a["id_abilita"] === 158)
+                    $moltiplicatore_base = 1.5;
             }
-            else if (  (int)$a["id_abilita"] === 119  )
-                $min = 3;
-            else if (  (int)$a["id_abilita"] === 158  )
-                $moltiplicatore_base = 1.5;
         }
         
         return max( $min, ( $moltiplicatore_base * $base ) + array_sum( $punti ) );
@@ -176,7 +182,10 @@ class CharactersManager
     
     private function calcolaPF( $base, $abilita )
     {
-        $punti = array_map("Utils::mappaOffsetPFAbilita", $abilita);
+        $punti = [0];
+        
+        if( isset($abilita) && count($abilita) > 0 )
+            $punti = array_map("Utils::mappaOffsetPFAbilita", $abilita);
         
         return $base  + array_sum( $punti );
     }
@@ -184,12 +193,14 @@ class CharactersManager
     private function recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search, $extra_where = array(), $extra_param = array() )
     {
         global $PF_INIZIALI;
+        global $MAPPA_COSTO_CLASSI_CIVILI;
         
         $where  = $extra_where;
         $params = $extra_param;
         $filter = False;
+        $order_str = "";
         
-        if( isset( $search ) && $search["value"] != "" )
+        if( isset( $search ) && isset( $search["value"] ) && $search["value"] != "" )
         {
             $filter = True;
             $params[":search"] = "%$search[value]%";
@@ -205,7 +216,7 @@ class CharactersManager
 					  )";
         }
         
-        if( isset( $order ) )
+        if( isset( $order ) && count($order) > 0 )
         {
             $sorting = array();
             foreach ( $order as $elem )
@@ -232,14 +243,28 @@ class CharactersManager
                         gi.ruoli_nome_ruolo,
                         GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
                         GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari,
+                        GROUP_CONCAT(DISTINCT ab_c.nome_abilita SEPARATOR ', ') AS abilita_civili,
+                        GROUP_CONCAT(DISTINCT ab_m.nome_abilita SEPARATOR ', ') AS abilita_militari,
+                        COUNT(DISTINCT cl_c.nome_classe) as num_classi_civili,
+                        COUNT(DISTINCT cl_m.nome_classe) as num_classi_militari,
+                        COUNT(DISTINCT ab_m.nome_abilita) as num_abilita_militari,
+                        ( SELECT
+                          SUM(costo_abilita) FROM abilita
+                          WHERE tipo_abilita = 'civile' AND id_abilita IN (
+                            SELECT abilita_id_abilita FROM personaggi_has_abilita
+                            WHERE personaggi_id_personaggio = pg.id_personaggio
+                            )
+                        ) as costo_abilita_civili,
                         MAX(cl_m.mente_base_classe) as mente_base_personaggio,
                         MAX(cl_m.shield_max_base_classe) as scudo_base_personaggio
                     FROM personaggi AS pg
                         JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
-                        JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
-                        JOIN personaggi_has_abilita AS pha ON pha.personaggi_id_personaggio = pg.id_personaggio
+                        LEFT OUTER JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
+                        LEFT OUTER JOIN personaggi_has_abilita AS pha ON pha.personaggi_id_personaggio = pg.id_personaggio
                         LEFT OUTER JOIN classi AS cl_m ON cl_m.id_classe = phc.classi_id_classe AND cl_m.tipo_classe = 'militare'
                         LEFT OUTER JOIN classi AS cl_c ON cl_c.id_classe = phc.classi_id_classe AND cl_c.tipo_classe = 'civile'
+                        LEFT OUTER JOIN abilita AS ab_m ON ab_m.id_abilita = pha.abilita_id_abilita AND ab_m.tipo_abilita = 'militare'
+                        LEFT OUTER JOIN abilita AS ab_c ON ab_c.id_abilita = pha.abilita_id_abilita AND ab_c.tipo_abilita = 'civile'
                     GROUP BY pg.id_personaggio";
         
         $where_str = count( $where ) > 0 ? "AND ".implode( $where, " AND ") : "";
@@ -261,6 +286,12 @@ class CharactersManager
                 $risultati[$i]["pf_personaggio"]     = $this->calcolaPF( $PF_INIZIALI, $abilita );
                 $risultati[$i]["shield_personaggio"] = $this->calcolaShield( $risultati[$i]["scudo_base_personaggio"], $abilita );
                 $risultati[$i]["mente_personaggio"]  = $this->calcolaDifesaMentale( $risultati[$i]["mente_base_personaggio"], $abilita );
+    
+                $risultati[$i]["pc_risparmiati"]  = (int)$risultati[$i]["pc_personaggio"] - (int)$risultati[$i]["num_classi_militari"] - (int)$risultati[$i]["num_abilita_militari"];
+                $risultati[$i]["px_risparmiati"]  = (int)$risultati[$i]["px_personaggio"] - (int)$risultati[$i]["costo_abilita_civili"];
+    
+                for( $j = 0; $j < (int)$risultati[$i]["num_classi_civili"]; $j++ )
+                    $risultati[$i]["px_risparmiati"] -= $MAPPA_COSTO_CLASSI_CIVILI[$j];
             }
         }
         else
@@ -435,6 +466,16 @@ class CharactersManager
         return $result;
     }
     
+    public function mostraPersonaggiConId( $ids )
+    {
+        UsersManager::operazionePossibile($this->session, "mostraPersonaggi_altri");
+    
+        $marcatori = str_repeat("?, ", count($ids)-1)."?";
+        $where = ["bj.id_personaggio IN ($marcatori)"];
+        
+        return $this->recuperaPersonaggi( 0, [], [], 0, count($ids), [], $where, $ids );
+    }
+    
     public function recuperaInfoClassi( )
     {
         $params = array();
@@ -536,7 +577,7 @@ class CharactersManager
         foreach( $class_ids as $ci )
             $classi_params[] = array( ":idpg" => $pgid, ":idclasse" => $ci );
         
-        $this->db->doMultipleInserts( $classi_query, $classi_params );
+        $this->db->doMultipleManipulations( $classi_query, $classi_params );
         
         $marcatori  = str_repeat("?, ", count($class_ids)-1)." ?";
         $query_nomi = "SELECT nome_classe FROM classi WHERE id_classe IN ($marcatori)";
@@ -568,7 +609,7 @@ class CharactersManager
         foreach( $ordine_ab as $ab )
             $abilita_params[] = array( ":idpg" => $pgid, ":idabilita" => $ab["id_abilita"] );
         
-        $this->db->doMultipleInserts( $abilita_query, $abilita_params );
+        $this->db->doMultipleManipulations( $abilita_query, $abilita_params );
         
         foreach( $ordine_ab as $ab )
             $this->registraAzione( $pgid, "INSERT", "abilita_personaggio", "abilita", NULL, $ab["nome_abilita"] );
@@ -588,7 +629,7 @@ class CharactersManager
             foreach ($opzioni as $id_ab => $opz)
                 $params_opzioni[] = array(":idpg" => $pgid, ":idabilita" => $id_ab, ":opzione" => $opz);
             
-            $this->db->doMultipleInserts($query_opzioni, $params_opzioni);
+            $this->db->doMultipleManipulations($query_opzioni, $params_opzioni);
             
             $marcatori = str_repeat("?,", count($opzioni) - 1) . "?";
             $query_abilita = "SELECT id_abilita, nome_abilita FROM abilita WHERE id_abilita IN ($marcatori)";
@@ -808,7 +849,7 @@ class CharactersManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
         $query_pg = "SELECT pg.id_personaggio,
-                            pg.nome_personaggio,
+                            CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore_completo,
                             pg.background_personaggio,
                             pg.px_personaggio,
                             pg.pc_personaggio,

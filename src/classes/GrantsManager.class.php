@@ -30,8 +30,8 @@ class GrantsManager
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
     
-        $query_check = "SELECT nome_ruolo FROM ruoli WHERE nome_ruolo = :ruolo";
-        $result = $this->db->doQuery($query_check,[":ruolo" => $nome],False);
+        $query_check = "SELECT nome_ruolo FROM ruoli WHERE LOWER(nome_ruolo) = :ruolo";
+        $result = $this->db->doQuery($query_check,[":ruolo" => strtolower($nome)],False);
         
         if( isset($result) && count($result) > 0 )
             throw new APIException("Questo ruolo esiste gi&agrave;. Inserirne uno differente.");
@@ -53,9 +53,6 @@ class GrantsManager
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
-        echo $nome.", ".$sostituto;
-        die();
-        
         if( $nome === $RUOLO_ADMIN )
             throw new APIException("Non &egrave; possibile eliminare o modificare il ruolo di amministratore.");
     
@@ -65,8 +62,8 @@ class GrantsManager
         if( !isset($result) || count($result) === 0 )
             throw new APIException("Questo ruolo non esiste.");
     
-        $query_update = "UPDATE giocatori SET ruoli_nome_ruolo = :ruolo";
-        $this->db->doQuery($query_update,[":ruolo" => $sostituto],False);
+        $query_update = "UPDATE giocatori SET ruoli_nome_ruolo = :sostituto WHERE ruoli_nome_ruolo = :ruolo";
+        $this->db->doQuery($query_update,[":sostituto" => $sostituto, ":ruolo" => $nome],False);
         
         $query_ruoli = "DELETE FROM ruoli WHERE nome_ruolo = :ruolo";
         $this->db->doQuery($query_ruoli,[":ruolo" => $nome],False);
@@ -79,23 +76,39 @@ class GrantsManager
         return json_encode($output);
     }
     
-    public function associaPermessi( $ruolo, $grants )
+    public function associaPermessi( $ruolo, $grants = [] )
     {
         global $DB_ERR_DELIMITATORE;
         global $MYSQL_DUPLICATE_ENTRY_ERRCODE;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+        
+        $query_perm = "SELECT grants_nome_grant FROM ruoli_has_grants WHERE ruoli_nome_ruolo = :ruolo";
+        $posseduti  = $this->db->doQuery($query_perm, [ ":ruolo" => $ruolo ], False);
+        $posseduti  = !isset($posseduti) || count($posseduti) === 0 ? [] : Utils::mappaArrayDiArrayAssoc( $posseduti, "grants_nome_grant" );
     
-        $params = [];
+        $query_tutti = "SELECT nome_grant FROM grants";
+        $tutti       = $this->db->doQuery($query_tutti, [ ], False);
+        $tutti       = Utils::mappaArrayDiArrayAssoc( $tutti, "nome_grant" );
         
-        foreach ( $grants as $g )
-            $params[] = [":ruolo"=>$ruolo, ":grnt" => $g];
+        $params_insert = [];
+        $params_delete = [];
         
-        $query_ruoli = "INSERT INTO ruoli_has_grants VALUES (:ruolo, :grnt)";
+        foreach ( $tutti as $p )
+        {
+            if ( isset($grants[$p]) && $grants[$p] === "on" && !in_array($p,$posseduti) )
+                $params_insert[] = [":ruolo" => $ruolo, ":grnt" => $p];
+            else if ( !isset($grants[$p]) && in_array($p,$posseduti) )
+                $params_delete[] = [":ruolo" => $ruolo, ":grnt" => $p];
+        }
+        
+        $query_insert = "INSERT INTO ruoli_has_grants VALUES (:ruolo, :grnt)";
+        $query_delete = "DELETE FROM ruoli_has_grants WHERE ruoli_nome_ruolo = :ruolo AND grants_nome_grant = :grnt";
     
         try
         {
-            $this->db->doMultipleInserts($query_ruoli, $params, False);
+            if(count($params_insert) > 0) $this->db->doMultipleManipulations($query_insert, $params_insert, False);
+            if(count($params_delete) > 0) $this->db->doMultipleManipulations($query_delete, $params_delete, False);
         }
         catch (Exception $e)
         {
@@ -122,7 +135,7 @@ class GrantsManager
         $query_ruoli = "SELECT ru.nome_ruolo, COUNT(rhg.grants_nome_grant) AS numero_grants
                             FROM ruoli AS ru
                             LEFT OUTER JOIN ruoli_has_grants AS rhg ON rhg.ruoli_nome_ruolo = ru.nome_ruolo
-                            GROUP BY rhg.ruoli_nome_ruolo ORDER BY ru.nome_ruolo ASC";
+                            GROUP BY ru.nome_ruolo ORDER BY ru.nome_ruolo ASC";
         $ruoli = $this->db->doQuery($query_ruoli,[],False);
         
         $output = [

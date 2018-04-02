@@ -42,6 +42,16 @@ class Utils
 		return $item["offset_pf_abilita"];
 	}
 
+	static function mappaArrayDiArrayAssoc( $arr, $key )
+	{
+	    $mappa = function ( $item ) use ( $key )
+        {
+            return $item[$key];
+        };
+	    
+		return array_map($mappa, $arr);
+	}
+
 	static function filtraClasseSenzaPrerequisito( $item )
 	{
 		return $item["prerequisito_classe"] != NULL;

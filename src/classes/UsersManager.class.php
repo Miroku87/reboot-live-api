@@ -314,9 +314,10 @@ class UsersManager
         
         $to_update = implode(" = ?, ",array_keys($modifiche) )." = ?";
         $valori = array_values($modifiche);
-        $valori[] = $this->session->email_giocatore;
+        $valori[] = $id;
         
         $query_bg = "UPDATE giocatori SET $to_update WHERE email_giocatore = ?";
+        
         $this->db->doQuery( $query_bg, $valori, False );
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
