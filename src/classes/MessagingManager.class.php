@@ -166,7 +166,7 @@ class MessagingManager
         
         if( $tipo === "ig" )
             $query_dest = "SELECT id_personaggio AS real_value, nome_personaggio AS label FROM personaggi WHERE nome_personaggio LIKE :term AND id_personaggio != :idno AND contattabile_personaggio = 1";
-        else if( $tipo === "ig" )
+        else if( $tipo === "fg" )
             $query_dest = "SELECT email_giocatore AS real_value,
                                   CONCAT( nome_giocatore, ' ', cognome_giocatore ) AS label
                            FROM giocatori
