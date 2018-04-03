@@ -850,6 +850,7 @@ class CharactersManager
         
         $query_pg = "SELECT pg.id_personaggio,
                             CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore_completo,
+                            pg.nome_personaggio,
                             pg.background_personaggio,
                             pg.px_personaggio,
                             pg.pc_personaggio,
