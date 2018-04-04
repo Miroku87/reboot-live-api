@@ -6,6 +6,7 @@ include_once( $path."classes/CharactersManager.class.php" );
 include_once( $path."classes/MessagingManager.class.php" );
 include_once( $path."classes/EventsManager.class.php" );
 include_once( $path."classes/GrantsManager.class.php" );
+include_once( $path."classes/NewsManager.class.php" );
 include_once( $path."config/constants.php" );
 
 class Main
@@ -15,6 +16,7 @@ class Main
 	protected $messagingmanager;
 	protected $eventsmanager;
 	protected $grantsmanager;
+	protected $newsmanager;
 	
 	public function __construct()
 	{
@@ -27,7 +29,7 @@ class Main
 		header( 'Content-Type: application/json;charset=UTF-8' );
 		header( 'Access-Control-Allow-Credentials: true' );
 		
-		if( in_array( $_SERVER["HTTP_ORIGIN"], $ALLOWED_ORIGINS ) )
+		if( in_array( @$_SERVER["HTTP_ORIGIN"], $ALLOWED_ORIGINS ) )
             header( 'Access-Control-Allow-Origin: '.$_SERVER["HTTP_ORIGIN"] );
 
 		$this->usersmanager      = new UsersManager();
@@ -35,6 +37,7 @@ class Main
 		$this->messagingmanager  = new MessagingManager();
 		$this->eventsmanager     = new EventsManager();
 		$this->grantsmanager     = new GrantsManager();
+		$this->newsmanager       = new NewsManager();
 	}
 	
 	public function __destruct()

@@ -320,8 +320,9 @@ class CharactersManager
             $query_opzioni = "SELECT opzioni_abilita_opzione FROM personaggi_has_opzioni_abilita WHERE personaggi_id_personaggio = :pgid";
             $opzioni_db    = $this->db->doQuery($query_opzioni, array(":pgid"=>$pgid), False);
             
-            foreach( $opzioni_db as $o )
-                $opzioni[] = $o["opzioni_abilita_opzione"];
+            if( isset($opzioni_db) && count( $opzioni_db ) > 0 )
+                foreach( $opzioni_db as $o )
+                    $opzioni[] = $o["opzioni_abilita_opzione"];
         }
         
         if( count($opzioni) > 0 && count($opzioni) !== count(array_unique($opzioni)) )
@@ -728,7 +729,7 @@ class CharactersManager
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
     
-    public function acquista( $pgid, $classi, $abilita, $opzioni )
+    public function acquista( $pgid, $classi, $abilita, $opzioni = [] )
     {
         global $DB_ERR_DELIMITATORE;
         

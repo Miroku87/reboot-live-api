@@ -26,25 +26,25 @@ class EventsManager
     {
         $error       = "";
         
-        if( !$titolo || Utils::soloSpazi($titolo) )
+        if( !isset($titolo) || Utils::soloSpazi($titolo) )
             $error .= "<li>Il campo Titolo non pu&ograve; essere lasciato vuoto.</li>";
-        if( !$data_inizio || Utils::soloSpazi($data_inizio) )
+        if( !isset($data_inizio) || Utils::soloSpazi($data_inizio) )
             $error .= "<li>Il campo Data Inizio non pu&ograve; essere lasciato vuoto.</li>";
         else
             $d_inizio = DateTime::createFromFormat("d/m/Y", $data_inizio);
-        if( !$ora_inizio || Utils::soloSpazi($ora_inizio) )
+        if( !isset($ora_inizio) || Utils::soloSpazi($ora_inizio) )
             $error .= "<li>Il campo Ora Inizio non pu&ograve; essere lasciato vuoto.</li>";
-        if( !$data_fine || Utils::soloSpazi($data_fine) )
+        if( !isset($data_fine) || Utils::soloSpazi($data_fine) )
             $error .= "<li>Il campo Data Fine non pu&ograve; essere lasciato vuoto.</li>";
         else
             $d_fine = DateTime::createFromFormat("d/m/Y", $data_fine);
-        if( !$ora_fine || Utils::soloSpazi($ora_fine) )
+        if( !isset($ora_fine) || Utils::soloSpazi($ora_fine) )
             $error .= "<li>Il campo Ora Fine non pu&ograve; essere lasciato vuoto.</li>";
-        if( $costo && !Utils::soloSpazi($costo) && !preg_match( "/^\d+(\.\d+)?$/", $costo ) )
+        if( isset($costo) && !Utils::soloSpazi($costo) && !preg_match( "/^\d+(\.\d+)?$/", $costo ) )
             $error .= "<li>Il campo Costo pu&ograve; contenere solo numeri.</li>";
-        if( $costo_max && Utils::soloSpazi($costo_max) && !preg_match( "/^\d+$/", $costo_max ) )
+        if( isset($costo_max) && Utils::soloSpazi($costo_max) && !preg_match( "/^\d+$/", $costo_max ) )
             $error .= "<li>Il campo Costo Maggiorato pu&ograve; contenere solo numeri.</li>";
-        if( !$luogo || Utils::soloSpazi($luogo) )
+        if( !isset($luogo) || Utils::soloSpazi($luogo) )
             $error .= "<li>Il campo Luogo non pu&ograve; essere lasciato vuoto.<br>";
         
         if( isset($d_inizio) && isset($d_fine) && $d_fine < $d_inizio )
@@ -364,7 +364,7 @@ class EventsManager
     {
         $params     = [];
         $filter     = False;
-        $extra_sel  = $tipo === "avanzato" ? "ip.pagato_iscrizione, ip.tipo_pagamento_iscrizione, ip.note_iscrizione," : "";
+        $extra_sel  = $tipo === "avanzato" ? "ip.pagato_iscrizione, ip.tipo_pagamento_iscrizione, ip.note_iscrizione, gi.note_giocatore, " : "";
         $where      = "";
         $order_str  = "";
         

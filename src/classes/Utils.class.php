@@ -52,6 +52,42 @@ class Utils
 		return array_map($mappa, $arr);
 	}
 
+	static function filtraArrayConValori( $arr, $valori )
+	{
+	    $filtro = function ( $item ) use ( $valori )
+        {
+            return in_array($item, $valori);
+        };
+	    
+		return array_filter($arr, $filtro);
+	}
+
+	/*static function filtraArrayConChiavi( $arr, $chiavi )
+	{
+	    $filtro = function ( $key ) use ( $chiavi )
+        {
+            return in_array($key, $chiavi);
+        };
+	    
+		return array_filter($arr, $filtro, ARRAY_FILTER_USE_KEY);
+	}*/
+    
+    static function filtraArrayConChiavi( $arr, $chiavi )
+    {
+        $newarr = [];
+        
+        if( count($arr) > 0 )
+        {
+            foreach ( $arr as $k => $v )
+            {
+                if( in_array($k, $chiavi) )
+                    $newarr[$k] = $v;
+            }
+        }
+        
+        return $newarr;
+    }
+
 	static function filtraClasseSenzaPrerequisito( $item )
 	{
 		return $item["prerequisito_classe"] != NULL;
