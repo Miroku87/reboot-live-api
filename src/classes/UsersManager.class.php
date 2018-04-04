@@ -185,7 +185,7 @@ class UsersManager
 			":mail"    => $mail
 		);
 		
-		if( !empty($nome) )
+		if( !empty($nome) && !Utils::soloSpazi($nome) )
         {
             $params[":note"] = $note;
             $macro_note = ":note";
