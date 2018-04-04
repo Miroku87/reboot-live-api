@@ -175,17 +175,23 @@ class UsersManager
 		
 		if( count($controllo) > 0 )
 		    throw new APIException("Esiste gi&agrave; un utente con la mail inserita. Inserirne una differente.");
-		
+        
+        $macro_note = "NULL";
 		$pass   = sha1( $pass1 );
-		$query  = "INSERT INTO giocatori (email_giocatore, password_giocatore, nome_giocatore, cognome_giocatore, note_giocatore) VALUES (:mail,:pass,:nome,:cognome,:note)";
 		$params = array(
 			":pass"    => $pass,
 			":nome"    => $nome,
 			":cognome" => $cognome,
-			":mail"    => $mail,
-			":note"    => $note
+			":mail"    => $mail
 		);
 		
+		if( !empty($nome) )
+        {
+            $params[":note"] = $note;
+            $macro_note = ":note";
+        }
+        
+        $query  = "INSERT INTO giocatori (email_giocatore, password_giocatore, nome_giocatore, cognome_giocatore, note_giocatore) VALUES (:mail,:pass,:nome,:cognome,$macro_note)";
 		$this->db->doQuery( $query, $params );
 		
 		$this->mailer->inviaMailRegistrazione( $mail, $nome." ".$cognome, $pass1  );
