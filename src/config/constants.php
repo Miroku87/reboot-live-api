@@ -21,6 +21,15 @@ $TIPO_GRANT_PG_PROPRIO          = "_proprio";
 $TIPO_GRANT_PG_ALTRI            = "_altri";
 $RUOLO_ADMIN                    = "admin";
 
+$GRANT_MOSTRA_ALTRI_PG          = "mostraPersonaggi_altri";
+$GRANT_VISUALIZZA_MAIN          = "visualizza_pagina_main";
+$GRANT_VISUALIZZA_CRAFT_CHIMICO = "visualizza_pagina_crafting_chimico";
+$GRANT_VISUALIZZA_CRAFT_PROGRAM = "visualizza_pagina_crafting_programmazione";
+$GRANT_VISUALIZZA_CRAFT_TECNICO = "visualizza_pagina_crafting_ingegneria";
+$GRANT_VISUALIZZA_NOTIZIE       = "visualizza_pagina_notizie";
+$GRANT_CREA_NOTIZIE             = "creaNotizia";
+$GRANT_MODIFICA_NOTIZIE         = "modificaNotizia";
+
 $PX_INIZIALI                    = 100;
 $PC_INIZIALI                    = 4;
 $PF_INIZIALI                    = 2;

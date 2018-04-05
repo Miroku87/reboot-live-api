@@ -12,9 +12,11 @@ class UsersManager
 	protected $db;
 	protected $grants;
 	protected $session;
+    protected $idev_in_corso;
 	
-	public function __construct()
+	public function __construct( $idev_in_corso = NULL )
 	{
+        $this->idev_in_corso = $idev_in_corso;
 		$this->session = SessionManager::getInstance();
 		$this->db      = new DatabaseBridge();
 		$this->mailer  = new Mailer();
@@ -27,6 +29,22 @@ class UsersManager
 	public function __toString()
     {
         return "[UsersManager]";
+    }
+
+    static function controllaPermessi( $sessione, $permessi, $tutti = True )
+    {
+        foreach ($permessi as $p)
+        {
+            if( in_array($p, $sessione->permessi_giocatore) && !$tutti )
+                return True;
+            else if ( !in_array($p, $sessione->permessi_giocatore) && $tutti )
+                return False;
+        }
+        
+        if( $tutti )
+            return True;
+        else
+            return False;
     }
 
     static function controllaLogin( $sessione )
@@ -94,6 +112,9 @@ class UsersManager
 	
 	public function login( $mail, $pass )
 	{
+	    global $GRANT_MOSTRA_ALTRI_PG;
+	    global $GRANT_VISUALIZZA_MAIN;
+	    
 	    if( !Utils::controllaMail($mail) )
 	        throw new APIException("La mail inserita non &egrave; valida. Riprova con un'altra.");
 	    
@@ -112,7 +133,7 @@ class UsersManager
 		$query_pg_propri = "SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :email";
         $pg_propri       = $this->db->doQuery( $query_pg_propri, array( ":email" => $mail ), False );
         
-        if( count($pg_propri) === 0 )
+        if( !isset($pg_propri) || count($pg_propri) === 0 )
             $pg_propri = [];
         
         $this->session->destroy();
@@ -121,16 +142,30 @@ class UsersManager
 		$this->session->nome_giocatore     = $result[0]["nome_completo"];
 		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
+  
+		$output = [
+		    "status" => "ok",
+            "email_giocatore" => $this->session->email_giocatore,
+            "nome_giocatore" => $this->session->nome_giocatore,
+            "pg_propri" => $this->session->pg_propri,
+            "permessi" => $this->session->permessi_giocatore
+        ];
 
-		$json =  "{\"status\": \"ok\", \"user_info\": {
-            \"email_giocatore\":\"".$this->session->email_giocatore."\",
-            \"nome_giocatore\":\"".$this->session->nome_giocatore."\",
-            \"pg_propri\":".json_encode( $this->session->pg_propri ).",
-            \"permessi\":".json_encode( $this->session->permessi_giocatore )."
-		}}";
-        $json = trim(preg_replace('/\s+/', ' ', $json));
+		if( Utils::clientInSameSubnet() && isset($this->idev_in_corso) && !in_array( $GRANT_MOSTRA_ALTRI_PG, $this->session->permessi_giocatore ) )
+        {
+            //TODO: testare
+            $query_iscrizione = "SELECT personaggi_id_personaggio FROM iscrizione_personaggi AS ip
+                                    WHERE eventi_id_evento = :idev";
+            $res_iscrizione   = $this->db->doQuery( $query_iscrizione, [ ":idev" => $this->idev_in_corso ], False );
+            
+            if( !isset($res_iscrizione) || count($res_iscrizione) === 0 )
+                throw new APIException("Ci dispiace, solo i giocatori con personaggi iscritti all'evento in corso possono loggare.");
+            
+            $output["pg_da_loggare"] = $res_iscrizione[0]["personaggi_id_personaggio"];
+            array_splice( $output["permessi"], array_search($GRANT_VISUALIZZA_MAIN,$output["permessi"] ),1 );
+        }
         
-		return $json;
+		return json_encode($output);
 	}
 
 	public function controllaaccesso( )

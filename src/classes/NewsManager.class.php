@@ -12,6 +12,7 @@ class NewsManager
 {
     protected $db;
     protected $session;
+    protected $idev_in_corso;
     
     public static $MAPPA_PAGINA_ABILITA = [
         26 => "Informazioni Commerciali",
@@ -21,8 +22,9 @@ class NewsManager
         82 => "Contatti nella Famiglia"
     ];
     
-    public function __construct()
+    public function __construct( $idev_in_corso = NULL )
     {
+        $this->idev_in_corso = $idev_in_corso;
         $this->session = SessionManager::getInstance();
         $this->db = new DatabaseBridge();
     }
@@ -138,32 +140,44 @@ class NewsManager
         return json_encode($output);
     }
     
-    public function recuperaNotiziePubbliche( $tipi = null )
+    public function recuperaNotiziePubbliche( $tipi = NULL )
     {
+        global $GRANT_CREA_NOTIZIE;
+        global $GRANT_MODIFICA_NOTIZIE;
+        
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
-        if( !isset($this->session->pg_loggato) )
-            throw new APIException("Devi essere loggato con un personaggio per compiere questa operazione.", APIException::$GRANTS_ERROR);
+        $legge_tutto = UsersManager::controllaPermessi( $this->session, [$GRANT_CREA_NOTIZIE, $GRANT_MODIFICA_NOTIZIE], False );
         
-        if ( !isset($tipi) )
+        if( !$legge_tutto && !isset($this->session->pg_loggato) )
+            throw new APIException("Devi essere loggato con un personaggio per compiere questa operazione.", APIException::$PG_LOGIN_ERROR);
+    
+        if (!$legge_tutto)
         {
-            $ids_civile   = Utils::mappaArrayDiArrayAssoc($this->session->pg_loggato["abilita"]["civile"], "id_abilita");
-            $ids_militare = Utils::mappaArrayDiArrayAssoc($this->session->pg_loggato["abilita"]["militare"], "id_abilita");
-            $ids          = array_merge($ids_civile, $ids_militare);
-            $id_con_pag   = Utils::filtraArrayConValori( $ids, array_keys(self::$MAPPA_PAGINA_ABILITA) );
-            $pagine       = Utils::filtraArrayConChiavi( self::$MAPPA_PAGINA_ABILITA, $id_con_pag );
-            $tipi         = array_values($pagine);
+            if (!isset($tipi))
+            {
+                $ids_civile = Utils::mappaArrayDiArrayAssoc($this->session->pg_loggato["abilita"]["civile"], "id_abilita");
+                $ids_militare = Utils::mappaArrayDiArrayAssoc($this->session->pg_loggato["abilita"]["militare"], "id_abilita");
+                $ids = array_merge($ids_civile, $ids_militare);
+                $id_con_pag = Utils::filtraArrayConValori($ids, array_keys(self::$MAPPA_PAGINA_ABILITA));
+                $pagine = Utils::filtraArrayConChiavi(self::$MAPPA_PAGINA_ABILITA, $id_con_pag);
+                $tipi = array_values($pagine);
+            }
+            else if (isset($tipi) && !is_array($tipi))
+                $tipi = [$tipi];
+    
+            $marcatori = str_repeat("?, ", count( $tipi ) - 1 ) . "?";
+            $query_sel = "SELECT * FROM notizie WHERE tipo_notizia IN ($marcatori) AND pubblica_notizia = 1 ORDER BY tipo_notizia ASC, data_creazione DESC ";
         }
-        else if ( isset($tipi) && !is_array($tipi) )
+        else
         {
-            $tipi = [$tipi];
+            $query_sel = "SELECT * FROM notizie WHERE pubblica_notizia = 1 ORDER BY tipo_notizia ASC, data_creazione DESC ";
+            $tipi = [];
         }
         
-        $marcatori = str_repeat("?, ", count( $tipi ) - 1 ) . "?";
-        $query_sel = "SELECT * FROM notizie WHERE tipo_notizia IN ($marcatori) AND pubblica_notizia = 1";
         $result = $this->db->doQuery($query_sel, $tipi, False);
         $result = !isset( $result ) ? [] : $result;
-        $output = [ ":status" => "ok", "result" => $result ];
+        $output = [ "status" => "ok", "result" => $result ];
         
         return json_encode($output);
     }

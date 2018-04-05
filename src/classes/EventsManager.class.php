@@ -166,6 +166,17 @@ class EventsManager
         return json_encode([ "status" => "ok", "result" => $evento[0] ]);
     }
     
+    public function recuperaEventoInCorso()
+    {
+        $query_ev = "SELECT id_evento FROM eventi AS ev WHERE ev.pubblico_evento = 1 AND NOW() BETWEEN ev.data_inizio_evento AND ev.data_fine_evento";
+        $res_ev   = $this->db->doQuery( $query_ev, [], False );
+        
+        if( !isset($res_ev) || count($res_ev) === 0 )
+            return NULL;
+        
+        return $res_ev[0]["id_evento"];
+    }
+    
     public function recuperaListaEventi( $draw, $columns, $order, $start, $length, $search )
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );

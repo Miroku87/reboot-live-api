@@ -5,6 +5,7 @@ class APIException extends Exception
     static $GENERIC_ERROR  = "genericError";
     static $GRANTS_ERROR   = "grantsError";
     static $LOGIN_ERROR    = "loginError";
+    static $PG_LOGIN_ERROR = "pgLoginError";
     static $DATABASE_ERROR = "databaseError";
     
     protected $type;

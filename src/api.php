@@ -31,13 +31,15 @@ class Main
 		
 		if( in_array( @$_SERVER["HTTP_ORIGIN"], $ALLOWED_ORIGINS ) )
             header( 'Access-Control-Allow-Origin: '.$_SERVER["HTTP_ORIGIN"] );
-
-		$this->usersmanager      = new UsersManager();
-		$this->charactersmanager = new CharactersManager();
-		$this->messagingmanager  = new MessagingManager();
-		$this->eventsmanager     = new EventsManager();
+		
+        $this->eventsmanager     = new EventsManager();
+        $idev_in_corso = $this->eventsmanager->recuperaEventoInCorso();
+        
+		$this->usersmanager      = new UsersManager( $idev_in_corso );
+		$this->charactersmanager = new CharactersManager( $idev_in_corso );
+		$this->messagingmanager  = new MessagingManager( $idev_in_corso );
 		$this->grantsmanager     = new GrantsManager();
-		$this->newsmanager       = new NewsManager();
+		$this->newsmanager       = new NewsManager( $idev_in_corso );
 	}
 	
 	public function __destruct()

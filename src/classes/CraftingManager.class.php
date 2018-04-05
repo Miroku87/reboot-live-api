@@ -11,8 +11,11 @@ include_once($path."config/constants.php");
 
 class CraftingManager
 {
-    public function __construct()
+    protected $idev_in_corso;
+    
+    public function __construct( $idev_in_corso = NULL )
     {
+        $this->idev_in_corso = $idev_in_corso;
     }
     
     public function __destruct()

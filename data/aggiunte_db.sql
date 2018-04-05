@@ -481,3 +481,10 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 ALTER TABLE `notizie` 
 ADD COLUMN `titolo_notizia` VARCHAR(255) NOT NULL AFTER `tipo_notizia`;
 
+-- 05 APRILE
+
+UPDATE `grants` SET `descrizione_grant`='L\'utente può visualizzare la pagina principale del sito con la lista dei pg creati.' WHERE `nome_grant`='visualizza_pagina_main';
+
+ALTER TABLE `notizie` 
+ADD COLUMN `data_creazione` DATETIME NOT NULL DEFAULT NOW() AFTER `testo_notizia`;
+

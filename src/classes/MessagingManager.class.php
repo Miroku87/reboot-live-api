@@ -9,9 +9,11 @@ class MessagingManager
 {
     protected $db;
     protected $session;
+    protected $idev_in_corso;
     
-    public function __construct()
+    public function __construct( $idev_in_corso = NULL )
     {
+        $this->idev_in_corso = $idev_in_corso;
         $this->session = SessionManager::getInstance();
         $this->db      = new DatabaseBridge();
     }

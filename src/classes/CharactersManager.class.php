@@ -13,9 +13,11 @@ class CharactersManager
     protected $db;
     protected $session;
     protected $mailer;
+    protected $idev_in_corso;
     
-    public function __construct()
+    public function __construct( $idev_in_corso = NULL )
     {
+        $this->idev_in_corso = $idev_in_corso;
         $this->session = SessionManager::getInstance();
         $this->db      = new DatabaseBridge();
         $this->mailer  = new Mailer();
@@ -209,6 +211,8 @@ class CharactersManager
 						bj.nome_personaggio LIKE :search OR
 						bj.classi_civili LIKE :search OR
 						bj.classi_militari LIKE :search OR
+						bj.abilita_civili LIKE :search OR
+						bj.abilita_militari LIKE :search OR
 						bj.nome_giocatore LIKE :search OR
 						bj.email_giocatore LIKE :search OR
 						bj.ruoli_nome_ruolo LIKE :search OR
@@ -846,6 +850,10 @@ class CharactersManager
         global $MAPPA_COSTO_CLASSI_CIVILI;
         global $ABILITA_CRAFTING;
         global $PF_INIZIALI;
+        global $GRANT_VISUALIZZA_CRAFT_CHIMICO;
+        global $GRANT_VISUALIZZA_CRAFT_PROGRAM;
+        global $GRANT_VISUALIZZA_CRAFT_TECNICO;
+        global $GRANT_VISUALIZZA_NOTIZIE;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
@@ -875,6 +883,7 @@ class CharactersManager
             throw new APIException( "Non puoi scaricare i dati di un giocatore non tuo." );
         
         $pg_data  = $res_pg[0];
+        $pg_data["permessi"] = [];
         
         $query_classi  = "SELECT cl.* FROM classi AS cl WHERE id_classe IN ( SELECT classi_id_classe FROM personaggi_has_classi WHERE personaggi_id_personaggio = :idpg )";
         $res_classi    = $this->db->doQuery( $query_classi, array( ":idpg" => $pgid ), False );
@@ -906,28 +915,35 @@ class CharactersManager
         $crafting_chimico        = False;
         $crafting_programmazione = False;
         $crafting_ingegneria     = False;
-        
+        $abilita_notizie         = array_keys( NewsManager::$MAPPA_PAGINA_ABILITA );
+    
         if( count( $res_abilita ) > 0 )
         {
             foreach ($res_abilita as $ab)
             {
                 $abilita[$ab["tipo_abilita"]][] = $ab;
                 
-                if ($ab["id_abilita"] === $ABILITA_CRAFTING["chimico"])
+                if ( $ab["id_abilita"] === $ABILITA_CRAFTING["chimico"] )
+                {
                     $crafting_chimico = True;
+                    $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_CHIMICO;
+                }
                 
-                if ($ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"])
+                if ( $ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"] )
+                {
                     $crafting_programmazione = True;
+                    $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_PROGRAM;
+                }
                 
-                if (in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]))
+                if ( in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]) )
+                {
                     $crafting_ingegneria = True;
+                    $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_TECNICO;
+                }
+                
+                if ( in_array($ab["id_abilita"], $abilita_notizie) && !array_search($GRANT_VISUALIZZA_NOTIZIE, $pg_data["permessi_pg"]) )
+                    $pg_data["permessi"][] = $GRANT_VISUALIZZA_NOTIZIE;
             }
-        }
-        else
-        {
-            $crafting_chimico = False;
-            $crafting_programmazione = False;
-            $crafting_ingegneria = False;
         }
         
         $px_spesi = 0;
