@@ -82,8 +82,9 @@ class NewsManager
     
         if ( !isset($id_articolo) )
         {
-            $query = "INSERT INTO notizie (id_notizia, tipo_notizia, titolo_notizia, autore_notizia, data_ig_notizia, data_pubblicazione_notizia, testo_notizia)
-                            VALUES ( NULL, :tipo, :titolo, :autore, :dataig, $macro_data, :testo)";
+            $query = "INSERT INTO notizie (id_notizia, tipo_notizia, titolo_notizia, autore_notizia, data_ig_notizia, data_pubblicazione_notizia, testo_notizia, creatore_notizia)
+                            VALUES ( NULL, :tipo, :titolo, :autore, :dataig, $macro_data, :testo, :creatore)";
+            $params[":creatore"] = $this->session->email_giocatore;
         }
         else if ( isset($id_articolo) )
         {
@@ -114,28 +115,71 @@ class NewsManager
         return $this->azioneNotizia( $tipo, $titolo, $autore, $data_ig, $pub_manuale, $data_pub, $ora_pub, $testo, $id_art );
     }
     
-    public function recuperaNotizie( $id = null, $tipo = null )
+    public function recuperaNotizie( $draw, $columns, $order, $start, $length, $search )
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
-        if( isset($id) )
+        $filter     = False;
+        $where      = "";
+        $params     = [];
+        
+        if( isset( $search ) && isset( $search["value"] ) && $search["value"] != "" )
         {
-            $params = [":id"=>$id];
-            $query_sel = "SELECT * FROM notizie WHERE id_notizia = :id";
-        }
-        elseif ( isset($tipo) )
-        {
-            $params = [":tipo"=>$tipo];
-            $query_sel = "SELECT * FROM notizie WHERE tipo_notizia = :tipo";
-        }
-        else if ( !isset($id) && !isset($tipo) )
-        {
-            $params = [":tipo"=>$tipo];
-            $query_sel = "SELECT * FROM notizie";
+            $filter = True;
+            $params[":search"] = "%$search[value]%";
+            $where .= " (
+						CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) LIKE :search OR
+						n.creatore_notizia LIKE :search OR
+						n.data_pubblicazione_notizia LIKE :search OR
+						n.titolo_notizia LIKE :search OR
+						n.tipo_notizia LIKE :search OR
+						n.autore_notizia LIKE :search OR
+						n.data_ig_notizia LIKE :search OR
+						n.testo_notizia LIKE :search
+					  )";
         }
         
-        $result = $this->db->doQuery($query_sel, $params, False);
-        $output = [ ":status" => "ok", "result" => $result ];
+        if( isset( $order ) )
+        {
+            $sorting = array();
+            foreach ( $order as $elem )
+                $sorting[] = $columns[$elem["column"]]["data"]." ".$elem["dir"];
+            
+            $order_str = "ORDER BY ".implode( $sorting, "," );
+        }
+        
+        if( !empty($where) )
+            $where = "WHERE".$where;
+        
+        $query = "SELECT n.*,
+                         IF( ( n.pubblica_notizia = 1 OR ( n.data_pubblicazione_notizia IS NOT NULL AND n.data_pubblicazione_notizia <= NOW() ) ), 'S&igrave;', 'No') as pubblica_notizia,
+                         IF( n.data_pubblicazione_notizia IS NULL, 'Manuale', DATE_FORMAT( n.data_pubblicazione_notizia, '%d/%m/%Y %H:%i:%s' ) ) AS data_pubblicazione_notizia,
+                         DATE_FORMAT( n.data_creazione_notizia, '%d/%m/%Y %H:%i:%s' ) AS data_creazione_notizia,
+                         CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_giocatore
+                      FROM notizie AS n
+                        JOIN giocatori AS gi ON gi.email_giocatore = n.creatore_notizia
+                      $where $order_str";
+        
+        $risultati  = $this->db->doQuery( $query, $params, False );
+        $totale     = count($risultati);
+        
+        if( count($risultati) > 0 )
+            $risultati = array_splice($risultati, $start, $length);
+        else
+            $risultati = array();
+        
+        $output     = array(
+            "status"          => "ok",
+            "draw"            => $draw,
+            "columns"         => $columns,
+            "order"           => $order,
+            "start"           => $start,
+            "length"          => $length,
+            "search"          => $search,
+            "recordsTotal"    => $totale,
+            "recordsFiltered" => $filter ? count($risultati) : $totale,
+            "data"            => $risultati
+        );
         
         return json_encode($output);
     }
@@ -167,11 +211,14 @@ class NewsManager
                 $tipi = [$tipi];
     
             $marcatori = str_repeat("?, ", count( $tipi ) - 1 ) . "?";
-            $query_sel = "SELECT * FROM notizie WHERE tipo_notizia IN ($marcatori) AND pubblica_notizia = 1 ORDER BY tipo_notizia ASC, data_creazione DESC ";
+            $query_sel = "SELECT * FROM notizie
+                            WHERE tipo_notizia IN ($marcatori) AND ( pubblica_notizia = 1 OR ( data_pubblicazione_notizia IS NOT NULL AND data_pubblicazione_notizia <= NOW() ) )
+                            ORDER BY tipo_notizia ASC, data_creazione_notizia DESC ";
         }
         else
         {
-            $query_sel = "SELECT * FROM notizie WHERE pubblica_notizia = 1 ORDER BY tipo_notizia ASC, data_creazione DESC ";
+            $query_sel = "SELECT * FROM notizie WHERE ( pubblica_notizia = 1 OR ( data_pubblicazione_notizia IS NOT NULL AND data_pubblicazione_notizia <= NOW() ) )
+                            ORDER BY tipo_notizia ASC, data_creazione_notizia DESC ";
             $tipi = [];
         }
         
@@ -188,6 +235,19 @@ class NewsManager
         
         $query = "UPDATE notizie SET pubblica_notizia = :pub WHERE id_notizia = :id";
         $params = [":id" => $id, ":pub" => 1];
+
+        $this->db->doQuery( $query, $params, False );
+        
+        $output = ["status" => "ok"];
+        return json_encode($output);
+    }
+    
+    public function ritiraNotizia( $id )
+    {
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+        
+        $query = "UPDATE notizie SET pubblica_notizia = :pub, data_pubblicazione_notizia = NULL WHERE id_notizia = :id";
+        $params = [":id" => $id, ":pub" => 0];
 
         $this->db->doQuery( $query, $params, False );
         

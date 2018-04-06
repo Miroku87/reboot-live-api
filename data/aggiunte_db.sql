@@ -486,5 +486,21 @@ ADD COLUMN `titolo_notizia` VARCHAR(255) NOT NULL AFTER `tipo_notizia`;
 UPDATE `grants` SET `descrizione_grant`='L\'utente può visualizzare la pagina principale del sito con la lista dei pg creati.' WHERE `nome_grant`='visualizza_pagina_main';
 
 ALTER TABLE `notizie` 
-ADD COLUMN `data_creazione` DATETIME NOT NULL DEFAULT NOW() AFTER `testo_notizia`;
+ADD COLUMN `data_creazione_notizia` DATETIME NOT NULL DEFAULT NOW() AFTER `testo_notizia`;
 
+-- 06 APRILE
+
+ALTER TABLE `notizie` 
+ADD COLUMN `creatore_notizia` VARCHAR(255) NOT NULL AFTER `data_creazione_notizia`,
+
+  
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('ritiraNotizia', 'L\'utente può ritirare un articolo pubblicato.');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'ritiraNotizia');
+
+ALTER TABLE `notizie` 
+ADD INDEX `fk_creatore_notizia_idx` (`creatore_notizia` ASC);
+ADD CONSTRAINT `fk_creatore_notizia`
+  FOREIGN KEY (`creatore_notizia`)
+  REFERENCES `giocatori` (`email_giocatore`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;

@@ -151,7 +151,7 @@ class UsersManager
             "permessi" => $this->session->permessi_giocatore
         ];
 
-		if( Utils::clientInSameSubnet() && isset($this->idev_in_corso) && !in_array( $GRANT_MOSTRA_ALTRI_PG, $this->session->permessi_giocatore ) )
+		if( Utils::clientInSameSubnet() && isset($this->idev_in_corso) && !UsersManager::controllaPermessi( $this->session, [$GRANT_MOSTRA_ALTRI_PG] ) )
         {
             //TODO: testare
             $query_iscrizione = "SELECT personaggi_id_personaggio FROM iscrizione_personaggi AS ip
@@ -162,7 +162,7 @@ class UsersManager
                 throw new APIException("Ci dispiace, solo i giocatori con personaggi iscritti all'evento in corso possono loggare.");
             
             $output["pg_da_loggare"] = $res_iscrizione[0]["personaggi_id_personaggio"];
-            array_splice( $output["permessi"], array_search($GRANT_VISUALIZZA_MAIN,$output["permessi"] ),1 );
+//            array_splice( $output["permessi"], array_search($GRANT_VISUALIZZA_MAIN,$output["permessi"] ),1 ); //mostriamo il pulsante ma facciamo il redirect tutto da front-end
         }
         
 		return json_encode($output);
