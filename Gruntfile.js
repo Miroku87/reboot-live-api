@@ -6,7 +6,7 @@ module.exports = function (grunt) {
     // Automatically load required grunt tasks
     require('jit-grunt')(grunt);
 
-    grunt.initConfig({
+    var init_config = {
 
         config: grunt.file.readJSON('gruntconfig.json'),
 
@@ -32,8 +32,8 @@ module.exports = function (grunt) {
                 options: {
                     patterns: [
                         {
-                            match: /(\$path = \$_SERVER\['DOCUMENT_ROOT']\.)"\/reboot-live-api\/src\/";/,
-                            replacement: '$1"/";'
+                            match: /(\$path = \$_SERVER\['DOCUMENT_ROOT']\s*\.\s*)"\/reboot-live-api\/src\/";/,
+                            replacement: '$1"/<%= config.server_dir %>";'
                         }
                     ]
                 },
@@ -41,25 +41,12 @@ module.exports = function (grunt) {
                     {cwd: './dist', expand:true, src: ['**/*.php'], dest: './dist'}
                 ]
             },
-            site_url_preprod: {
+            site_url: {
                 options: {
                     patterns: [
                         {
                             match: /(\$SITE_URL\s*?=\s)[\s\S]*?;/,
-                            replacement: '$1"<%= config.preprod.site_url %>";'
-                        }
-                    ]
-                },
-                files: [
-                    {cwd: './dist', expand:true, src: ['config/constants.php'], dest: './dist'}
-                ]
-            },
-            site_url_prod: {
-                options: {
-                    patterns: [
-                        {
-                            match: /(\$SITE_URL\s*?=\s)[\s\S]*?;/,
-                            replacement: '$1"<%= config.prod.site_url %>";'
+                            replacement: '$1"<%= config.site_url %><%= config.site_dir %>";'
                         }
                     ]
                 },
@@ -72,19 +59,19 @@ module.exports = function (grunt) {
                     patterns: [
                         {
                             match: /(\$MAIL_ACCOUNT\s*?=\s)[\s\S]*?;/,
-                            replacement: '$1"<%= config.prod.mail_account %>";'
+                            replacement: '$1"<%= config.mail_account %>";'
                         },
                         {
                             match: /(\$MAIL_PASSWORD\s*?=\s)[\s\S]*?;/,
-                            replacement: '$1"<%= config.prod.mail_password %>";'
+                            replacement: '$1"<%= config.mail_password %>";'
                         },
                         {
                             match: /(\$MAIL_HOST\s*?=\s)[\s\S]*?;/,
-                            replacement: '$1"<%= config.prod.mail_host %>";'
+                            replacement: '$1"<%= config.mail_host %>";'
                         },
                         {
                             match: /(\$MAIL_PORT\s*?=\s)[\s\S]*?;/,
-                            replacement: '$1"<%= config.prod.mail_port %>";'
+                            replacement: '$1"<%= config.mail_port %>";'
                         }
                     ]
                 },
@@ -92,20 +79,20 @@ module.exports = function (grunt) {
                     {cwd: './dist', expand:true, src: ['config/constants.php'], dest: './dist'}
                 ]
             },
-            db_config_prod: {
+            db_config: {
                 options: {
                     patterns: [
                         {
                             match: /("DB_NAME"\s*?=>\s*?)"[\s\S]*?,/,
-                            replacement: '$1"<%= config.prod.db_name %>",'
+                            replacement: '$1"<%= config.db_name %>",'
                         },
                         {
                             match: /("DB_USER"\s*?=>\s*?)"[\s\S]*?,/,
-                            replacement: '$1"<%= config.prod.db_user %>",'
+                            replacement: '$1"<%= config.db_user %>",'
                         },
                         {
                             match: /("DB_PASS"\s*?=>\s*?)"[\s\S]*?"/,
-                            replacement: '$1"<%= config.prod.db_pass %>"'
+                            replacement: '$1"<%= config.db_pass %>"'
                         }
                     ]
                 },
@@ -113,28 +100,7 @@ module.exports = function (grunt) {
                     {cwd: './dist', expand:true, src: ['config/config.inc.php'], dest: './dist'}
                 ]
             },
-            db_config_preprod: {
-                options: {
-                    patterns: [
-                        {
-                            match: /("DB_NAME"\s*?=>\s*?)"[\s\S]*?,/,
-                            replacement: '$1"<%= config.preprod.db_name %>",'
-                        },
-                        {
-                            match: /("DB_USER"\s*?=>\s*?)"[\s\S]*?,/,
-                            replacement: '$1"<%= config.preprod.db_user %>",'
-                        },
-                        {
-                            match: /("DB_PASS"\s*?=>\s*?)"[\s\S]*?"/,
-                            replacement: '$1"<%= config.preprod.db_pass %>"'
-                        }
-                    ]
-                },
-                files: [
-                    {cwd: './dist', expand:true, src: ['config/config.inc.php'], dest: './dist'}
-                ]
-            },
-            preprod_no_mails: {
+            no_mails: {
                 options: {
                     patterns: [
                         {
@@ -148,24 +114,74 @@ module.exports = function (grunt) {
                 ]
             }
         }
+    };
+
+    grunt.initConfig(init_config);
+
+    grunt.registerTask('get-local-ip', 'Get IP Address for LAN.', function()
+    {
+        var os              = require('os'),
+            ifaces          = os.networkInterfaces(),
+            lookupIpAddress = null,
+            devices         = ["enl","en0","WiFi", "Ethernet"];
+
+        for (var dev in ifaces)
+        {
+             if(devices.indexOf(dev) === -1)
+                 continue;
+
+            ifaces[dev].some(function(details)
+            {
+                if (details.family=='IPv4')
+                {
+                    lookupIpAddress = details.address;
+                    return true;
+                }
+            });
+        }
+
+        grunt.log.writeln("Local IP Address found: "+lookupIpAddress);
+        var old_config = grunt.config.get("config"),
+            new_config = old_config.site_url = lookupIpAddress;
+        grunt.config.set('config.site_url', lookupIpAddress);
     });
 
-    grunt.registerTask('preprod', [
-        'clean:build',
-        'copy:build',
-        'replace:import_paths',
-        'replace:preprod_no_mails',
-        'replace:mail_settings',
-        'replace:db_config_preprod',
-        'replace:site_url_preprod'
-    ]);
+    function runTasks( name )
+    {
+        grunt.config('config', grunt.file.readJSON('gruntconfig.json')[name] );
 
-    grunt.registerTask('prod', [
-        'clean:build',
-        'copy:build',
-        'replace:import_paths',
-        'replace:mail_settings',
-        'replace:db_config_prod',
-        'replace:site_url_prod'
-    ]);
+        var tasks = [];
+
+        tasks.push('clean:build');
+
+        if( name === "local" )
+            tasks.push('get-local-ip');
+
+        tasks.push('copy:build');
+        tasks.push('replace:import_paths');
+
+        if( name === "local" || name === "preprod" )
+            tasks.push('replace:no_mails');
+
+        tasks.push('replace:mail_settings');
+        tasks.push('replace:db_config');
+        tasks.push('replace:site_url');
+
+        grunt.task.run(tasks);
+    }
+
+    grunt.registerTask('local', function()
+    {
+        runTasks("local");
+    });
+
+    grunt.registerTask('preprod', function()
+    {
+        runTasks("preprod");
+    });
+
+    grunt.registerTask('prod', function()
+    {
+        runTasks("prod");
+    });
 };

@@ -1,4 +1,4 @@
-USE `reboot_live`;
+USE 
 
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crea_evento', 'L\'utente può accedere alla pagina che permette di creare un evento.');
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaOpzioniAbilita', 'L\'utente può recuperare dal db le opzioni extra di varie abilità.');
@@ -504,3 +504,15 @@ ADD CONSTRAINT `fk_creatore_notizia`
   REFERENCES `giocatori` (`email_giocatore`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
+  
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_programmazione', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting di Netrunner.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_chimico', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting del Medico.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_ingegneria', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting da Tecnico.');
+
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_programmazione');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_chimico');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_ingegneria');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_programmazione');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_chimico');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_ingegneria');
+

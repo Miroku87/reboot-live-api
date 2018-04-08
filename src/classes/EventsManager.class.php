@@ -168,7 +168,7 @@ class EventsManager
     
     public function recuperaEventoInCorso()
     {
-        $query_ev = "SELECT id_evento FROM eventi AS ev WHERE ev.pubblico_evento = 1 AND NOW() BETWEEN ev.data_inizio_evento AND ev.data_fine_evento";
+        $query_ev = "SELECT id_evento FROM eventi AS ev WHERE ev.pubblico_evento = 1 AND DATE(NOW()) BETWEEN ev.data_inizio_evento AND ev.data_fine_evento";
         $res_ev   = $this->db->doQuery( $query_ev, [], False );
         
         if( !isset($res_ev) || count($res_ev) === 0 )

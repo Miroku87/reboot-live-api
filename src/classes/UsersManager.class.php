@@ -144,19 +144,21 @@ class UsersManager
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
   
 		$output = [
-		    "status" => "ok",
+		    "status"          => "ok",
             "email_giocatore" => $this->session->email_giocatore,
-            "nome_giocatore" => $this->session->nome_giocatore,
-            "pg_propri" => $this->session->pg_propri,
-            "permessi" => $this->session->permessi_giocatore
+            "nome_giocatore"  => $this->session->nome_giocatore,
+            "pg_propri"       => $this->session->pg_propri,
+            "permessi"        => $this->session->permessi_giocatore
         ];
 
-		if( Utils::clientInSameSubnet() && isset($this->idev_in_corso) && !UsersManager::controllaPermessi( $this->session, [$GRANT_MOSTRA_ALTRI_PG] ) )
+		if( Utils::clientInSameLAN() && isset($this->idev_in_corso) && !UsersManager::controllaPermessi( $this->session, [$GRANT_MOSTRA_ALTRI_PG] ) )
         {
             //TODO: testare
             $query_iscrizione = "SELECT personaggi_id_personaggio FROM iscrizione_personaggi AS ip
-                                    WHERE eventi_id_evento = :idev";
-            $res_iscrizione   = $this->db->doQuery( $query_iscrizione, [ ":idev" => $this->idev_in_corso ], False );
+                                    JOIN personaggi AS pg ON pg.id_personaggio = ip.personaggi_id_personaggio
+                                    JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
+									WHERE eventi_id_evento = :idev AND gi.email_giocatore = :mail";
+            $res_iscrizione   = $this->db->doQuery( $query_iscrizione, [ ":idev" => $this->idev_in_corso, ":mail" => $this->session->email_giocatore ], False );
             
             if( !isset($res_iscrizione) || count($res_iscrizione) === 0 )
                 throw new APIException("Ci dispiace, solo i giocatori con personaggi iscritti all'evento in corso possono loggare.");

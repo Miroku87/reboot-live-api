@@ -923,13 +923,13 @@ class CharactersManager
             {
                 $abilita[$ab["tipo_abilita"]][] = $ab;
                 
-                if ( $ab["id_abilita"] === $ABILITA_CRAFTING["chimico"] )
+                if ( $ab["id_abilita"] == $ABILITA_CRAFTING["chimico"] )
                 {
                     $crafting_chimico = True;
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_CHIMICO;
                 }
                 
-                if ( $ab["id_abilita"] === $ABILITA_CRAFTING["programmazione"] )
+                if ( $ab["id_abilita"] == $ABILITA_CRAFTING["programmazione"] )
                 {
                     $crafting_programmazione = True;
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_PROGRAM;
@@ -985,6 +985,10 @@ class CharactersManager
         $pg_data["crafting_programmazione"] = $crafting_programmazione;
         $pg_data["crafting_ingegneria"]     = $crafting_ingegneria;
         $pg_data["opzioni"]                 = $opzioni;
+    
+        $permessi_giocatore = $this->session->permessi_giocatore;
+        Utils::rimuoviPiuElementiDaArray( $permessi_giocatore, $this->session->pg_loggato["permessi"] );
+        $this->session->permessi_giocatore = array_merge( $permessi_giocatore, $pg_data["permessi"] );
         
         $this->session->pg_loggato = $pg_data;
         
