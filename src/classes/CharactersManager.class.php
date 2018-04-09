@@ -933,7 +933,14 @@ class CharactersManager
                 {
                     $crafting_programmazione = True;
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_PROGRAM;
+                    $pg_data["max_programmi_netrunner"] = 1;
                 }
+                
+                if ( $ab["id_abilita"] == $ABILITA_CRAFTING["programmazione_avanzata"] )
+                    $pg_data["max_programmi_netrunner"] = 2;
+                
+                if ( $ab["id_abilita"] == $ABILITA_CRAFTING["programmazione_totale"] )
+                    $pg_data["max_programmi_netrunner"] = 4;
                 
                 if ( in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]) )
                 {
@@ -941,7 +948,7 @@ class CharactersManager
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_TECNICO;
                 }
                 
-                if ( in_array($ab["id_abilita"], $abilita_notizie) && !array_search($GRANT_VISUALIZZA_NOTIZIE, $pg_data["permessi_pg"]) )
+                if ( isset($this->idev_in_corso) && in_array($ab["id_abilita"], $abilita_notizie) && !array_search($GRANT_VISUALIZZA_NOTIZIE, $pg_data["permessi_pg"]) )
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_NOTIZIE;
             }
         }

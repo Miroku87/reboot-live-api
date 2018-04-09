@@ -55,7 +55,7 @@ class EventsManager
     
     private function possoPubblicare( )
     {
-        $query_pub = "SELECT pubblico_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento > NOW()";
+        $query_pub = "SELECT pubblico_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento > DATE(NOW())";
         $result    = $this->db->doQuery( $query_pub, [], False );
         
         if( count($result) > 0 )
@@ -64,7 +64,7 @@ class EventsManager
     
     private function controllaDataEvento( $id )
     {
-        $query_data = "SELECT id_evento FROM eventi WHERE data_inizio_evento > NOW() AND id_evento = :idev";
+        $query_data = "SELECT id_evento FROM eventi WHERE data_inizio_evento > DATE(NOW()) AND id_evento = :idev";
         $evento     = $this->db->doQuery( $query_data, [":idev" => $id], False);
         
         if( !isset($evento) || ( isset($evento) && count($evento) === 0 ) )
@@ -154,7 +154,7 @@ class EventsManager
     {
         UsersManager::operazionePossibile( $this->session, "recuperaEventi" );
         
-        $query_end = $id === "last" ? "WHERE pubblico_evento = 1 AND data_inizio_evento > NOW() ORDER BY id_evento DESC LIMIT 1" : "WHERE id_evento = :id";
+        $query_end = $id === "last" ? "WHERE pubblico_evento = 1 AND data_inizio_evento > DATE(NOW()) ORDER BY id_evento DESC LIMIT 1" : "WHERE id_evento = :id";
         $params    = $id === "last" ? [] : [ ":id" => $id ];
         
         $query_ev = "SELECT ev.*,
@@ -216,7 +216,6 @@ class EventsManager
                       FROM eventi AS ev
                         JOIN giocatori AS gi ON gi.email_giocatore = ev.creatore_evento
                       $where $order_str";
-        //ev.data_inizio_evento > NOW()
         
         $risultati  = $this->db->doQuery( $query_mex, $params, False );
         $totale     = count($risultati);
@@ -380,9 +379,9 @@ class EventsManager
         $order_str  = "";
         
         if( $quando === "prossimo" )
-            $where .= "t1.pubblico_evento = 1 AND t1.data_inizio_evento > NOW()";
+            $where .= "t1.pubblico_evento = 1 AND t1.data_inizio_evento > DATE(NOW())";
         else if ( $quando === "precedente" )
-            $where .= "t1.id_evento = (SELECT id_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento < NOW() ORDER BY data_inizio_evento DESC LIMIT 1)";
+            $where .= "t1.id_evento = (SELECT id_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento < DATE(NOW()) ORDER BY data_inizio_evento DESC LIMIT 1)";
         
         if( isset( $search ) && isset($search["value"]) > 0 && $search["value"] != "" )
         {

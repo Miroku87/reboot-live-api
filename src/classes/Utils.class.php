@@ -146,11 +146,14 @@ class Utils
     
     static function rimuoviPiuElementiDaArray(&$arr, $elems)
     {
-        foreach ($elems as $e)
+        if( count($elems) > 0 )
         {
-            $i = array_search($e, $arr);
-            if ($i !== False)
-                array_splice($arr, $i, 1);
+            foreach ($elems as $e)
+            {
+                $i = array_search($e, $arr);
+                if ($i !== False)
+                    array_splice($arr, $i, 1);
+            }
         }
     }
     

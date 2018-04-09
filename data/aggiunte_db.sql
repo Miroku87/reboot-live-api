@@ -516,3 +516,29 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_chimico');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_ingegneria');
 
+-- 07 APRILE
+
+CREATE TABLE `reboot_live`.`crafting_programmazione` (
+  `parametro_crafting` VARCHAR(45) NOT NULL,
+  `valore_parametro_crafting` VARCHAR(45) NOT NULL,
+  `effetto_valore_crafting` VARCHAR(45) NOT NULL,
+  `parametro_collegato_crafting` VARCHAR(45) NULL,
+  PRIMARY KEY (`parametro_crafting`,`valore_parametro_crafting`));
+  
+DROP TABLE IF EXISTS `ricette`;
+CREATE TABLE `ricette` (
+  `id_ricetta` int(11) NOT NULL AUTO_INCREMENT,
+  `personaggi_id_personaggio` int(11) NOT NULL,
+  `data_inserimento_ricetta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+  `tipo_ricetta` set('Programmazione','Tecnico','Chimico') NOT NULL,
+  `nome_ricetta` varchar(255) NOT NULL,
+  `componenti_ricetta` varchar(255) NOT NULL,
+  `risultato_ricetta` varchar(255) NOT NULL,
+  `approvata_ricetta` TINYINT(1) NOT NULL DEFAULT 0,
+  `note_ricetta` text,
+  `extra_cartellino_ricetta` text,
+  PRIMARY KEY (`id_ricetta`),
+  KEY `fk_ricette_personaggi1_idx` (`personaggi_id_personaggio`),
+  CONSTRAINT `fk_ricette_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+

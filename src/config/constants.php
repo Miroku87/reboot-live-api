@@ -35,7 +35,13 @@ $PC_INIZIALI                    = 4;
 $PF_INIZIALI                    = 2;
 $ANNO_PRIMO_LIVE                = 271;
 
-$ABILITA_CRAFTING               = array( "chimico"  => 61, "programmazione"  => 29, "ingegneria"  => array( 48, 49, 50, 51 ) );
+$ABILITA_CRAFTING               = array(
+    "chimico"                 => 61,
+    "programmazione"          => 29,
+    "programmazione_avanzata" => 30,
+    "programmazione_totale"   => 31,
+    "ingegneria"              => array( 48, 49, 50, 51 )
+);
 
 $MAPPA_COSTO_CLASSI_CIVILI      = array(0,20,40,60,80,100,120);
 
