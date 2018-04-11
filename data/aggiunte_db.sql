@@ -505,32 +505,35 @@ ADD CONSTRAINT `fk_creatore_notizia`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
   
-INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_programmazione', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting di Netrunner.');
-INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_chimico', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting del Medico.');
-INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_ingegneria', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting da Tecnico.');
+-- INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_programmazione', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting di Netrunner.');
+-- INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_chimico', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting del Medico.');
+-- INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_crafting_ingegneria', 'L\'utente, se loggato con un pg che ha le giuste abilità, potrà accedere alla sezione del crafting da Tecnico.');
 
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_programmazione');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_chimico');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_ingegneria');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_programmazione');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_chimico');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_ingegneria');
+-- INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_programmazione');
+-- INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_chimico');
+-- INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_crafting_ingegneria');
+-- INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_programmazione');
+-- INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_chimico');
+-- INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_crafting_ingegneria');
 
 -- 07 APRILE
 
-CREATE TABLE `reboot_live`.`crafting_programmazione` (
+CREATE TABLE `crafting_programmazione` (
   `parametro_crafting` VARCHAR(45) NOT NULL,
   `valore_parametro_crafting` VARCHAR(45) NOT NULL,
   `effetto_valore_crafting` VARCHAR(45) NOT NULL,
   `parametro_collegato_crafting` VARCHAR(45) NULL,
   PRIMARY KEY (`parametro_crafting`,`valore_parametro_crafting`));
   
+INSERT INTO `crafting_programmazione` VALUES ('X1','0','ATTACCO','Y1'),('X1','1','ATTACCO','Y1'),('X1','2','DIFESA','Y1'),('X1','3','DIFESA','Y1'),('X1','4','ABILITA\'','Y2'),('X1','5','ABILITA\'','Y2'),('X1','6','ATTACCO','Y1'),('X1','7','DIFESA','Y1'),('X1','8','ABILITA\'','Y2'),('X1','9','ATTACCO','Y1'),('Y1','0','danno','Z1'),('Y1','1','status','Z2'),('Y1','2','danno','Z1'),('Y1','3','status','Z2'),('Y1','4','danno','Z1'),('Y1','5','status','Z2'),('Y1','6','danno','Z1'),('Y1','7','status','Z2'),('Y1','8','danno','Z1'),('Y1','9','status','Z2'),('Y2','0','1 uso','Z3'),('Y2','1','2 usi','Z3'),('Y2','2','1 uso','Z3'),('Y2','3','2 usi','Z3'),('Y2','4','3 usi','Z3'),('Y2','5','1 uso','Z3'),('Y2','6','2 usi','Z3'),('Y2','7','3 usi','Z3'),('Y2','8','4 usi ','Z3'),('Y2','9','1 uso','Z3'),('Z1','0','SINGOLO',NULL),('Z1','1','DOPPIO',NULL),('Z1','2','TRIPLO',NULL),('Z1','3','QUADRUPLO',NULL),('Z1','4','A ZERO',NULL),('Z1','5','DOPPIO',NULL),('Z1','6','TRIPLO',NULL),('Z1','7','QUADRUPLO',NULL),('Z1','8','DOPPIO',NULL),('Z1','9','TRIPLO',NULL),('Z2','0','DISARMO!',NULL),('Z2','1','CONFUSIONE!',NULL),('Z2','2','PARALISI!',NULL),('Z2','3','SPINTA 5 !',NULL),('Z2','4','SHOCK!',NULL),('Z2','5','DISARMO!',NULL),('Z2','6','CONFUSIONE!',NULL),('Z2','7','SPINTA 5 !',NULL),('Z2','8','SHOCK!',NULL),('Z2','9','PARALISI!',NULL),('Z3','0','COMANDO!',NULL),('Z3','1','SINCERITA\'!',NULL),('Z3','2','GUARIGIONE 5!',NULL),('Z3','3','RIPARARAZIONE 5!',NULL),('Z3','4','ATTENUAZIONE!',NULL),('Z3','5','COMANDO ! IGNORAMI',NULL),('Z3','6','VELENO!  GUARIGIONE 1! TEMPO 1 MINUTO',NULL),('Z3','7','RIFLESSO! ',NULL),('Z3','8','BONUS ! ATTENUAZIONE! RAGGIO 2 TEMPO 1 MINUTO',NULL),('Z3','9','NEUTRALIZZA ( associabile a qualsiasi effetto o status)',NULL);
+  
 DROP TABLE IF EXISTS `ricette`;
 CREATE TABLE `ricette` (
   `id_ricetta` int(11) NOT NULL AUTO_INCREMENT,
   `personaggi_id_personaggio` int(11) NOT NULL,
-  `data_inserimento_ricetta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+  `data_inserimento_ricetta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `tipo_ricetta` set('Programmazione','Tecnico','Chimico') NOT NULL,
+  `tipo_oggetto` SET('Applicativo', 'Pistola', 'Fucile', 'Scudo', 'Esoscheletro') NOT NULL,
   `nome_ricetta` varchar(255) NOT NULL,
   `componenti_ricetta` varchar(255) NOT NULL,
   `risultato_ricetta` varchar(255) NOT NULL,
@@ -542,3 +545,14 @@ CREATE TABLE `ricette` (
   CONSTRAINT `fk_ricette_personaggi1` FOREIGN KEY (`personaggi_id_personaggio`) REFERENCES `personaggi` (`id_personaggio`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 08 APRILE
+
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('modificaRicetta', 'L\'utente può modificare una ricetta creata.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaRicette_proprio', 'L\'utente può recuperare le ricette create da un suo personaggio.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaRicette_altri', 'L\'utente può recuperare le ricette create da chiunque.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_gestione_ricette', 'L\'utente può vedere la pagina di gestione delle ricette.');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'modificaRicetta');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaRicette_proprio');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaRicette_altri');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_gestione_ricette');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaRicette_proprio');
