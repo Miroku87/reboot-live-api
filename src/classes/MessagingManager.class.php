@@ -29,11 +29,12 @@ class MessagingManager
         $tabella       = $tipo === "fg" ? "messaggi_fuorigioco" : "messaggi_ingioco";
         $tabella_check = $tipo === "fg" ? "giocatori" : "personaggi";
         $id_check      = $tipo === "fg" ? "email_giocatore" : "id_personaggio";
+        $eliminato     = $tipo === "fg" ? "eliminato_giocatore" : "eliminato_personaggio";
     
-        $query_check = "SELECT $id_check FROM $tabella_check WHERE $id_check = :mitt OR $id_check = :dest";
+        $query_check = "SELECT $id_check FROM $tabella_check WHERE ( $id_check = :mitt OR $id_check = :dest ) AND $eliminato = 0";
         $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt, ":dest" => $dest ), False );
         
-        if( count( $ris_check ) === 0 )
+        if( count( $ris_check ) < 2 )
             throw new APIException("Il mittente o il destinatario di questo messaggio non esistono.");
         
         $params = array(
@@ -164,6 +165,9 @@ class MessagingManager
     
     private function recuperaDestinatari( $tipo, $term  )
     {
+        if( substr($term, 0 ,1) === "#" )
+            return json_encode([ "status" => "ok", "result" => [] ]);
+        
         $id_no = $tipo === "ig" ? $this->session->pg_loggato["id_personaggio"] : $this->session->email_giocatore;
         
         if( $tipo === "ig" )
