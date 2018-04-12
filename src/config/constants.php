@@ -35,6 +35,7 @@ $PC_INIZIALI                    = 4;
 $PF_INIZIALI                    = 2;
 $ANNO_PRIMO_LIVE                = 271;
 
+$ID_RICETTA_PAG                 = 4;
 $ABILITA_CRAFTING               = array(
     "chimico"                 => 61,
     "programmazione"          => 29,

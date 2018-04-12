@@ -189,7 +189,7 @@ class CharactersManager
         if( isset($abilita) && count($abilita) > 0 )
             $punti = array_map("Utils::mappaOffsetPFAbilita", $abilita);
         
-        return $base  + array_sum( $punti );
+        return $base  + max( $punti );
     }
     
     private function recuperaPersonaggi( $draw, $columns, $order, $start, $length, $search, $extra_where = array(), $extra_param = array() )
@@ -240,6 +240,7 @@ class CharactersManager
                         pg.eliminato_personaggio,
                         pg.contattabile_personaggio,
                         pg.anno_nascita_personaggio,
+                        pg.note_cartellino_personaggio,
                         gi.email_giocatore,
                         CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         gi.note_giocatore,
@@ -879,7 +880,7 @@ class CharactersManager
                     WHERE id_personaggio = :idpg";
         $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid ), False );
         
-        if( count( $res_pg ) === 0 )
+        if( isset($res_pg) && count( $res_pg ) === 0 )
             throw new APIException( "Non puoi scaricare i dati di un giocatore non tuo." );
         
         $pg_data  = $res_pg[0];
@@ -909,15 +910,16 @@ class CharactersManager
         $classi  = array( "civile" => array(), "militare" => array() );
         $abilita = array( "civile" => array(), "militare" => array() );
         
-        foreach( $res_classi as $cl )
-            $classi[$cl["tipo_classe"]][] = $cl;
+        if( isset($res_classi) && count($res_classi) > 0 )
+            foreach( $res_classi as $cl )
+                $classi[$cl["tipo_classe"]][] = $cl;
         
         $crafting_chimico        = False;
         $crafting_programmazione = False;
         $crafting_ingegneria     = False;
         $abilita_notizie         = array_keys( NewsManager::$MAPPA_PAGINA_ABILITA );
     
-        if( count( $res_abilita ) > 0 )
+        if( isset($res_abilita) && count( $res_abilita ) > 0 )
         {
             foreach ($res_abilita as $ab)
             {
@@ -956,12 +958,14 @@ class CharactersManager
         $px_spesi = 0;
         $pc_spesi = count( $classi["militare"] ) + count( $abilita["militare"] );
         
-        for( $i = 0; $i < count( $classi["civile"] ); $i++ )
-            $px_spesi += $MAPPA_COSTO_CLASSI_CIVILI[$i];
+        if( isset($abilita["civile"] ) && count( $abilita["civile"] ) > 0 )
+        {
+            for ($i = 0; $i < count($classi["civile"]); $i++)
+                $px_spesi += $MAPPA_COSTO_CLASSI_CIVILI[$i];
         
-        if( count( $abilita["civile"] ) > 0 )
-            foreach( $abilita["civile"] as $ac )
+            foreach ($abilita["civile"] as $ac)
                 $px_spesi += $ac["costo_abilita"];
+        }
         
         $px_risparmiati = $pg_data["px_personaggio"] - $px_spesi;
         $pc_risparmiati = $pg_data["pc_personaggio"] - $pc_spesi;
@@ -974,9 +978,15 @@ class CharactersManager
         $result_opz = $this->db->doQuery( $query_opz, array( ":pgid" => $pgid ), False );
         $opzioni = array();
         
-        if( count($result_opz) > 0 )
+        if( isset($result_opz) && count($result_opz) > 0 )
             foreach( $result_opz as $r )
                 $opzioni[$r["abilita_id_abilita"]] = [ "nome_abilita" => $r["nome_abilita"], "opzione" => $r["opzioni_abilita_opzione"] ];
+        
+        $query_ricette = "SELECT COUNT(id_ricetta) as num_ricette FROM ricette WHERE personaggi_id_personaggio = :pgid";
+        $res_ricette   = $this->db->doQuery($query_ricette, [":pgid"=>$pgid], False);
+    
+        $pg_data["num_ricette"] = (int)$res_ricette[0]["num_ricette"];
+        
         
         $pg_data["pf_personaggio"]     = $this->calcolaPF( $PF_INIZIALI, $res_abilita );
         $pg_data["shield_personaggio"] = $this->calcolaShield( $pg_data["scudo_base_personaggio"], $res_abilita );
@@ -1054,5 +1064,22 @@ class CharactersManager
         }
         
         return "{\"status\": \"ok\",\"result\": ".json_encode($ret)."}";
+    }
+    
+    public function recuperaNoteCartellino( $pgid )
+    {
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
+        
+        $query = "SELECT note_cartellino_personaggio FROM personaggi WHERE id_personaggio = :pgid";
+        $result = $this->db->doQuery( $query, [ ":pgid" => $pgid ], False );
+        
+        $note = $result[0]["note_cartellino_personaggio"];
+        
+        $output = [
+            "status" => "ok",
+            "result" => !isset($note) ? "" : $note
+        ];
+        
+        return json_encode($output);
     }
 }

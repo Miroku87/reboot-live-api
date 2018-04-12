@@ -51,16 +51,30 @@ class CraftingManager
             $risultati[] = $res_x[0]["effetto"]." - ".$res_y[0]["effetto"]." - ".$res_z[0]["effetto"];
         }
         
+        $risultato_crafting = implode("@@", $risultati);
+    
+        $sql_progr = "SELECT id_unico_risultato FROM ricette WHERE risultato_ricetta = :risultato";
+        $progr_id  = $this->db->doQuery( $sql_progr, [":risultato" => $risultato_crafting], False );
+    
+        if( !isset($progr_id) || count($progr_id) === 0 )
+        {
+            $sql_id_res = "SELECT IFNULL( MAX( COALESCE(id_unico_risultato, 0) ), 0) as id_unico_risultato FROM ricette WHERE tipo_ricetta = :tipo";
+            $progr_id   = $this->db->doQuery($sql_id_res, [":tipo" => "Programmazione"], False);
+            $progr_id[0]["id_unico_risultato"] =  (int)$progr_id[0]["id_unico_risultato"] + 1;
+        }
+        
         $params = [
             ":idpg"     => $pgid,
             ":tipo"     => "Programmazione",
-            ":tipo_ogg" => "Applicativo",
+            ":tipo_ogg" => "Programma",
             ":nome"     => $nome_programma,
             ":comps"    => implode("@@", $valori_usati),
-            ":res"      => implode("@@", $risultati)
+            ":res"      => $risultato_crafting,
+            ":id_res"   => (int)$progr_id[0]["id_unico_risultato"]
         ];
         
-        $sql_ricetta = "INSERT INTO ricette VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :comps, :res, 0, NULL, NULL )";
+        $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, componenti_ricetta, risultato_ricetta, approvata_ricetta, id_unico_risultato)
+                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :comps, :res, 0, :id_res )";
         $this->db->doQuery( $sql_ricetta, $params, False );
         
         $output = ["status" => "ok", "result"=> true];
@@ -104,14 +118,17 @@ class CraftingManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
         $filter     = False;
-        $where      = "";
+        $where      = [];
+        $order_str  = "";
         $params     = [];
+        $campi_prvt = ["ri.risultato_ricetta", "ri.id_unico_risultato", "ri.note_ricetta", "ri.extra_cartellino_ricetta"];
+        $campi_str  = (int)$pgid === -1 ? ", ".implode(", ",$campi_prvt) : "";
     
-        if( isset( $search ) && $search["value"] != "" )
+        if( isset( $search ) && isset( $search["value"] ) && $search["value"] != "" )
         {
             $filter = True;
             $params[":search"] = "%$search[value]%";
-            $where .= " (
+            $where[] = " (
 						r.nome_giocatore LIKE :search OR
 						r.personaggi_id_personaggio LIKE :search OR
 						r.nome_personaggio LIKE :search OR
@@ -119,12 +136,13 @@ class CraftingManager
 						r.componenti_ricetta LIKE :search OR
 						r.risultato_ricetta LIKE :search OR
 						r.note_ricetta LIKE :search OR
+						r.note_pg_ricetta LIKE :search OR
 						r.extra_cartellino_ricetta LIKE :search OR
 						r.data_inserimento_it LIKE :search
 					  )";
         }
     
-        if( isset( $order ) )
+        if( isset( $order ) && !empty($order) && count($order) > 0 )
         {
             $sorting = array();
             foreach ( $order as $elem )
@@ -133,8 +151,16 @@ class CraftingManager
             $order_str = "ORDER BY ".implode( $sorting, "," );
         }
     
-        if( !empty($where) )
-            $where = "WHERE".$where;
+        if( (int)$pgid > 0 )
+        {
+            $where[] = "r.personaggi_id_personaggio = :pgid";
+            $params[":pgid"] = $pgid;
+        }
+    
+        if( count($where) > 0 )
+            $where = "WHERE ".implode(" AND ", $where );
+        else
+            $where = "";
     
         $query_ric = "SELECT * FROM
                       (
@@ -146,12 +172,11 @@ class CraftingManager
                                 ri.tipo_oggetto,
                                 ri.nome_ricetta,
                                 ri.componenti_ricetta,
-                                ri.risultato_ricetta,
                                 ri.approvata_ricetta,
-                                ri.note_ricetta,
-                                ri.extra_cartellino_ricetta,
+                                ri.note_pg_ricetta,
                                 CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_giocatore,
                                 pg.nome_personaggio
+                                $campi_str
                         FROM ricette AS ri
                             JOIN personaggi AS pg ON pg.id_personaggio = ri.personaggi_id_personaggio
                             JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore

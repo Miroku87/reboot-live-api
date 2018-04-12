@@ -533,7 +533,7 @@ CREATE TABLE `ricette` (
   `personaggi_id_personaggio` int(11) NOT NULL,
   `data_inserimento_ricetta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `tipo_ricetta` set('Programmazione','Tecnico','Chimico') NOT NULL,
-  `tipo_oggetto` SET('Applicativo', 'Pistola', 'Fucile', 'Scudo', 'Esoscheletro') NOT NULL,
+  `tipo_oggetto` SET('Programma', 'Arma Mischia', 'Pistola', 'Fucile Assalto', 'Mitragliatore', 'Shotgun', 'Fucile Precisione', 'Gadget Normale', 'Gadget Avanzato', 'Protesi Generica', 'Protesi Braccio', 'Protesi Gamba', 'Esoscheletro') DEFAULT NULL,
   `nome_ricetta` varchar(255) NOT NULL,
   `componenti_ricetta` varchar(255) NOT NULL,
   `risultato_ricetta` varchar(255) NOT NULL,
@@ -556,3 +556,27 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaRicette_altri');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_gestione_ricette');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaRicette_proprio');
+
+-- 11 APRILE
+  
+ALTER TABLE `ricette` 
+ADD COLUMN `id_unico_risultato` INT(11) NULL DEFAULT NULL AFTER `approvata_ricetta`;
+
+ALTER TABLE `personaggi` 
+ADD COLUMN `note_cartellino_personaggio` TEXT NULL DEFAULT NULL AFTER `note_master_personaggio`;
+
+ALTER TABLE `ricette` 
+ADD COLUMN `note_pg_ricetta` TEXT NULL DEFAULT NULL AFTER `note_ricetta`;
+
+
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('modificaPG_note_cartellino_personaggio_altri', 'L\'utente può modificare le note da stampare sul cartellino dei pg di altri giocatori.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('modificaPG_note_cartellino_personaggio_proprio', 'L\'utente può modificare le note da stampare sul cartellino dei propri pg.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaNoteCartellino_altri', 'L\'utente può leggere gli extra che verranno stampati sul cartellino di un PG non suo.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaNoteCartellino_proprio', 'L\'utente può guardare le note extra che verranno stampate sul cartellino di un proprio pg.');
+
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'modificaPG_note_cartellino_personaggio_altri');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'modificaPG_note_cartellino_personaggio_proprio');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaNoteCartellino_altri');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaNoteCartellino_proprio');
+
+
