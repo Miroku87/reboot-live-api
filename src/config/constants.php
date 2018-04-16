@@ -28,6 +28,10 @@ $GRANT_VISUALIZZA_CRAFT_PROGRAM = "visualizza_pagina_crafting_programmazione";
 $GRANT_VISUALIZZA_CRAFT_TECNICO = "visualizza_pagina_crafting_ingegneria";
 $GRANT_VISUALIZZA_NOTIZIE       = "visualizza_pagina_notizie";
 $GRANT_VISUALIZZA_MERCATO       = "visualizza_pagina_mercato";
+$GRANT_CRAFTA_ARMI              = "crafta_armi";
+$GRANT_CRAFTA_PROTESI           = "crafta_protesi";
+$GRANT_CRAFTA_GADGET_SHIELD     = "crafta_gadget_shield";
+$GRANT_CRAFTA_SCUDI_ESOSCHELE   = "crafta_scudi_esoscheletri";
 $GRANT_CREA_NOTIZIE             = "creaNotizia";
 $GRANT_MODIFICA_NOTIZIE         = "modificaNotizia";
 
@@ -37,12 +41,21 @@ $PF_INIZIALI                    = 2;
 $ANNO_PRIMO_LIVE                = 271;
 
 $ID_RICETTA_PAG                 = 4;
+$CRAFTING_ARMI                  = 48;
+$CRAFTING_PROTESI               = 49;
+$CRAFTING_GADGET_SHIELD         = 50;
+$CRAFTING_SCUDI_ESOSCHELE       = 51;
 $ABILITA_CRAFTING               = array(
     "chimico"                 => 61,
     "programmazione"          => 29,
     "programmazione_avanzata" => 30,
     "programmazione_totale"   => 31,
-    "ingegneria"              => array( 48, 49, 50, 51 )
+    "ingegneria"              => array(
+        $CRAFTING_ARMI,
+        $CRAFTING_PROTESI,
+        $CRAFTING_GADGET_SHIELD,
+        $CRAFTING_SCUDI_ESOSCHELE
+    )
 );
 
 $MAPPA_COSTO_CLASSI_CIVILI      = array(0,20,40,60,80,100,120);

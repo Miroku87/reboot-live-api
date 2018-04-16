@@ -856,6 +856,14 @@ class CharactersManager
         global $GRANT_VISUALIZZA_CRAFT_TECNICO;
         global $GRANT_VISUALIZZA_NOTIZIE;
         global $GRANT_VISUALIZZA_MERCATO;
+        global $GRANT_CRAFTA_ARMI;
+        global $GRANT_CRAFTA_PROTESI;
+        global $GRANT_CRAFTA_GADGET_SHIELD;
+        global $GRANT_CRAFTA_SCUDI_ESOSCHELE;
+        global $CRAFTING_ARMI;
+        global $CRAFTING_PROTESI;
+        global $CRAFTING_GADGET_SHIELD;
+        global $CRAFTING_SCUDI_ESOSCHELE;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
@@ -948,7 +956,18 @@ class CharactersManager
                 if ( in_array($ab["id_abilita"], $ABILITA_CRAFTING["ingegneria"]) )
                 {
                     $crafting_ingegneria = True;
-                    $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_TECNICO;
+                    
+                    if( !array_search( $GRANT_VISUALIZZA_CRAFT_TECNICO, $pg_data["permessi"] ) )
+                        $pg_data["permessi"][] = $GRANT_VISUALIZZA_CRAFT_TECNICO;
+                    
+                    if( $ab["id_abilita"] == $CRAFTING_ARMI )
+                        $pg_data["permessi"][] = $GRANT_CRAFTA_ARMI;
+                    else if( $ab["id_abilita"] == $CRAFTING_GADGET_SHIELD )
+                        $pg_data["permessi"][] = $GRANT_CRAFTA_GADGET_SHIELD;
+                    else if( $ab["id_abilita"] == $CRAFTING_PROTESI )
+                        $pg_data["permessi"][] = $GRANT_CRAFTA_PROTESI;
+                    else if( $ab["id_abilita"] == $CRAFTING_SCUDI_ESOSCHELE )
+                        $pg_data["permessi"][] = $GRANT_CRAFTA_SCUDI_ESOSCHELE;
                 }
                 
                 if ( isset($this->idev_in_corso) && in_array($ab["id_abilita"], $abilita_notizie) && !array_search($GRANT_VISUALIZZA_NOTIZIE, $pg_data["permessi_pg"]) )
