@@ -468,7 +468,6 @@ INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaNotizi
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('modificaNotizia', 'L\'utente può modificare notizie esistenti');
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('pubblicaNotizia', 'L\'utente può pubblicare una notizia già creata');
 
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_notizie');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaNotiziePubbliche');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_notizie');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'creaNotizia');

@@ -174,7 +174,7 @@ class UsersManager
 	{
 	    $section = func_get_arg(0);
 		if( !isset( $this->session ) || ( isset( $this->session ) && !in_array( "visualizza_pagina_".$section, $this->session->permessi_giocatore ) ) )
-            throw new APIException( "Impossibile accedere a questa sezione." );
+            throw new APIException( "Impossibile accedere a questa sezione.", APIException::$GRANTS_ERROR );
 
 		return "{\"status\": \"ok\"}";
 	}

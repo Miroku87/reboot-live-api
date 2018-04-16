@@ -27,6 +27,7 @@ $GRANT_VISUALIZZA_CRAFT_CHIMICO = "visualizza_pagina_crafting_chimico";
 $GRANT_VISUALIZZA_CRAFT_PROGRAM = "visualizza_pagina_crafting_programmazione";
 $GRANT_VISUALIZZA_CRAFT_TECNICO = "visualizza_pagina_crafting_ingegneria";
 $GRANT_VISUALIZZA_NOTIZIE       = "visualizza_pagina_notizie";
+$GRANT_VISUALIZZA_MERCATO       = "visualizza_pagina_mercato";
 $GRANT_CREA_NOTIZIE             = "creaNotizia";
 $GRANT_MODIFICA_NOTIZIE         = "modificaNotizia";
 

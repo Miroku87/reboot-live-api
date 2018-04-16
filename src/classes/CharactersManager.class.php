@@ -855,6 +855,7 @@ class CharactersManager
         global $GRANT_VISUALIZZA_CRAFT_PROGRAM;
         global $GRANT_VISUALIZZA_CRAFT_TECNICO;
         global $GRANT_VISUALIZZA_NOTIZIE;
+        global $GRANT_VISUALIZZA_MERCATO;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
         
@@ -954,6 +955,9 @@ class CharactersManager
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_NOTIZIE;
             }
         }
+    
+        if ( isset($this->idev_in_corso) )
+            $pg_data["permessi"][] = $GRANT_VISUALIZZA_MERCATO;
         
         $px_spesi = 0;
         $pc_spesi = count( $classi["militare"] ) + count( $abilita["militare"] );
