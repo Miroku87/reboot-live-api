@@ -121,7 +121,7 @@ class CraftingManager
         ];
     
         $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta)
-                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :res, 0, :id_res )";
+                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, NULL, 0, NULL )";
         $id_nuova    = $this->db->doQuery($sql_ricetta, $params, False);
     
         foreach ($tutti_id as $id)
@@ -216,7 +216,7 @@ class CraftingManager
                                 ri.tipo_ricetta,
                                 ri.tipo_oggetto,
                                 ri.nome_ricetta,
-                                GROUP_CONCAT( DISTINCT cc.nome_componente SEPARATOR '; ') as componenti_ricetta,
+                                GROUP_CONCAT( cc.nome_componente ORDER BY cr.ordine_crafting ASC, cc.nome_componente ASC SEPARATOR '; ') as componenti_ricetta,
                                 ri.approvata_ricetta,
                                 ri.note_pg_ricetta,
                                 CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_giocatore,

@@ -837,6 +837,11 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pagina_mercato', 'L\'utente può vedere la pagina che permette l\'acaquisto dei componenti.');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_mercato');
 
-ALTER TABLE `reboot_live`.`componenti_crafting` 
+ALTER TABLE `componenti_crafting` 
 CHANGE COLUMN `descrizione` `descrizione_componente` TEXT NULL DEFAULT NULL ;
+
+DELETE FROM `ruoli_has_grants` WHERE `ruoli_nome_ruolo`='giocatore' and`grants_nome_grant`='visualizza_pagina_notizie';
+
+ALTER TABLE `componenti_ricetta` 
+CHANGE COLUMN `ordine_crafting` `ordine_crafting` INT(11) NULL DEFAULT 0 ;
 
