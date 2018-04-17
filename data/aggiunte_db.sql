@@ -579,6 +579,29 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 
 -- 17 APRILE
 
+
+ALTER TABLE `componenti_crafting` 
+CHANGE COLUMN `costo_componente` `costo_attuale_componente` INT(255) NULL AFTER `tipo_componente`,
+CHANGE COLUMN `id_componente` `id_componente` VARCHAR(255) NOT NULL ,
+CHANGE COLUMN `tipo_componente` `tipo_componente` SET('parametro_x', 'parametro_y', 'parametro_z', 'struttura', 'batteria', 'applicativo', 'supporto', 'sostanza base', 'sostanza satellite') NOT NULL ,
+CHANGE COLUMN `valore_componente` `valore_param_componente` INT(11) NULL ,
+ADD COLUMN `costo_vecchio_componente` INT(255) NULL AFTER `costo_attuale_componente`,
+ADD COLUMN `volume_componente` INT(11) NULL AFTER `valore_param_componente`,
+ADD COLUMN `energia_componente` INT(11) NULL AFTER `volume_componente`,
+ADD COLUMN `tipo_supporto_componente` SET('cerotto', 'fiala', 'polvere') NULL AFTER `energia_componente`,
+ADD COLUMN `fattore_legame_componente` VARCHAR(255) NULL AFTER `tipo_supporto_componente`,
+ADD COLUMN `curativo_primario_componente` VARCHAR(255) NULL AFTER `fattore_legame_componente`,
+ADD COLUMN `psicotropo_primario_componente` VARCHAR(255) NULL AFTER `curativo_primario_componente`,
+ADD COLUMN `tossico_primario_componente` VARCHAR(255) NULL AFTER `psicotropo_primario_componente`,
+ADD COLUMN `curativo_secondario_componente` VARCHAR(255) NULL AFTER `tossico_primario_componente`,
+ADD COLUMN `psicotropo_secondario_componente` VARCHAR(255) NULL AFTER `curativo_secondario_componente`,
+ADD COLUMN `tossico_secondario_componente` VARCHAR(255) NULL AFTER `psicotropo_secondario_componente`,
+ADD COLUMN `possibilita_dipendeza_componente` VARCHAR(255) NULL AFTER `tossico_secondario_componente`,
+ADD COLUMN `descrizione` TEXT NULL AFTER `possibilita_dipendeza_componente`;
+
+ALTER TABLE `componenti_crafting` 
+ADD COLUMN `tipo_crafting_componente` SET('tecnico', 'programmazione', 'chimico') NOT NULL AFTER `nome_componente`;
+
 ALTER TABLE `componenti_ricetta` 
 CHANGE COLUMN `componenti_crafting_id_componente` `componenti_crafting_id_componente` VARCHAR(255) NOT NULL ;
 
@@ -607,28 +630,6 @@ CHANGE COLUMN `approvata_ricetta` `approvata_ricetta` TINYINT(1) NOT NULL DEFAUL
 CHANGE COLUMN `tipo_oggetto` `tipo_oggetto` SET('Programma', 'Arma Mischia', 'Pistola', 'Fucile Assalto', 'Mitragliatore', 'Shotgun', 'Fucile Precisione', 'Gadget Normale', 'Gadget Avanzato', 'Protesi Generica', 'Protesi Braccio', 'Protesi Gamba', 'Esoscheletro') NOT NULL ,
 CHANGE COLUMN `risultato_ricetta` `risultato_ricetta` VARCHAR(255) NULL ;
 
-
-ALTER TABLE `componenti_crafting` 
-CHANGE COLUMN `costo_componente` `costo_attuale_componente` INT(255) NULL AFTER `tipo_componente`,
-CHANGE COLUMN `id_componente` `id_componente` VARCHAR(255) NOT NULL ,
-CHANGE COLUMN `tipo_componente` `tipo_componente` SET('parametro_x', 'parametro_y', 'parametro_z', 'struttura', 'batteria', 'applicativo', 'supporto', 'sostanza base', 'sostanza satellite') NOT NULL ,
-CHANGE COLUMN `valore_componente` `valore_param_componente` INT(11) NULL ,
-ADD COLUMN `costo_vecchio_componente` INT(255) NULL AFTER `costo_attuale_componente`,
-ADD COLUMN `volume_componente` INT(11) NULL AFTER `valore_param_componente`,
-ADD COLUMN `energia_componente` INT(11) NULL AFTER `volume_componente`,
-ADD COLUMN `tipo_supporto_componente` SET('cerotto', 'fiala', 'polvere') NULL AFTER `energia_componente`,
-ADD COLUMN `fattore_legame_componente` VARCHAR(255) NULL AFTER `tipo_supporto_componente`,
-ADD COLUMN `curativo_primario_componente` VARCHAR(255) NULL AFTER `fattore_legame_componente`,
-ADD COLUMN `psicotropo_primario_componente` VARCHAR(255) NULL AFTER `curativo_primario_componente`,
-ADD COLUMN `tossico_primario_componente` VARCHAR(255) NULL AFTER `psicotropo_primario_componente`,
-ADD COLUMN `curativo_secondario_componente` VARCHAR(255) NULL AFTER `tossico_primario_componente`,
-ADD COLUMN `psicotropo_secondario_componente` VARCHAR(255) NULL AFTER `curativo_secondario_componente`,
-ADD COLUMN `tossico_secondario_componente` VARCHAR(255) NULL AFTER `psicotropo_secondario_componente`,
-ADD COLUMN `possibilita_dipendeza_componente` VARCHAR(255) NULL AFTER `tossico_secondario_componente`,
-ADD COLUMN `descrizione` TEXT NULL AFTER `possibilita_dipendeza_componente`;
-
-ALTER TABLE `componenti_crafting` 
-ADD COLUMN `tipo_crafting_componente` SET('tecnico', 'programmazione', 'chimico') NOT NULL AFTER `nome_componente`;
 
 INSERT INTO `componenti_crafting`
 (`id_componente`,
@@ -783,14 +784,14 @@ VALUES
 ('A107','Placche rinforzate pesanti','tecnico','applicativo','-1','0','80','80','Placche di rinforzo pesanti'),
 ('A108','Generatore elettromagnetico da detonazione','tecnico','applicativo','-1','0','120','120','Genera un impulso che fa detonare il contenitore'),
 ('A109','generatore elettromagnetico da detonazione potenziato','tecnico','applicativo','-1','0','160','160','Genera un impulso che fa detonare il contenitore'),
-('A110','Generatore magnetico da dispersione a microonde','tecnico','applicativo','-2','0','160','160','Causa la vaporizzazione del liquido contenuto'),
+('A110','Generatore magnetico da dispersione a microonde','tecnico','applicativo','-2','0','160','160','Causa la vaporizzazione del liquido contenuto');
 
 INSERT INTO `componenti_crafting`
 (`id_componente`,
 `nome_componente`,
 `tipo_crafting_componente`,
 `tipo_componente`,
-`valore_param_componente`,
+`valore_param_componente`
 )
 VALUES
 ('X=0', 'X=0', 'programmazione','parametro_x', '0' ),
@@ -827,6 +828,6 @@ VALUES
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaComponentiBase', 'L\'utente può vedere la lista dei componenti durante i crafting e nel mercato');
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaComponentiAvanzata', 'L\'utente può vedere tutti i dati riguardanti i componenti');
 
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaComponenti_base');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaComponenti_avanzata');
-INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaComponenti_base');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaComponentiBase');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaComponentiAvanzata');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaComponentiBase');
