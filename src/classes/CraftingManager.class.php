@@ -121,13 +121,13 @@ class CraftingManager
         ];
     
         $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta)
-                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, NULL, 0, NULL )";
+                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome )";
         $id_nuova    = $this->db->doQuery($sql_ricetta, $params, False);
     
         foreach ($tutti_id as $id)
             $inserts[] = [":idcomp" => $id, ":idric" => $id_nuova];
     
-        $sql_componenti = "INSERT INTO componenti_ricetta VALUES (:idcomp,:idric,:ord)";
+        $sql_componenti = "INSERT INTO componenti_ricetta VALUES (:idcomp,:idric,0)";
         $this->db->doMultipleManipulations( $sql_componenti, $inserts, False );
     
         $output = ["status" => "ok", "result" => true];
