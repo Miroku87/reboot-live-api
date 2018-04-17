@@ -309,7 +309,7 @@ class CraftingManager
         {
             $sorting = array();
             foreach ($order as $elem)
-                $sorting[] = "r." . $columns[$elem["column"]]["data"] . " " . $elem["dir"];
+                $sorting[] = $columns[$elem["column"]]["data"] . " " . $elem["dir"];
             
             $order_str = "ORDER BY " . implode($sorting, ",");
         }
@@ -345,7 +345,7 @@ class CraftingManager
         return json_encode($output);
     }
     
-    public function recuperaComponentiBase( $tipo_crafting )
+    public function recuperaComponentiBase($draw, $columns, $order, $start, $length, $search,  $tipo_crafting )
     {
         UsersManager::operazionePossibile($this->session, __FUNCTION__);
         /*
@@ -376,9 +376,10 @@ class CraftingManager
             [ "data" => "costo_vecchio_componente" ],
             [ "data" => "valore_param_componente" ],
             [ "data" => "volume_componente" ],
-            [ "data" => "energia_componente" ]
+            [ "data" => "energia_componente" ],
+            [ "data" => "descrizione_componente" ]
         ];
         
-        return $this->recuperaComponenti(1, $campi, [],0,99999, NULL, ["tipo_crafting_componente = '$tipo_crafting'"]);
+        return $this->recuperaComponenti($draw, $campi, $order, $start, $length, $search, ["tipo_crafting_componente = '$tipo_crafting'"]);
     }
 }
