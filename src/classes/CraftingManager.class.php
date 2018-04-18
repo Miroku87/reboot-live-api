@@ -314,7 +314,8 @@ class CraftingManager
                                 ri.approvata_ricetta,
                                 ri.note_pg_ricetta,
                                 CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_giocatore,
-                                pg.nome_personaggio
+                                pg.nome_personaggio,
+                                SUM( cc.fcc_componente ) AS fcc_componente
                                 $campi_str
                         FROM ricette AS ri
                             JOIN personaggi AS pg ON pg.id_personaggio = ri.personaggi_id_personaggio
@@ -353,7 +354,11 @@ class CraftingManager
         UsersManager::operazionePossibile($this->session, "recuperaRicette", -1);
         
         $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
-        $query_ric = "SELECT * FROM ricette WHERE id_ricetta IN ($marcatori)";
+        $query_ric = "SELECT ri.*, SUM(cc.fcc_componente) AS fcc_componente FROM ricette AS ri
+                            LEFT JOIN componenti_ricetta AS cr ON ri.id_ricetta = cr.ricette_id_ricetta
+                            LEFT JOIN componenti_crafting AS cc ON cr.componenti_crafting_id_componente = cc.id_componente
+                      WHERE id_ricetta IN ($marcatori)
+                      GROUP BY ri.id_ricetta";
         $risultati = $this->db->doQuery($query_ric, $ids, False);
         
         $output = [

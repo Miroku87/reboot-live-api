@@ -704,26 +704,7 @@ CREATE TABLE `crafting_chimico` (
   `psicotropo_crafting_chimico` VARCHAR(100) DEFAULT NULL,
   PRIMARY KEY (`id_crafting_chimico`));
 
- INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('20', NULL, NULL, NULL);
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('19', 'neutralizza mutilazione', 'coma', 'sincerità 3 domande');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('18', NULL, 'singolo', 'comando prima frase imperativa');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('17', 'guarigione 10', 'triplo', 'paralisi 30');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('16', 'guarigione 7', 'a zero', NULL);
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('15', 'guarigione 5', 'a zero', 'disarmo 30');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('14', 'guarigione 3', NULL, 'paura');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('13', 'guarigione 1', 'quadruplo', 'confusione 30');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('12', 'neutralizza veleno', 'crash', 'spinta 0');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('11', 'neutrallizza sonno', 'singolo', 'dolore 30');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('10', 'neutrallizza shok', 'quadruplo', 'shock 30');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('9', 'neutralizza continuo', 'crash', 'sincerità 1 domanda');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('8', 'neutralizza dolore', NULL, 'Shock');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('7', 'neutrallizza paralisi', 'triplo', NULL);
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('6', 'rimarginazione 5', 'triplo', 'confusione');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('5', 'rimarginazione 4', 'doppio', 'dolore');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('4', 'rimarginazione 3', 'doppio', 'spinta 0');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('3', 'rimarginazione 2', 'singolo', 'disarmo');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('2', 'rimarginazione 1', 'singolo', 'paralisi');
-INSERT INTO `crafting_chimico` (`id_crafting_chimico`, `cura_crafting_chimico`, `tossico_crafting_chimico`, `psicotropo_crafting_chimico`) VALUES ('1', NULL, NULL, NULL);
+INSERT INTO `crafting_chimico` VALUES (1,NULL,NULL,NULL),(2,'RIMARGINAZIONE 1','SINGOLO','PARALISI'),(3,'RIMARGINAZIONE 2','SINGOLO','DISARMO'),(4,'RIMARGINAZIONE 3','DOPPIO','SPINTA 0'),(5,'RIMARGINAZIONE 4','DOPPIO','DOLORE'),(6,'RIMARGINAZIONE 5','TRIPLO','CONFUSIONE'),(7,'NEUTRALLIZZA PARALISI','TRIPLO',NULL),(8,'NEUTRALIZZA DOLORE',NULL,'SHOCK'),(9,'NEUTRALIZZA CONTINUO','CRASH','SINCERITÀ 1 DOMANDA'),(10,'NEUTRALLIZZA SHOK','QUADRUPLO','SHOCK 30'),(11,'NEUTRALLIZZA SONNO','SINGOLO','DOLORE 30'),(12,'NEUTRALIZZA VELENO','CRASH','SPINTA 0'),(13,'GUARIGIONE 1','QUADRUPLO','CONFUSIONE 30'),(14,'GUARIGIONE 3',NULL,'PAURA'),(15,'GUARIGIONE 5','A ZERO','DISARMO 30'),(16,'GUARIGIONE 7','A ZERO',NULL),(17,'GUARIGIONE 10','TRIPLO','PARALISI 30'),(18,NULL,'SINGOLO','COMANDO Prima Frase Imperativa'),(19,'NEUTRALIZZA MUTILAZIONE','COMA','SINCERITÀ 3 Domande'),(20,NULL,NULL,NULL);
 
 ALTER TABLE `componenti_crafting` 
 ADD COLUMN `effetto_sicuro_componente` VARCHAR(255) NULL AFTER `possibilita_dipendeza_componente`;
@@ -739,31 +720,28 @@ UPDATE `abilita` SET `prerequisito_abilita`='65' WHERE `id_abilita`='65';
 ALTER TABLE `ricette` 
 CHANGE COLUMN `id_unico_risultato` `id_unico_risultato_ricetta` INT(11) NULL DEFAULT NULL ;
 
-UPDATE `componenti_crafting` SET `effetto_sicuro_componente`='Aggiungi alla chiamata CONTINUO!' WHERE `id_componente`='D002';
-UPDATE `componenti_crafting` SET `effetto_sicuro_componente`='Ripeti la chiamata 2 volte' WHERE `id_componente`='D004';
-UPDATE `componenti_crafting` SET `effetto_sicuro_componente`='Ripeti 2 volte la chiamata e subisci CONTINUO!' WHERE `id_componente`='D006';
-
-ALTER TABLE `reboot_live`.`componenti_ricetta` 
+ALTER TABLE `componenti_ricetta` 
 DROP FOREIGN KEY `fk_ricette_id_ricetta`,
 DROP FOREIGN KEY `fk_componente_ricetta`;
-ALTER TABLE `reboot_live`.`componenti_ricetta` 
+ALTER TABLE `componenti_ricetta` 
 ADD COLUMN `id_componenti_ricetta` INT(11) NOT NULL AUTO_INCREMENT FIRST,
 DROP PRIMARY KEY,
 ADD PRIMARY KEY (`id_componenti_ricetta`),
 DROP INDEX `fk_ricette_id_ricetta_idx` ;
 
-ALTER TABLE `reboot_live`.`componenti_ricetta` 
+ALTER TABLE `componenti_ricetta` 
 ADD INDEX `fk_ricetta_id_ricetta_idx` (`ricette_id_ricetta` ASC),
 ADD INDEX `fk_componenti_id_componente_idx` (`componenti_crafting_id_componente` ASC);
-ALTER TABLE `reboot_live`.`componenti_ricetta` 
+ALTER TABLE `componenti_ricetta` 
 ADD CONSTRAINT `fk_ricetta_id_ricetta`
   FOREIGN KEY (`ricette_id_ricetta`)
-  REFERENCES `reboot_live`.`ricette` (`id_ricetta`)
+  REFERENCES `ricette` (`id_ricetta`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_componenti_id_componente`
   FOREIGN KEY (`componenti_crafting_id_componente`)
-  REFERENCES `reboot_live`.`componenti_crafting` (`id_componente`)
+  REFERENCES `componenti_crafting` (`id_componente`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+-- MERGE SU DB-BETA FINO A QUI
