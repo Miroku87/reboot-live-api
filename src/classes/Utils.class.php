@@ -61,6 +61,16 @@ class Utils
         return array_filter($arr, $filtro);
     }
     
+    static function filtraArrayDiArrayAssoc($arr, $key, $valori)
+    {
+        $filtro = function ( $item ) use ($key, $valori)
+        {
+            return in_array( $item[$key], $valori );
+        };
+        
+        return array_filter($arr, $filtro);
+    }
+    
     /*static function filtraArrayConChiavi( $arr, $chiavi )
     {
         $filtro = function ( $key ) use ( $chiavi )

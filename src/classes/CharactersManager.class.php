@@ -930,7 +930,7 @@ class CharactersManager
     
         if( isset($res_abilita) && count( $res_abilita ) > 0 )
         {
-            foreach ($res_abilita as $ab)
+            foreach ( $res_abilita as $ab )
             {
                 $abilita[$ab["tipo_abilita"]][] = $ab;
                 

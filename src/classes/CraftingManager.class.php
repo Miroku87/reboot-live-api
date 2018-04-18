@@ -49,16 +49,16 @@ class CraftingManager
             $risultati[] = $res_x[0]["effetto"] . " - " . $res_y[0]["effetto"] . " - " . $res_z[0]["effetto"];
         }
         
-        $risultato_crafting = implode("@@", $risultati);
+        $risultato_crafting = implode(";", $risultati);
         
-        $sql_progr = "SELECT id_unico_risultato FROM ricette WHERE risultato_ricetta = :risultato";
+        $sql_progr = "SELECT id_unico_risultato_ricetta FROM ricette WHERE risultato_ricetta = :risultato";
         $progr_id = $this->db->doQuery($sql_progr, [":risultato" => $risultato_crafting], False);
         
         if (!isset($progr_id) || count($progr_id) === 0)
         {
-            $sql_id_res = "SELECT IFNULL( MAX( COALESCE(id_unico_risultato, 0) ), 0) AS id_unico_risultato FROM ricette WHERE tipo_ricetta = :tipo";
+            $sql_id_res = "SELECT IFNULL( MAX( COALESCE(id_unico_risultato_ricetta, 0) ), 0) AS id_unico_risultato_ricetta FROM ricette WHERE tipo_ricetta = :tipo";
             $progr_id = $this->db->doQuery($sql_id_res, [":tipo" => "Programmazione"], False);
-            $progr_id[0]["id_unico_risultato"] = (int)$progr_id[0]["id_unico_risultato"] + 1;
+            $progr_id[0]["id_unico_risultato_ricetta"] = (int)$progr_id[0]["id_unico_risultato_ricetta"] + 1;
         }
         
         $params = [
@@ -67,10 +67,10 @@ class CraftingManager
             ":tipo_ogg" => "Programma",
             ":nome" => $nome_programma,
             ":res" => $risultato_crafting,
-            ":id_res" => (int)$progr_id[0]["id_unico_risultato"]
+            ":id_res" => (int)$progr_id[0]["id_unico_risultato_ricetta"]
         ];
         
-        $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, risultato_ricetta, approvata_ricetta, id_unico_risultato)
+        $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, risultato_ricetta, approvata_ricetta, id_unico_risultato_ricetta)
                           VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :res, 0, :id_res )";
         $id_nuova    = $this->db->doQuery($sql_ricetta, $params, False);
     
@@ -81,7 +81,7 @@ class CraftingManager
             $inserts[] = [":idcomp" => "Z=" . $p["z_val"], ":idric" => $id_nuova, ":ord" => $k];
         }
         
-        $sql_componenti = "INSERT INTO componenti_ricetta VALUES (:idcomp,:idric,:ord)";
+        $sql_componenti = "INSERT INTO componenti_ricetta (componenti_crafting_id_componente, ricette_id_ricetta, ordine_crafting) VALUES (:idcomp,:idric,:ord)";
         $this->db->doMultipleManipulations( $sql_componenti, $inserts, False );
         
         $output = ["status" => "ok", "result" => true];
@@ -96,38 +96,41 @@ class CraftingManager
         UsersManager::operazionePossibile($this->session, $GRANT_VISUALIZZA_CRAFT_TECNICO);
         
         $tutti_id  = array_merge($batterie, $strutture, $applicativi);
-        $marcatori = str_repeat( "?, ", count($tutti_id) - 1 )."?";
-        $sql_check = "SELECT SUM(COALESCE(volume_componente,0)) AS volume_rimanente, SUM(COALESCE(energia_componente,0)) AS energia_rimanente
-                        FROM componenti_crafting
-                        WHERE id_componente IN ($marcatori)";
+        $sotto_query = [];
+        
+        for ($i = 0; $i < count($tutti_id); $i++)
+            $sotto_query[] = "SELECT CONCAT(UPPER(tipo_componente),': ',nome_componente) as descrizione_componente, volume_componente, energia_componente FROM componenti_crafting WHERE id_componente = ?";
+        
+        $union     =  implode(" UNION ALL ", $sotto_query);
+        $sql_check = "SELECT descrizione_componente, volume_componente, energia_componente FROM ( $union ) AS u ORDER BY descrizione_componente ASC";
         $check_res = $this->db->doQuery( $sql_check, $tutti_id, False);
         
-        if( isset($check_res) && count($check_res) > 0 )
-        {
-            foreach ( $check_res[0] as $c )
-            {
-                if( (int)$c < 0 )
-                    throw new APIException("Il crafting non &egrave; andato a buon fine. Riprovare.");
-            }
-        }
-        else
+        if( !isset($check_res) || count($check_res) === 0 )
+            throw new APIException("Il crafting non &egrave; andato a buon fine. Riprovare.");
+        
+        $volume  = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "volume_componente") ) );
+        $energia = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "energia_componente") ) );
+        $risultato_crafting = implode(";", Utils::mappaArrayDiArrayAssoc($check_res, "descrizione_componente") );
+        
+        if( $volume < 0 || $energia < 0 )
             throw new APIException("Il crafting non &egrave; andato a buon fine. Riprovare.");
     
         $params = [
             ":idpg" => $pgid,
             ":tipo" => "Tecnico",
             ":tipo_ogg" => $tipo,
-            ":nome" => $nome
+            ":nome" => $nome,
+            ":res" => $risultato_crafting
         ];
     
-        $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta)
-                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome )";
+        $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, risultato_ricetta)
+                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :res )";
         $id_nuova    = $this->db->doQuery($sql_ricetta, $params, False);
     
         foreach ($tutti_id as $id)
             $inserts[] = [":idcomp" => $id, ":idric" => $id_nuova];
     
-        $sql_componenti = "INSERT INTO componenti_ricetta VALUES (:idcomp,:idric,0)";
+        $sql_componenti = "INSERT INTO componenti_ricetta (componenti_crafting_id_componente, ricette_id_ricetta) VALUES (:idcomp,:idric)";
         $this->db->doMultipleManipulations( $sql_componenti, $inserts, False );
     
         $output = ["status" => "ok", "result" => true];
@@ -135,12 +138,100 @@ class CraftingManager
         return json_encode($output);
     }
     
-    public function inserisciRicettaMedico($pgid, $substrato, $principio_att, $psicotropo)
+    public function inserisciRicettaMedico( $pgid, $nome, $supporto, $principio_attivo, $sostanza_1, $sostanza_2, $sostanza_3 )
     {
         global $GRANT_VISUALIZZA_CRAFT_CHIMICO;
-        
+    
         UsersManager::operazionePossibile($this->session, $GRANT_VISUALIZZA_CRAFT_CHIMICO);
+    
+        $sql_info = "SELECT id_componente,
+                            tipo_componente,
+                            curativo_primario_componente,
+                            psicotropo_primario_componente,
+                            tossico_primario_componente,
+                            curativo_secondario_componente,
+                            psicotropo_secondario_componente,
+                            tossico_secondario_componente,
+                            possibilita_dipendeza_componente,
+                            effetto_sicuro_componente,
+                            descrizione_componente
+                     FROM componenti_crafting
+                     WHERE id_componente IN (?,?,?,?,?)";
+        $info = $this->db->doQuery($sql_info, [$supporto, $principio_attivo, $sostanza_1, $sostanza_2, $sostanza_3], False);
         
+        $info_supporto  = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$supporto]))[0];
+        $info_principio = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$principio_attivo]))[0];
+        $info_sostanza1 = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$sostanza_1]))[0];
+        $info_sostanza2 = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$sostanza_2]))[0];
+        $info_sostanza3 = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$sostanza_3]))[0];
+    
+        $curativo = (int)$info_principio["curativo_primario_componente"] +
+            (int)$info_sostanza1["curativo_secondario_componente"] +
+            (int)$info_sostanza2["curativo_secondario_componente"] +
+            (int)$info_sostanza3["curativo_secondario_componente"];
+    
+        $tossico = (int)$info_principio["tossico_primario_componente"] +
+            (int)$info_sostanza1["tossico_secondario_componente"] +
+            (int)$info_sostanza2["tossico_secondario_componente"] +
+            (int)$info_sostanza3["tossico_secondario_componente"];
+    
+        $psicotropo = (int)$info_principio["psicotropo_primario_componente"] +
+            (int)$info_sostanza1["psicotropo_secondario_componente"] +
+            (int)$info_sostanza2["psicotropo_secondario_componente"] +
+            (int)$info_sostanza3["psicotropo_secondario_componente"];
+    
+        if ($curativo > $tossico)
+        {
+            $campo_risultato = "curativo_crafting_chimico";
+            $id_effetto      = ceil( ( $curativo - $tossico ) / 3 );
+        }
+        else
+        {
+            $campo_risultato = "tossico_crafting_chimico";
+            $id_effetto      = ceil( ( $tossico - $curativo ) / 3 );
+        }
+        
+        $id_psicotropo = ceil( $psicotropo / 4 );
+        
+        $sql_risultato = "SELECT
+                                ( SELECT $campo_risultato FROM crafting_chimico WHERE id_crafting_chimico = :id_effetto ) AS effetto,
+                                ( SELECT psicotropo_crafting_chimico FROM crafting_chimico WHERE id_crafting_chimico = :id_psico ) AS psicotropo";
+        $risultato     = $this->db->doQuery( $sql_risultato, [ ":id_effetto" => $id_effetto, ":id_psico" => $id_psicotropo ], False );
+        $arr_risult    = [];
+        
+        if( isset($risultato[0]["effetto"]) )
+            $arr_risult[] = $risultato[0]["effetto"];
+        
+        if( isset($risultato[0]["psicotropo"]) )
+            $arr_risult[] = $risultato[0]["psicotropo"];
+        
+        if( isset( $info_supporto["effetto_sicuro_componente"] ) )
+            $arr_risult[] = $info_supporto["effetto_sicuro_componente"];
+    
+        $params = [
+            ":idpg" => $pgid,
+            ":tipo" => "Chimico",
+            ":tipo_ogg" => "Sostanza",
+            ":nome" => $nome,
+            ":risult" => implode(";",$arr_risult)
+        ];
+    
+        $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, risultato_ricetta)
+                          VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :risult )";
+        $id_nuova    = $this->db->doQuery($sql_ricetta, $params, False);
+    
+        $inserts[] = [":idcomp" => $supporto, ":idric" => $id_nuova, ":ruolo" => "Base"];
+        $inserts[] = [":idcomp" => $principio_attivo, ":idric" => $id_nuova, ":ruolo" => "Principio Attivo"];
+        $inserts[] = [":idcomp" => $sostanza_1, ":idric" => $id_nuova, ":ruolo" => "Sostanza Satellite"];
+        $inserts[] = [":idcomp" => $sostanza_2, ":idric" => $id_nuova, ":ruolo" => "Sostanza Satellite"];
+        $inserts[] = [":idcomp" => $sostanza_3, ":idric" => $id_nuova, ":ruolo" => "Sostanza Satellite"];
+    
+        $sql_componenti = "INSERT INTO componenti_ricetta (componenti_crafting_id_componente, ricette_id_ricetta, ruolo_componente_ricetta) VALUES (:idcomp,:idric,:ruolo)";
+        $this->db->doMultipleManipulations( $sql_componenti, $inserts, False );
+    
+        $output = ["status" => "ok", "result" => true];
+    
+        return json_encode($output);
     }
     
     public function modificaRicetta($id_r, $modifiche)
@@ -166,7 +257,7 @@ class CraftingManager
         $where = [];
         $order_str = "";
         $params = [];
-        $campi_prvt = ["ri.risultato_ricetta", "ri.id_unico_risultato", "ri.note_ricetta", "ri.extra_cartellino_ricetta"];
+        $campi_prvt = ["ri.risultato_ricetta", "ri.id_unico_risultato_ricetta", "ri.note_ricetta", "ri.extra_cartellino_ricetta"];
         $campi_str = (int)$pgid === -1 ? ", " . implode(", ", $campi_prvt) : "";
         
         if (isset($search) && isset($search["value"]) && $search["value"] != "")
@@ -216,7 +307,10 @@ class CraftingManager
                                 ri.tipo_ricetta,
                                 ri.tipo_oggetto,
                                 ri.nome_ricetta,
-                                GROUP_CONCAT( cc.nome_componente ORDER BY cr.ordine_crafting ASC, cc.nome_componente ASC SEPARATOR '; ') as componenti_ricetta,
+                                IF( cr.ruolo_componente_ricetta IS NOT NULL,
+                                    GROUP_CONCAT( CONCAT(cc.nome_componente,' (',cr.ruolo_componente_ricetta,')') ORDER BY cr.ordine_crafting ASC, cc.nome_componente ASC SEPARATOR '; '),
+                                    GROUP_CONCAT( cc.nome_componente ORDER BY cr.ordine_crafting ASC, cc.nome_componente ASC SEPARATOR '; ')
+                                ) as componenti_ricetta,
                                 ri.approvata_ricetta,
                                 ri.note_pg_ricetta,
                                 CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_giocatore,
@@ -291,8 +385,6 @@ class CraftingManager
                         valore_param_componente LIKE :search OR
                         volume_componente LIKE :search OR
                         energia_componente LIKE :search OR
-                        tipo_supporto_componente LIKE :search OR
-                        tipo_sostanza_componente LIKE :search OR
                         fattore_legame_componente LIKE :search OR
                         curativo_primario_componente LIKE :search OR
                         psicotropo_primario_componente LIKE :search OR
@@ -301,7 +393,7 @@ class CraftingManager
                         psicotropo_secondario_componente LIKE :search OR
                         tossico_secondario_componente LIKE :search OR
                         possibilita_dipendeza_componente LIKE :search OR
-                        descrizione LIKE :search
+                        descrizione_componente LIKE :search
 					  )";
         }
         
