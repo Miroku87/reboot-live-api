@@ -745,3 +745,7 @@ ADD CONSTRAINT `fk_componenti_id_componente`
   ON UPDATE NO ACTION;
 
 -- MERGE SU DB-BETA FINO A QUI
+
+-- 19 APRILE
+ALTER TABLE `crafting_chimico` 
+CHANGE COLUMN `cura_crafting_chimico` `curativo_crafting_chimico` VARCHAR(100) NULL DEFAULT NULL ;
