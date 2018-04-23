@@ -99,10 +99,13 @@ class CraftingManager
         $sotto_query = [];
         
         for ($i = 0; $i < count($tutti_id); $i++)
-            $sotto_query[] = "SELECT CONCAT(UPPER(tipo_componente),': ',nome_componente) as descrizione_componente, volume_componente, energia_componente FROM componenti_crafting WHERE id_componente = ?";
+            $sotto_query[] = "SELECT effetto_sicuro_componente,
+                                     tipo_applicativo_componente,
+                                     volume_componente,
+                                     energia_componente FROM componenti_crafting WHERE id_componente = ?";
         
         $union     =  implode(" UNION ALL ", $sotto_query);
-        $sql_check = "SELECT descrizione_componente, volume_componente, energia_componente FROM ( $union ) AS u ORDER BY descrizione_componente ASC";
+        $sql_check = "SELECT effetto_sicuro_componente, tipo_applicativo_componente, volume_componente, energia_componente FROM ( $union ) AS u";
         $check_res = $this->db->doQuery( $sql_check, $tutti_id, False);
         
         if( !isset($check_res) || count($check_res) === 0 )
@@ -110,7 +113,27 @@ class CraftingManager
         
         $volume  = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "volume_componente") ) );
         $energia = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "energia_componente") ) );
-        $risultato_crafting = implode(";", Utils::mappaArrayDiArrayAssoc($check_res, "descrizione_componente") );
+        $tipi_applicativi = Utils::mappaArrayDiArrayAssoc($check_res, "tipo_applicativo_componente");
+        $effetti_componenti = Utils::mappaArrayDiArrayAssoc($check_res, "effetto_sicuro_componente");
+        $risultato_crafting = implode(";", $effetti_componenti );
+        
+        $tipi_unici = array_unique($tipi_applicativi);
+        $tipi_unici_null = Utils::filtraArrayConValori($tipi_unici,[NULL]);
+        $tipi_unici_no_null = array_values( array_diff($tipi_unici, $tipi_unici_null) );
+        
+        if( count($tipi_unici_no_null) === 1 )
+            $tipo = $tipi_unici_no_null[0];
+
+        $mappa_tipi = [
+            "pistola" => "Pistola",
+            "fucile d'assalto" => "Fucile Assalto",
+            "shotgun" => "Shotgun",
+            "mitragliatore" => "Mitragliatore",
+            "fucile di precisione" => "Fucile Precisione"
+        ];
+        
+        if( array_search( $tipo, array_keys($mappa_tipi) ) !== False )
+            $tipo = $mappa_tipi[$tipo];
         
         if( $volume < 0 || $energia < 0 )
             throw new APIException("Il crafting non &egrave; andato a buon fine. Riprovare.");
@@ -122,7 +145,7 @@ class CraftingManager
             ":nome" => $nome,
             ":res" => $risultato_crafting
         ];
-    
+        
         $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, risultato_ricetta)
                           VALUES (NULL, :idpg, NOW(), :tipo, :tipo_ogg, :nome, :res )";
         $id_nuova    = $this->db->doQuery($sql_ricetta, $params, False);

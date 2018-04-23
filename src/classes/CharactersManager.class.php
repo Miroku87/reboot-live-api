@@ -855,6 +855,7 @@ class CharactersManager
         global $GRANT_VISUALIZZA_CRAFT_PROGRAM;
         global $GRANT_VISUALIZZA_CRAFT_TECNICO;
         global $GRANT_VISUALIZZA_NOTIZIE;
+        global $GRANT_RECUPERA_NOTIZIE;
         global $GRANT_VISUALIZZA_MERCATO;
         global $GRANT_CRAFTA_ARMI;
         global $GRANT_CRAFTA_PROTESI;
@@ -970,8 +971,11 @@ class CharactersManager
                         $pg_data["permessi"][] = $GRANT_CRAFTA_SCUDI_ESOSCHELE;
                 }
                 
-                if ( isset($this->idev_in_corso) && in_array($ab["id_abilita"], $abilita_notizie) && !array_search($GRANT_VISUALIZZA_NOTIZIE, $pg_data["permessi_pg"]) )
+                if ( isset($this->idev_in_corso) && in_array($ab["id_abilita"], $abilita_notizie) && !array_search($GRANT_VISUALIZZA_NOTIZIE, $pg_data["permessi"]) )
+                {
                     $pg_data["permessi"][] = $GRANT_VISUALIZZA_NOTIZIE;
+                    $pg_data["permessi"][] = $GRANT_RECUPERA_NOTIZIE;
+                }
             }
         }
     

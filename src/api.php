@@ -53,17 +53,22 @@ class Main
 	{
 	    global $DEBUG;
 	    global $MAINTENANCE;
+        global $MESSAGGIO_CHIUSURA;
 	    global $IP_MAINTAINER;
 
 		$method  = $_SERVER['REQUEST_METHOD'];
 		$request = explode( '/', trim( $_SERVER['PATH_INFO'], '/' ) );
 		$classe  = $request[0];
 		$func    = $request[1];
+		$data    = [];
 		
 		try
 		{
             if( $MAINTENANCE && !in_array( Utils::getUserIP(), $IP_MAINTAINER) )
                 throw new APIException("Ci scusiamo, ma al momento il database &egrave; in manutenzione. Per favore attendi comunicazioni dallo Staff.");
+            
+            if( isset($MESSAGGIO_CHIUSURA) && !empty($MESSAGGIO_CHIUSURA) && !in_array( Utils::getUserIP(), $IP_MAINTAINER) )
+                throw new APIException($MESSAGGIO_CHIUSURA);
             
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;

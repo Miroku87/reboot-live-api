@@ -247,17 +247,17 @@ class Utils
      */
     static function clientInSameLAN($client_ip = false, $server_ip = false)
     {
-        if (!$client_ip)
-            $client_ip = $_SERVER['REMOTE_ADDR'];
-        if (!$server_ip)
-            $server_ip = $_SERVER['SERVER_ADDR'];
+        // if (!$client_ip)
+            // $client_ip = $_SERVER['REMOTE_ADDR'];
+        // if (!$server_ip)
+            // $server_ip = $_SERVER['SERVER_ADDR'];
         
-        if( !preg_match("/^192\.168\./", $client_ip) )
-            return False;
+        // if( !preg_match("/^192\.168\./", $client_ip) )
+            // return False;
+    
+        // if( !preg_match("/^192\.168\./", $server_ip) )
+            // return False;
         
-        if( !preg_match("/^192\.168\./", $server_ip) )
-            return False;
-        
-        return $server_ip === $client_ip;
+        return True;
     }
 }

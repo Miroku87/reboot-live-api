@@ -2,6 +2,7 @@
 
 $DEBUG                          = False;
 $MAINTENANCE                    = False;
+$MESSAGGIO_CHIUSURA             = "Il database rimarr&agrave; chiuso fino al caricamento dei dati aggiornati con le modifiche fatte durante l'ultimo evento.";
 $RETE_LOCALE                    = False;
 $IP_MAINTAINER                  = ["82.48.82.184"];
 
@@ -34,6 +35,7 @@ $GRANT_CRAFTA_GADGET_SHIELD     = "crafta_gadget_shield";
 $GRANT_CRAFTA_SCUDI_ESOSCHELE   = "crafta_scudi_esoscheletri";
 $GRANT_CREA_NOTIZIE             = "creaNotizia";
 $GRANT_MODIFICA_NOTIZIE         = "modificaNotizia";
+$GRANT_RECUPERA_NOTIZIE         = "recuperaNotizie";
 
 $PX_INIZIALI                    = 100;
 $PC_INIZIALI                    = 4;

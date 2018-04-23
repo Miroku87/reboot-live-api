@@ -171,12 +171,12 @@ class MessagingManager
         $id_no = $tipo === "ig" ? $this->session->pg_loggato["id_personaggio"] : $this->session->email_giocatore;
         
         if( $tipo === "ig" )
-            $query_dest = "SELECT id_personaggio AS real_value, nome_personaggio AS label FROM personaggi WHERE nome_personaggio LIKE :term AND id_personaggio != :idno AND contattabile_personaggio = 1";
+            $query_dest = "SELECT id_personaggio AS real_value, nome_personaggio AS label FROM personaggi WHERE nome_personaggio LIKE :term AND id_personaggio != :idno AND contattabile_personaggio = 1 AND eliminato_personaggio = 0";
         else if( $tipo === "fg" )
             $query_dest = "SELECT email_giocatore AS real_value,
                                   CONCAT( nome_giocatore, ' ', cognome_giocatore ) AS label
                            FROM giocatori
-                           WHERE CONCAT( nome_giocatore, ' ', cognome_giocatore ) LIKE :term AND email_giocatore != :idno";
+                           WHERE CONCAT( nome_giocatore, ' ', cognome_giocatore ) LIKE :term AND email_giocatore != :idno AND eliminato_giocatore = 0";
         
         $ret["status"] = "ok";
         $ret["results"] = $this->db->doQuery( $query_dest, array( ":term" => "%$term%", ":idno" => $id_no ), False );
