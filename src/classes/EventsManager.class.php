@@ -370,35 +370,34 @@ class EventsManager
         return json_encode([ "status" => "ok", "result" => true ]);
     }
     
-    private function recuperaListaIscritti( $tipo, $draw, $columns, $order, $start, $length, $search, $quando )
+    private function recuperaListaIscritti( $tipo, $draw, $columns, $order, $start, $length, $search, $quando, $where = [] )
     {
         $params     = [];
         $filter     = False;
-        $extra_sel  = $tipo === "avanzato" ? "ip.pagato_iscrizione, ip.tipo_pagamento_iscrizione, ip.note_iscrizione, gi.note_giocatore, " : "";
-        $where      = "";
+        $extra_sel  = $tipo === "avanzato" ? "ip.pagato_iscrizione, ip.tipo_pagamento_iscrizione, ip.note_iscrizione, ip.ha_partecipato_iscrizione, gi.note_giocatore, " : "";
         $order_str  = "";
         
         if( $quando === "prossimo" )
-            $where .= "t1.pubblico_evento = 1 AND t1.data_inizio_evento > DATE(NOW())";
+            $where[] = "t1.pubblico_evento = 1 AND t1.data_inizio_evento > DATE(NOW())";
         else if ( $quando === "precedente" )
-            $where .= "t1.id_evento = (SELECT id_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento < DATE(NOW()) ORDER BY data_inizio_evento DESC LIMIT 1)";
+            $where[] = "t1.id_evento = (SELECT id_evento FROM eventi WHERE pubblico_evento = 1 AND data_inizio_evento < DATE(NOW()) ORDER BY data_inizio_evento DESC LIMIT 1)";
         
         if( isset( $search ) && isset($search["value"]) > 0 && $search["value"] != "" )
         {
             $filter = True;
             $params[":search"] = "%$search[value]%";
-            $where .= " AND (
+            $where[] = "(
 						t1.nome_completo LIKE :search OR
 						t1.personaggi_id_personaggio LIKE :search OR
 						t1.nome_personaggio LIKE :search OR
 						t1.classi_civili LIKE :search OR
-						t1.classi_militari LIKE :search ";
+						t1.classi_militari LIKE :search ".
             
-            if( $tipo === "avanzato" )
-                $where .= "OR t1.tipo_pagamento_iscrizione LIKE :search
-                           OR t1.note_iscrizione LIKE :search";
-            
-            $where .= ")";
+                       ( $tipo === "avanzato" ?
+                       "OR t1.tipo_pagamento_iscrizione LIKE :search
+                        OR t1.note_iscrizione LIKE :search" : "" ).
+                
+                        ")";
         }
         
         if( isset( $order ) && count($order) > 0 && !empty($order) )
@@ -409,6 +408,11 @@ class EventsManager
             
             $order_str = "ORDER BY ".implode( $sorting, "," );
         }
+        
+        if( count($where ) > 0 )
+            $where = implode( " AND ", $where);
+        else
+            $where = "";
         
         $query_mex = "SELECT * FROM (
                           SELECT ip.personaggi_id_personaggio,
@@ -461,6 +465,13 @@ class EventsManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
         return $this->recuperaListaIscritti("avanzato", $draw, $columns, $order, $start, $length, $search, $quando);
+    }
+    
+    public function recuperaListaPartecipanti( $id_ev )
+    {
+        UsersManager::operazionePossibile( $this->session, "recuperaListaIscrittiAvanzato" );
+        
+        return $this->recuperaListaIscritti("avanzato", 1, [], [], 0, 999, [], "precedente", ["t1.ha_partecipato_iscrizione = 1"]);
     }
     
     public function recuperaListaIscrittiBase( $draw, $columns, $order, $start, $length, $search, $quando )

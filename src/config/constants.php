@@ -2,7 +2,7 @@
 
 $DEBUG                          = False;
 $MAINTENANCE                    = False;
-$MESSAGGIO_CHIUSURA             = "Il database rimarr&agrave; chiuso fino al caricamento dei dati aggiornati con le modifiche fatte durante l'ultimo evento.";
+$MESSAGGIO_CHIUSURA             = NULL;//"Il database rimarr&agrave; chiuso fino al caricamento dei dati aggiornati con le modifiche fatte durante l'ultimo evento.";
 $RETE_LOCALE                    = False;
 $IP_MAINTAINER                  = ["82.48.82.184"];
 

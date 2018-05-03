@@ -116,6 +116,7 @@ class CraftingManager
         $tipi_applicativi = Utils::mappaArrayDiArrayAssoc($check_res, "tipo_applicativo_componente");
         $effetti_componenti = Utils::mappaArrayDiArrayAssoc($check_res, "effetto_sicuro_componente");
         $risultato_crafting = implode(";", $effetti_componenti );
+        $risultato_crafting = preg_replace("/^;+/","$1",$risultato_crafting);
         
         $tipi_unici = array_unique($tipi_applicativi);
         $tipi_unici_null = Utils::filtraArrayConValori($tipi_unici,[NULL]);
@@ -230,13 +231,15 @@ class CraftingManager
         
         if( isset( $info_supporto["effetto_sicuro_componente"] ) )
             $arr_risult[] = $info_supporto["effetto_sicuro_componente"];
+        
+        $risultato_crafting = preg_replace("/^;+/","$1", implode(";",$arr_risult) );
     
         $params = [
             ":idpg" => $pgid,
             ":tipo" => "Chimico",
             ":tipo_ogg" => "Sostanza",
             ":nome" => $nome,
-            ":risult" => implode(";",$arr_risult)
+            ":risult" => $risultato_crafting
         ];
     
         $sql_ricetta = "INSERT INTO ricette (id_ricetta, personaggi_id_personaggio, data_inserimento_ricetta, tipo_ricetta, tipo_oggetto, nome_ricetta, risultato_ricetta)
@@ -433,7 +436,7 @@ class CraftingManager
             
             $order_str = "ORDER BY " . implode($sorting, ",");
         }
-        
+//        echo $order_str;
         if (count($where) > 0)
             $where = "WHERE " . implode(" AND ", $where);
         else
@@ -490,14 +493,16 @@ class CraftingManager
                         descrizione LIKE :search*/
         $campi = [
             [ "data" => "id_componente" ],
-            [ "data" => "nome_componente" ],
             [ "data" => "tipo_componente" ],
+            [ "data" => "descrizione_componente" ],
+            [ "data" => "3" ],
             [ "data" => "costo_attuale_componente" ],
+            [ "data" => "5" ],
+            [ "data" => "nome_componente" ],
             [ "data" => "costo_vecchio_componente" ],
             [ "data" => "valore_param_componente" ],
             [ "data" => "volume_componente" ],
-            [ "data" => "energia_componente" ],
-            [ "data" => "descrizione_componente" ]
+            [ "data" => "energia_componente" ]
         ];
         
         return $this->recuperaComponenti($draw, $campi, $order, $start, $length, $search, ["tipo_crafting_componente = '$tipo_crafting'"]);
