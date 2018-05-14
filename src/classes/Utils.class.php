@@ -68,7 +68,7 @@ class Utils
             return in_array( $item[$key], $valori );
         };
         
-        return array_filter($arr, $filtro);
+        return array_values( array_filter($arr, $filtro) );
     }
     
     /*static function filtraArrayConChiavi( $arr, $chiavi )

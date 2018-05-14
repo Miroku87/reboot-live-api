@@ -8,6 +8,7 @@ include_once( $path."classes/EventsManager.class.php" );
 include_once( $path."classes/GrantsManager.class.php" );
 include_once( $path."classes/NewsManager.class.php" );
 include_once( $path."classes/CraftingManager.class.php" );
+include_once( $path."classes/TransactionManager.class.php" );
 include_once( $path."config/constants.php" );
 
 class Main

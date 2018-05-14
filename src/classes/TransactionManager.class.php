@@ -25,12 +25,13 @@ class TransactionManager
     {
     }
     
-    public function inserisciTransazione( $id_debitore, $id_creditore = NULL, $note = NULL, $id_acq_comp = NULL )
+    public function inserisciTransazione( $id_debitore, $importo, $id_creditore = NULL, $note = NULL, $id_acq_comp = NULL )
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
         $params = [
-            ":pgdeb" => $id_debitore
+            ":pgdeb" => $id_debitore,
+            ":importo" => $importo
         ];
         
         if( isset($id_creditore) )
@@ -57,7 +58,7 @@ class TransactionManager
         else
             $id_acq_comp_macro = "NULL";
         
-        $sql_ins = "INSERT INTO transizioni_bit (debitore_transizione, creditore_transizione, note_transizione, id_acquisto_componente) VALUES (:pgdeb,$cred_macro,$note_macro,$id_acq_comp_macro)";
+        $sql_ins = "INSERT INTO transizioni_bit (debitore_transizione, creditore_transizione, importo_transazione, note_transizione, id_acquisto_componente) VALUES (:pgdeb,$cred_macro,:importo,$note_macro,$id_acq_comp_macro)";
         $this->db->doQuery( $sql_ins, $params, False );
         
         $output = ["status" => "ok", "result" => true];
@@ -67,9 +68,12 @@ class TransactionManager
     
     public function compraComponenti( $ids )
     {
+        global $SCONTO_MERCATO;
+        global $QTA_PER_SCONTO_MERCATO;
+        
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
-        if( !isset($this->session->pg_loggato->id_personaggio) )
+        if( !isset($this->session->pg_loggato) )
             throw new APIException("Devi essere loggato con un personaggio per compiere questa operazione.");
         
         $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
@@ -81,16 +85,18 @@ class TransactionManager
         $totale      = 0;
         $params_comp = [];
         
-        
         foreach( $ids as $i )
         {
-            $componente = Utils::filtraArrayDiArrayAssoc($risultati, "id_componente", $i)[0];
+            $componente = Utils::filtraArrayDiArrayAssoc( $risultati, "id_componente", [ $i ] )[0];
             $totale += (int)$componente["costo_attuale_componente"];
-            $params_comp[] = [ ":idpg" => $this->session->pg_loggato->id_personaggio, ":idcomp" => $i, ":costo" => $componente["costo_attuale_componente"] ];
+            $params_comp[] = [ ":idpg" => $this->session->pg_loggato["id_personaggio"], ":idcomp" => $i, ":costo" => $componente["costo_attuale_componente"] ];
         }
         
+        if( count( $ids ) % $QTA_PER_SCONTO_MERCATO === 0 )
+            $totale = $totale - ( $totale * ( $SCONTO_MERCATO / 100 ) );
+        
         $sql_check = "SELECT id_personaggio FROM personaggi WHERE credito_personaggio >= :tot AND id_personaggio = :idpg";
-        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $totale, "idpg" => $this->session->pg_loggato->id_personaggio ], False );
+        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $totale, "idpg" => $this->session->pg_loggato["id_personaggio"] ], False );
         
         if( !isset($ris_check) || count($ris_check) === 0 )
             throw new APIException("Non hai abbastanza Bit per completare l'acquisto.");
@@ -100,11 +106,12 @@ class TransactionManager
         foreach ($params_comp as $p)
         {
             $id_acq_com   = $this->db->doQuery( $sql_acq_comp, $p, False );
-            $this->inserisciTransazione( $p[":pgid"], NULL, "Acquisto componente ".$p[":idcomp"]." dal RavShop.", $id_acq_com );
+            $this->inserisciTransazione( $p[":idpg"], $p[":costo"], NULL, "Acquisto componente ".$p[":idcomp"]." dal RavShop.", $id_acq_com );
         }
         
         $output = [
-            "status" => "ok"
+            "status" => "ok",
+            "result" => $totale
         ];
         
         return json_encode($output);

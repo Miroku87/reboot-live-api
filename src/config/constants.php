@@ -41,6 +41,8 @@ $PX_INIZIALI                    = 100;
 $PC_INIZIALI                    = 4;
 $PF_INIZIALI                    = 2;
 $ANNO_PRIMO_LIVE                = 271;
+$SCONTO_MERCATO                 = 5;
+$QTA_PER_SCONTO_MERCATO         = 6;
 
 $ID_RICETTA_PAG                 = 4;
 $CRAFTING_ARMI                  = 48;

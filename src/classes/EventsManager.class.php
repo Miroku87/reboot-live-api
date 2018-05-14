@@ -269,8 +269,8 @@ class EventsManager
             ":tipo_pag"  => $tipo_pagamento,
             ":note"      => nl2br($note)
         ];
-        
-        $query_ev = "INSERT INTO iscrizione_personaggi VALUES ( :id_ev, :id_pg, :pagato, :tipo_pag, :note)";
+    
+        $query_ev = "INSERT INTO iscrizione_personaggi (eventi_id_evento,personaggi_id_personaggio,pagato_iscrizione,tipo_pagamento_iscrizione,note_iscrizione) VALUES ( :id_ev, :id_pg, :pagato, :tipo_pag, :note)";
         $evento = $this->db->doQuery( $query_ev, $params, False );
         
         $query_gi = "SELECT pg.nome_personaggio, CONCAT(gi.nome_giocatore, ' ', gi.cognome_giocatore) as nome_completo, gi.note_giocatore
