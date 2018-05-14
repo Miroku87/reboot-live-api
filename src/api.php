@@ -19,6 +19,7 @@ class Main
 	protected $grantsmanager;
 	protected $newsmanager;
 	protected $craftingmanager;
+	protected $transactionmanager;
 	
 	public function __construct()
 	{
@@ -37,12 +38,13 @@ class Main
         $this->eventsmanager     = new EventsManager();
         $idev_in_corso = $this->eventsmanager->recuperaEventoInCorso();
         
-		$this->usersmanager      = new UsersManager( $idev_in_corso );
-		$this->charactersmanager = new CharactersManager( $idev_in_corso );
-		$this->messagingmanager  = new MessagingManager( $idev_in_corso );
-		$this->grantsmanager     = new GrantsManager();
-		$this->newsmanager       = new NewsManager( $idev_in_corso );
-		$this->craftingmanager   = new CraftingManager( $idev_in_corso );
+		$this->usersmanager       = new UsersManager( $idev_in_corso );
+		$this->charactersmanager  = new CharactersManager( $idev_in_corso );
+		$this->messagingmanager   = new MessagingManager( $idev_in_corso );
+		$this->grantsmanager      = new GrantsManager();
+		$this->newsmanager        = new NewsManager( $idev_in_corso );
+		$this->craftingmanager    = new CraftingManager( $idev_in_corso );
+		$this->transactionmanager = new TransactionManager( $idev_in_corso );
 	}
 	
 	public function __destruct()

@@ -491,7 +491,7 @@ class CraftingManager
                         tossico_secondario_componente LIKE :search OR
                         possibilita_dipendeza_componente LIKE :search OR
                         descrizione LIKE :search*/
-        $campi = [
+        /*$campi = [
             [ "data" => "id_componente" ],
             [ "data" => "tipo_componente" ],
             [ "data" => "descrizione_componente" ],
@@ -503,8 +503,60 @@ class CraftingManager
             [ "data" => "valore_param_componente" ],
             [ "data" => "volume_componente" ],
             [ "data" => "energia_componente" ]
+        ];*/
+    
+        $columns[] = [ "data" => "costo_vecchio_componente" ];
+        $columns[] = [ "data" => "volume_componente" ];
+        $columns[] = [ "data" => "energia_componente" ];
+        
+        $campi_permessi = [
+            "id_componente",
+            "tipo_componente",
+            "descrizione_componente",
+            "costo_attuale_componente",
+            "nome_componente",
+            "costo_vecchio_componente",
+            "valore_param_componente",
+            "volume_componente",
+            "energia_componente",
+            "curativo_primario_componente",
+            "tossico_primario_componente",
+            "psicotropo_primario_componente",
+            "curativo_secondario_componente",
+            "psicotropo_secondario_componente",
+            "tossico_secondario_componente"
         ];
+        $campi = Utils::filtraArrayDiArrayAssoc($columns,"data",$campi_permessi);
         
         return $this->recuperaComponenti($draw, $campi, $order, $start, $length, $search, ["tipo_crafting_componente = '$tipo_crafting'"]);
+    }
+    
+    public function recuperaComponentiConId( $ids )
+    {
+        UsersManager::operazionePossibile( $this->session, "recuperaComponentiBase" );
+    
+        $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
+        $sql = "SELECT   id_componente
+                        ,nome_componente
+                        ,tipo_componente
+                        ,volume_componente
+                        ,energia_componente
+                        ,curativo_primario_componente
+                        ,psicotropo_primario_componente
+                        ,tossico_primario_componente
+                        ,curativo_secondario_componente
+                        ,psicotropo_secondario_componente
+                        ,tossico_secondario_componente
+                        ,possibilita_dipendeza_componente
+                        ,descrizione_componente
+                 FROM componenti_crafting WHERE id_componente IN ($marcatori)";
+        $risultati = $this->db->doQuery($sql, $ids, False);
+        
+        $output = [
+            "status" => "ok",
+            "result" => $risultati
+        ];
+        
+        return json_encode($output);
     }
 }
