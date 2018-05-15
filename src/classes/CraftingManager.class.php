@@ -538,6 +538,7 @@ class CraftingManager
         $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
         $sql = "SELECT   id_componente
                         ,nome_componente
+                        ,tipo_crafting_componente
                         ,tipo_componente
                         ,volume_componente
                         ,energia_componente
