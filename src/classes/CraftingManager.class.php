@@ -333,6 +333,7 @@ class CraftingManager
                                 ri.tipo_ricetta,
                                 ri.tipo_oggetto,
                                 ri.nome_ricetta,
+                                ri.gia_stampata,
                                 IF( cr.ruolo_componente_ricetta IS NOT NULL,
                                     GROUP_CONCAT( CONCAT(cc.nome_componente,' (',cr.ruolo_componente_ricetta,')') ORDER BY cr.ordine_crafting ASC, cc.nome_componente ASC SEPARATOR '; '),
                                     GROUP_CONCAT( cc.nome_componente ORDER BY cr.ordine_crafting ASC, cc.nome_componente ASC SEPARATOR '; ')
@@ -385,6 +386,23 @@ class CraftingManager
                             LEFT JOIN componenti_crafting AS cc ON cr.componenti_crafting_id_componente = cc.id_componente
                       WHERE id_ricetta IN ($marcatori)
                       GROUP BY ri.id_ricetta";
+        $risultati = $this->db->doQuery($query_ric, $ids, False);
+        
+        $output = [
+            "status" => "ok",
+            "result" => $risultati
+        ];
+        
+        return json_encode($output);
+    }
+    
+    public function segnaRicetteComeStampate($ids)
+    {
+        UsersManager::operazionePossibile( $this->session, "recuperaRicette_altri" );
+        
+        $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
+        $query_ric = "UPDATE ricette SET gia_stampata = 1
+                      WHERE id_ricetta IN ($marcatori)";
         $risultati = $this->db->doQuery($query_ric, $ids, False);
         
         $output = [
@@ -508,6 +526,11 @@ class CraftingManager
         $columns[] = [ "data" => "costo_vecchio_componente" ];
         $columns[] = [ "data" => "volume_componente" ];
         $columns[] = [ "data" => "energia_componente" ];
+        $columns[] = [ "data" => "tipo_componente" ];
+        $columns[] = [ "data" => "id_componente" ];
+        $columns[] = [ "data" => "nome_componente" ];
+        $columns[] = [ "data" => "descrizione_componente" ];
+        $columns[] = [ "data" => "tipo_applicativo_componente" ];
         
         $campi_permessi = [
             "id_componente",
@@ -524,7 +547,9 @@ class CraftingManager
             "psicotropo_primario_componente",
             "curativo_secondario_componente",
             "psicotropo_secondario_componente",
-            "tossico_secondario_componente"
+            "tossico_secondario_componente",
+            "possibilita_dipendeza_componente",
+            "tipo_applicativo_componente"
         ];
         $campi = Utils::filtraArrayDiArrayAssoc($columns,"data",$campi_permessi);
         

@@ -66,3 +66,7 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 
 INSERT INTO ruoli_has_grants (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'modificaPG_credito_personaggio_proprio');
 
+-- PREPROD MERGED TIL HERE
+
+ALTER TABLE `ricette`
+  ADD COLUMN `gia_stampata` TINYINT(1) NOT NULL DEFAULT 0 AFTER `approvata_ricetta`;
