@@ -60,7 +60,7 @@ class CraftingManager
             $progr_id = $this->db->doQuery($sql_id_res, [":tipo" => "Programmazione"], False);
             $progr_id[0]["id_unico_risultato_ricetta"] = (int)$progr_id[0]["id_unico_risultato_ricetta"] + 1;
         }
-        
+    
         $params = [
             ":idpg" => $pgid,
             ":tipo" => "Programmazione",
@@ -83,7 +83,7 @@ class CraftingManager
         
         $sql_componenti = "INSERT INTO componenti_ricetta (componenti_crafting_id_componente, ricette_id_ricetta, ordine_crafting) VALUES (:idcomp,:idric,:ord)";
         $this->db->doMultipleManipulations( $sql_componenti, $inserts, False );
-        
+    
         $output = ["status" => "ok", "result" => true];
         
         return json_encode($output);
