@@ -222,11 +222,10 @@ class CharactersManager
         
         if( isset( $order ) && count($order) > 0 )
         {
-            $sorting = array();
-            foreach ( $order as $elem )
-                $sorting[] = "bj.".$columns[$elem["column"]]["data"]." ".$elem["dir"];
-            
-            $order_str = "ORDER BY ".implode( $sorting, "," );
+            $order_by_field = $columns[$order[0]["column"]]["data"];
+            $order_by_dir   = $order[0]["dir"];
+            if( array_search( $order_by_field, [ "pf_personaggio", "mente_personaggio", "shield_personaggio" ] ) === False )
+                $order_str = "ORDER BY bj." . $order_by_field . " " . $order_by_dir;
         }
         
         $big_join = "SELECT
@@ -280,8 +279,6 @@ class CharactersManager
         
         if( count($risultati) > 0 )
         {
-            $risultati = array_splice($risultati, $start, $length);
-            
             for ($i = 0; $i < count($risultati); $i++)
             {
                 $query_ab = "SELECT id_abilita, offset_pf_abilita, offset_shield_abilita, offset_mente_abilita
@@ -298,6 +295,17 @@ class CharactersManager
                 for( $j = 0; $j < (int)$risultati[$i]["num_classi_civili"]; $j++ )
                     $risultati[$i]["px_risparmiati"] -= $MAPPA_COSTO_CLASSI_CIVILI[$j];
             }
+    
+            if( isset($order_by_field) && isset($order_by_dir) && array_search( $order_by_field, [ "pf_personaggio", "mente_personaggio", "shield_personaggio" ] ) !== False )
+            {
+                $dir_mult = $order_by_dir === "asc" ? 1 : -1;
+                usort($risultati, function ($item1, $item2) use ($order_by_field, $dir_mult)
+                {
+                    return ( (int)$item1[$order_by_field] - (int)$item2[$order_by_field] ) * $dir_mult;
+                });
+            }
+            
+            $risultati = array_splice($risultati, $start, $length);
         }
         else
             $risultati = array();

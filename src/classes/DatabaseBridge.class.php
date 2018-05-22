@@ -68,6 +68,10 @@ class DatabaseBridge extends PDO
                 $result = True;
                 $to_json = False;
             }
+            
+            $stmnt->closeCursor(); // this is not even required
+            $stmnt = null; // doing this is mandatory for connection to get closed
+            $conn  = null;
 
             if ($result && !$to_json)
                 return $result;
@@ -91,6 +95,10 @@ class DatabaseBridge extends PDO
 
             foreach( $params as $p )
                 $stmnt->execute( $p );
+    
+            $stmnt->closeCursor(); // this is not even required
+            $stmnt = null; // doing this is mandatory for connection to get closed
+            $conn  = null;
 
             return True;
         }
