@@ -30,30 +30,35 @@ CREATE TABLE `componenti_acquistati` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE `transizioni_bit` (
-  `id_transizione` INT NOT NULL AUTO_INCREMENT,
-  `data_transizione` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `debitore_transizione` INT(11) NOT NULL,
-  `creditore_transizione` INT(11) NULL DEFAULT NULL,
+  `id_transazione` INT NOT NULL AUTO_INCREMENT,
+  `data_transazione` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `debitore_transazione` INT(11) NOT NULL,
+  `creditore_transazione` INT(11) NULL DEFAULT NULL,
   `importo_transazione` INT NOT NULL DEFAULT 0,
-  `note_transizione` TEXT NULL DEFAULT NULL,
+  `note_transazione` TEXT NULL DEFAULT NULL,
   `id_acquisto_componente` INT NULL DEFAULT NULL,
-  PRIMARY KEY (`id_transizione`));
+  PRIMARY KEY (`id_transazione`));
 
 ALTER TABLE `transizioni_bit`
-  ADD INDEX `fk_debitore_idx` (`debitore_transizione` ASC);
+  ADD INDEX `fk_debitore_idx` (`debitore_transazione` ASC);
+
 ALTER TABLE `transizioni_bit`
+  ADD INDEX `fk_creditore_idx` (`creditore_transazione` ASC);
+
+ALTER TABLE `transazioni_bit`
   ADD CONSTRAINT `fk_debitore`
-FOREIGN KEY (`debitore_transizione`)
+FOREIGN KEY (`debitore_transazione`)
 REFERENCES `personaggi` (`id_personaggio`)
   ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `transizioni_bit`
-  ADD INDEX `fk_creditore_idx` (`creditore_transizione` ASC);
-ALTER TABLE `transizioni_bit`
+  ON UPDATE NO ACTION,
   ADD CONSTRAINT `fk_creditore`
-FOREIGN KEY (`creditore_transizione`)
+FOREIGN KEY (`creditore_transazione`)
 REFERENCES `personaggi` (`id_personaggio`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+  ADD CONSTRAINT `fk_acq_comp`
+FOREIGN KEY (`id_acquisto_componente`)
+REFERENCES `componenti_acquistati` (`id_acquisto`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
@@ -77,3 +82,17 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_banca');
 
 -- PREPROD MERGED TIL HERE
+
+-- 24 MAGGIO
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaInfoBanca_proprio', 'L\'utente può recuperare le informazioni sul credito dei propri pg.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaInfoBanca_altri', 'L\'utente può recuperare le informazioni sul credito di pg non suoi.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaMovimenti_proprio', 'L\'utente può recuperare le informazioni sui movimenti dei propri pg.');
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaMovimenti_altri', 'L\'utente può recuperare le informazioni sui movimenti dei pg di altri giocatori');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaInfoBanca_proprio');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaInfoBanca_altri');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaMovimenti_proprio');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'recuperaMovimenti_altri');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaInfoBanca_proprio');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaMovimenti_proprio');
+
+

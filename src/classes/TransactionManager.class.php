@@ -58,7 +58,7 @@ class TransactionManager
         else
             $id_acq_comp_macro = "NULL";
         
-        $sql_ins = "INSERT INTO transizioni_bit (debitore_transizione, creditore_transizione, importo_transazione, note_transizione, id_acquisto_componente) VALUES (:pgdeb,$cred_macro,:importo,$note_macro,$id_acq_comp_macro)";
+        $sql_ins = "INSERT INTO transizioni_bit (debitore_transazione, creditore_transazione, importo_transazione, note_transazione, id_acquisto_componente) VALUES (:pgdeb,$cred_macro,:importo,$note_macro,$id_acq_comp_macro)";
         $this->db->doQuery( $sql_ins, $params, False );
         
         $output = ["status" => "ok", "result" => true];
@@ -114,6 +114,91 @@ class TransactionManager
             "result" => $totale
         ];
         
+        return json_encode($output);
+    }
+    
+    public function recuperaInfoBanca( )
+    {
+        if( !isset( $this->session->pg_loggato["id_personaggio"] ) )
+            throw new APIException("Devi essere loggato con un personaggio per eseguire questa operazione.", APIException::$PG_LOGIN_ERROR );
+        
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $this->session->pg_loggato["id_personaggio"] );
+        
+    }
+    
+    public function recuperaMovimenti( $draw, $columns, $order, $start, $length, $search )
+    {
+        if( !isset( $this->session->pg_loggato["id_personaggio"] ) )
+            throw new APIException("Devi essere loggato con un personaggio per eseguire questa operazione.", APIException::$PG_LOGIN_ERROR );
+        
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $this->session->pg_loggato["id_personaggio"] );
+    
+        $filter = False;
+        $where = [ "t.debitore_transazione = :pgid" ];
+        $order_str = "";
+        $params = [
+            ":pgid" => $this->session->pg_loggato["id_personaggio"]
+        ];
+    
+        if (isset($search) && isset($search["value"]) && $search["value"] != "")
+        {
+            $filter = True;
+            $params[":search"] = "%$search[value]%";
+            $where[] = " (
+						t.nome_creditore LIKE :search OR
+						t.nome_debitore LIKE :search OR
+						t.tipo_transazione LIKE :search OR
+						t.note_transazione LIKE :search OR
+						t.datait_transazione LIKE :search
+					  )";
+        }
+        
+        if( isset( $order ) && count($order) > 0 )
+        {
+            $order_by_field = $columns[$order[0]["column"]]["data"];
+            $order_by_dir   = $order[0]["dir"];
+            $order_str = "ORDER BY t." . $order_by_field . " " . $order_by_dir;
+        }
+    
+        if (count($where) > 0)
+            $where = "WHERE " . implode(" AND ", $where);
+        else
+            $where = "";
+    
+        $query_ric = "SELECT * FROM
+                      (
+                        SELECT
+                            tb.*,
+                            DATE_FORMAT( tb.data_transazione, '%d/%m/%Y %H:%i:%s' ) as datait_transazione,
+                            IF( tb.creditore_transazione = :pgid, 'entrata', 'uscita' ) as tipo_transazione,
+                            IF( tb.id_acquisto_componente IS NOT NULL, 'RavShop', pgc.nome_personaggio ) as nome_creditore,
+                            pgd.nome_personaggio as nome_debitore
+                        FROM transazioni_bit AS tb
+                            LEFT OUTER JOIN personaggi AS pgc ON pgc.id_personaggio = tb.creditore_transazione
+                            JOIN personaggi AS pgd ON pgd.id_personaggio = tb.debitore_transazione
+                      ) AS t $where $order_str";
+    
+        $risultati = $this->db->doQuery($query_ric, $params, False);
+        $totale = count($risultati);
+    
+        if (count($risultati) > 0)
+            $risultati = array_splice($risultati, $start, $length);
+        else
+            $risultati = array();
+    
+        $output = array(
+            "status" => "ok",
+            "draw" => $draw,
+            "columns" => $columns,
+            "order" => $order,
+            "start" => $start,
+            "length" => $length,
+            "search" => $search,
+            "recordsTotal" => $totale,
+            "recordsFiltered" => $filter ? count($risultati) : $totale,
+            "data" => $risultati
+        );
+    
         return json_encode($output);
     }
 }
