@@ -28,6 +28,12 @@ class TransactionManager
     public function inserisciTransazione( $id_debitore, $importo, $id_creditore = NULL, $note = NULL, $id_acq_comp = NULL )
     {
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
+    
+        $sql_check = "SELECT id_personaggio FROM personaggi WHERE credito_personaggio >= :tot AND id_personaggio = :idpg";
+        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $importo, ":idpg" => $id_debitore ], False );
+    
+        if( !isset($ris_check) || count($ris_check) === 0 )
+            throw new APIException("Non hai abbastanza Bit per completare l'acquisto.");
         
         $params = [
             ":pgdeb" => $id_debitore,
@@ -58,7 +64,7 @@ class TransactionManager
         else
             $id_acq_comp_macro = "NULL";
         
-        $sql_ins = "INSERT INTO transizioni_bit (debitore_transazione, creditore_transazione, importo_transazione, note_transazione, id_acquisto_componente) VALUES (:pgdeb,$cred_macro,:importo,$note_macro,$id_acq_comp_macro)";
+        $sql_ins = "INSERT INTO transazioni_bit (debitore_transazione, creditore_transazione, importo_transazione, note_transazione, id_acquisto_componente) VALUES (:pgdeb,$cred_macro,:importo,$note_macro,$id_acq_comp_macro)";
         $this->db->doQuery( $sql_ins, $params, False );
         
         $output = ["status" => "ok", "result" => true];
@@ -75,6 +81,9 @@ class TransactionManager
         
         if( !isset($this->session->pg_loggato) )
             throw new APIException("Devi essere loggato con un personaggio per compiere questa operazione.");
+        
+        if( !isset($ids) || count($ids) === 0 )
+            throw new APIException( "Non ci sono articoli nel carrello." );
         
         $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
         $sql = "SELECT   id_componente
@@ -96,7 +105,7 @@ class TransactionManager
             $totale = $totale - ( $totale * ( $SCONTO_MERCATO / 100 ) );
         
         $sql_check = "SELECT id_personaggio FROM personaggi WHERE credito_personaggio >= :tot AND id_personaggio = :idpg";
-        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $totale, "idpg" => $this->session->pg_loggato["id_personaggio"] ], False );
+        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $totale, ":idpg" => $this->session->pg_loggato["id_personaggio"] ], False );
         
         if( !isset($ris_check) || count($ris_check) === 0 )
             throw new APIException("Non hai abbastanza Bit per completare l'acquisto.");
@@ -123,7 +132,19 @@ class TransactionManager
             throw new APIException("Devi essere loggato con un personaggio per eseguire questa operazione.", APIException::$PG_LOGIN_ERROR );
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $this->session->pg_loggato["id_personaggio"] );
+    
+        $sql_check = "SELECT
+                        ( SELECT credito_personaggio FROM personaggi WHERE id_personaggio = :idpg ) AS credito_personaggio,
+                        ( SELECT COALESCE( SUM(importo_transazione), 0 ) FROM transazioni_bit WHERE YEAR(data_transazione) = YEAR(NOW()) AND creditore_transazione = :idpg ) as entrate_anno_personaggio,
+                        ( SELECT COALESCE( SUM(importo_transazione), 0 ) FROM transazioni_bit WHERE YEAR(data_transazione) = YEAR(NOW()) AND debitore_transazione = :idpg ) as uscite_anno_personaggio";
+        $ris_check = $this->db->doQuery( $sql_check, [ ":idpg" => $this->session->pg_loggato["id_personaggio"] ], False );
         
+        $output = [
+            "status" => "ok",
+            "result" => $ris_check[0]
+        ];
+    
+        return json_encode($output);
     }
     
     public function recuperaMovimenti( $draw, $columns, $order, $start, $length, $search )
@@ -134,7 +155,7 @@ class TransactionManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $this->session->pg_loggato["id_personaggio"] );
     
         $filter = False;
-        $where = [ "t.debitore_transazione = :pgid" ];
+        $where = [ "( t.debitore_transazione = :pgid OR t.creditore_transazione = :pgid )" ];
         $order_str = "";
         $params = [
             ":pgid" => $this->session->pg_loggato["id_personaggio"]

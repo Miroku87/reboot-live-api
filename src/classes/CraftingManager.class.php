@@ -381,8 +381,12 @@ class CraftingManager
         UsersManager::operazionePossibile($this->session, "recuperaRicette", -1);
         
         $marcatori = str_repeat("?, ", count($ids) - 1) . "?";
-        $query_ric = "SELECT ri.*, SUM(cc.fcc_componente) AS fcc_componente FROM ricette AS ri
-                            LEFT JOIN componenti_ricetta AS cr ON ri.id_ricetta = cr.ricette_id_ricetta
+        $query_ric = "SELECT
+                        ri.*,
+                        SUM(cc.fcc_componente) AS fcc_componente,
+                        cc.tipo_componente AS biostruttura_sostanza
+                      FROM ricette AS ri
+                            LEFT JOIN componenti_ricetta AS cr ON ri.id_ricetta = cr.ricette_id_ricetta AND cr.ruolo_componente_ricetta = 'Base'
                             LEFT JOIN componenti_crafting AS cc ON cr.componenti_crafting_id_componente = cc.id_componente
                       WHERE id_ricetta IN ($marcatori)
                       GROUP BY ri.id_ricetta";
