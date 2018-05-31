@@ -113,7 +113,9 @@ class UsersManager
 	public function login( $mail, $pass )
 	{
 	    global $GRANT_MOSTRA_ALTRI_PG;
-	    global $GRANT_VISUALIZZA_MAIN;
+        global $GRANT_LOGIN_QUANDO_CHIUSO;
+        global $GRANT_VISUALIZZA_MAIN;
+	    global $MESSAGGIO_CHIUSURA;
 	    
 	    if( !Utils::controllaMail($mail) )
 	        throw new APIException("La mail inserita non &egrave; valida. Riprova con un'altra.");
@@ -126,6 +128,7 @@ class UsersManager
 
 		$params = array( ":mail" => $mail, ":pass" => sha1( $pass ) );
 		$result = $this->db->doQuery( $query_grants, $params, False );
+		$grants = array_map( "Utils::mappaPermessiUtente", $result );
 		
 		if( count( $result ) === 0 )
 			throw new APIException( "Email utente o password sono errati. Per favore riprovare." );
@@ -136,11 +139,14 @@ class UsersManager
         if( !isset($pg_propri) || count($pg_propri) === 0 )
             $pg_propri = [];
         
+        if( isset($MESSAGGIO_CHIUSURA) && !empty($MESSAGGIO_CHIUSURA) && !in_array( $GRANT_LOGIN_QUANDO_CHIUSO, $grants ) )
+            throw new APIException($MESSAGGIO_CHIUSURA, APIException::$GRANTS_ERROR);
+        
         $this->session->destroy();
         $this->session                     = SessionManager::getInstance();
 		$this->session->email_giocatore    = $result[0]["email_giocatore"];
 		$this->session->nome_giocatore     = $result[0]["nome_completo"];
-		$this->session->permessi_giocatore = array_map( "Utils::mappaPermessiUtente", $result );
+		$this->session->permessi_giocatore = $grants;
 		$this->session->pg_propri          = array_map( "Utils::mappaPGUtente", $pg_propri );
   
 		$output = [

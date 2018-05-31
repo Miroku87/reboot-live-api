@@ -149,6 +149,8 @@ class TransactionManager
     
     public function recuperaMovimenti( $draw, $columns, $order, $start, $length, $search, $tutti = False )
     {
+        $tutti = (bool)$tutti;
+        
         if( !$tutti && !isset( $this->session->pg_loggato["id_personaggio"] ) )
             throw new APIException("Devi essere loggato con un personaggio per eseguire questa operazione.", APIException::$PG_LOGIN_ERROR );
 		
@@ -161,8 +163,9 @@ class TransactionManager
     
         $filter    = False;
         $where     = $tutti ? [] : [ "( t.debitore_transazione = :pgid OR t.creditore_transazione = :pgid )" ];
-        $order_str = "";
         $params    = $tutti ? [] : [ ":pgid" => $pgid ];
+        $sql_tipo  = $tutti ? "" : ", IF( tb.creditore_transazione = :pgid, 'entrata', 'uscita' ) as tipo_transazione";
+        $order_str = "";
     
         if (isset($search) && isset($search["value"]) && $search["value"] != "")
         {
@@ -194,9 +197,9 @@ class TransactionManager
                         SELECT
                             tb.*,
                             DATE_FORMAT( tb.data_transazione, '%d/%m/%Y %H:%i:%s' ) as datait_transazione,
-                            IF( tb.creditore_transazione = :pgid, 'entrata', 'uscita' ) as tipo_transazione,
                             IF( tb.id_acquisto_componente IS NOT NULL, 'RavShop', pgc.nome_personaggio ) as nome_creditore,
                             pgd.nome_personaggio as nome_debitore
+                            $sql_tipo
                         FROM transazioni_bit AS tb
                             LEFT OUTER JOIN personaggi AS pgc ON pgc.id_personaggio = tb.creditore_transazione
                             JOIN personaggi AS pgd ON pgd.id_personaggio = tb.debitore_transazione

@@ -1,5 +1,5 @@
 
--- MERGE IN PROD FINO A QUI
+
 
 -- 25 APRILE
 
@@ -12,7 +12,6 @@ INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('modificaIscriz
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('modificaIscrizionePG_ha_partecipato_iscrizione_proprio', 'L\'utente può modificare lo stato di partecipazione del suo utente per un evento passato.');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'modificaIscrizionePG_ha_partecipato_iscrizione_altri');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'modificaIscrizionePG_ha_partecipato_iscrizione_proprio');
-
 
 -- 13 MAGGIO
 
@@ -29,7 +28,7 @@ CREATE TABLE `componenti_acquistati` (
   CONSTRAINT `fk_id_comp_acq` FOREIGN KEY (`id_componente_acquisto`) REFERENCES `componenti_crafting` (`id_componente`) ON DELETE NO ACTION ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-CREATE TABLE `transizioni_bit` (
+CREATE TABLE `transazioni_bit` (
   `id_transazione` INT NOT NULL AUTO_INCREMENT,
   `data_transazione` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `debitore_transazione` INT(11) NOT NULL,
@@ -39,10 +38,10 @@ CREATE TABLE `transizioni_bit` (
   `id_acquisto_componente` INT NULL DEFAULT NULL,
   PRIMARY KEY (`id_transazione`));
 
-ALTER TABLE `transizioni_bit`
+ALTER TABLE `transazioni_bit`
   ADD INDEX `fk_debitore_idx` (`debitore_transazione` ASC);
 
-ALTER TABLE `transizioni_bit`
+ALTER TABLE `transazioni_bit`
   ADD INDEX `fk_creditore_idx` (`creditore_transazione` ASC);
 
 ALTER TABLE `transazioni_bit`
@@ -81,8 +80,6 @@ INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('visualizza_pag
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'visualizza_pagina_banca');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'visualizza_pagina_banca');
 
--- PREPROD MERGED TIL HERE
-
 -- 24 MAGGIO
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaInfoBanca_proprio', 'L\'utente può recuperare le informazioni sul credito dei propri pg.');
 INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('recuperaInfoBanca_altri', 'L\'utente può recuperare le informazioni sul credito di pg non suoi.');
@@ -95,4 +92,17 @@ INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES 
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaInfoBanca_proprio');
 INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'recuperaMovimenti_proprio');
 
+-- 31 MAGGIO
 
+INSERT INTO `grants` (`nome_grant`, `descrizione_grant`) VALUES ('login_durante_chiusura', 'L\'utente può entrare nell\'interfaccia nonostante sia ufficialmente chiusa al pubblico.');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('admin', 'login_durante_chiusura');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'inserisciTransazione');
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'compraComponenti');
+
+INSERT INTO `ruoli_has_grants` (`ruoli_nome_ruolo`, `grants_nome_grant`) VALUES ('giocatore', 'modificaPG_credito_personaggio_altri');
+UPDATE grants SET `descrizione_grant`='L\'utente può modificare il credito degli altri personaggi come succede durante una transazione bancaria.' WHERE `nome_grant`='modificaPG_credito_personaggio_altri';
+
+
+
+-- PREPROD MERGED TIL HERE
+-- MERGE IN PROD FINO A QUI

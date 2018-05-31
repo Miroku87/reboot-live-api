@@ -70,9 +70,6 @@ class Main
             if( $MAINTENANCE && !in_array( Utils::getUserIP(), $IP_MAINTAINER) )
                 throw new APIException("Ci scusiamo, ma al momento il database &egrave; in manutenzione. Per favore attendi comunicazioni dallo Staff.");
             
-            if( isset($MESSAGGIO_CHIUSURA) && !empty($MESSAGGIO_CHIUSURA) && !in_array( Utils::getUserIP(), $IP_MAINTAINER) )
-                throw new APIException($MESSAGGIO_CHIUSURA);
-            
 			if( $method == "GET" )        $data = $_GET;
 			else if ( $method == "POST" ) $data = $_POST;
 			

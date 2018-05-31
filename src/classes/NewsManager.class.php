@@ -36,7 +36,7 @@ class NewsManager
     private function controllaInputArticolo( $tipo, $titolo, $autore, $pub_manuale, $data_pub, $ora_pub, $testo )
     {
         $error      = "";
-    
+        
         if( !isset($tipo) || $tipo === "-1" )
             $error .= "<li>&Egrave; obbligatorio scegliere il tipo dell'articolo.</li>";
     
@@ -46,7 +46,7 @@ class NewsManager
         if( !isset($autore) || Utils::soloSpazi($autore) )
             $error .= "<li>Il campo Autore non pu&ograve; essere lasciato vuoto.</li>";
         
-        if( isset($pub_manuale) && $pub_manuale === "0" && ( !isset($data_pub) || Utils::soloSpazi($data_pub) || !isset($ora_pub) || Utils::soloSpazi($ora_pub) ) )
+        if( isset($pub_manuale) && $pub_manuale === "0" && ( !isset($data_pub) || empty($data_pub) || Utils::soloSpazi($data_pub) || !isset($ora_pub) || empty($ora_pub) || Utils::soloSpazi($ora_pub) ) )
             $error .= "<li>Se la pubblicazione &egrave; automatica &egrave; obbligatorio inserire data e ora di pubblicazione.</li>";
     
         if( !isset($testo) || Utils::soloSpazi($testo) )
