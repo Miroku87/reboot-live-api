@@ -247,8 +247,8 @@ class CharactersManager
                         gi.ruoli_nome_ruolo,
                         GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
                         GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari,
-                        GROUP_CONCAT(DISTINCT ab_c.nome_abilita SEPARATOR ', ') AS abilita_civili,
-                        GROUP_CONCAT(DISTINCT ab_m.nome_abilita SEPARATOR ', ') AS abilita_militari,
+                        GROUP_CONCAT(DISTINCT CONCAT( ab_c.nome_abilita, COALESCE( CONCAT( ' (',phoa_c.opzioni_abilita_opzione,')' ), '' ) ) SEPARATOR ', ') AS abilita_civili,
+                        GROUP_CONCAT(DISTINCT CONCAT( ab_m.nome_abilita, COALESCE( CONCAT( ' (',phoa_m.opzioni_abilita_opzione,')' ), '' ) ) SEPARATOR ', ') AS abilita_militari,
                         COUNT(DISTINCT cl_c.nome_classe) as num_classi_civili,
                         COUNT(DISTINCT cl_m.nome_classe) as num_classi_militari,
                         COUNT(DISTINCT ab_m.nome_abilita) as num_abilita_militari,
@@ -269,6 +269,8 @@ class CharactersManager
                         LEFT OUTER JOIN classi AS cl_c ON cl_c.id_classe = phc.classi_id_classe AND cl_c.tipo_classe = 'civile'
                         LEFT OUTER JOIN abilita AS ab_m ON ab_m.id_abilita = pha.abilita_id_abilita AND ab_m.tipo_abilita = 'militare'
                         LEFT OUTER JOIN abilita AS ab_c ON ab_c.id_abilita = pha.abilita_id_abilita AND ab_c.tipo_abilita = 'civile'
+                        LEFT OUTER JOIN personaggi_has_opzioni_abilita AS phoa_c ON phoa_c.personaggi_id_personaggio = pg.id_personaggio AND phoa_c.abilita_id_abilita = ab_c.id_abilita
+                        LEFT OUTER JOIN personaggi_has_opzioni_abilita AS phoa_m ON phoa_m.personaggi_id_personaggio = pg.id_personaggio AND phoa_m.abilita_id_abilita = ab_m.id_abilita
                     GROUP BY pg.id_personaggio";
         
         $where_str = count( $where ) > 0 ? "AND ".implode( $where, " AND ") : "";

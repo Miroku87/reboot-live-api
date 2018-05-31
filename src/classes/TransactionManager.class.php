@@ -147,19 +147,22 @@ class TransactionManager
         return json_encode($output);
     }
     
-    public function recuperaMovimenti( $draw, $columns, $order, $start, $length, $search )
+    public function recuperaMovimenti( $draw, $columns, $order, $start, $length, $search, $tutti = False )
     {
-        if( !isset( $this->session->pg_loggato["id_personaggio"] ) )
+        if( !$tutti && !isset( $this->session->pg_loggato["id_personaggio"] ) )
             throw new APIException("Devi essere loggato con un personaggio per eseguire questa operazione.", APIException::$PG_LOGIN_ERROR );
+		
+		if( $tutti )
+			$pgid = -1;
+		else
+			$pgid = $this->session->pg_loggato["id_personaggio"];
         
-        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $this->session->pg_loggato["id_personaggio"] );
+        UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
     
-        $filter = False;
-        $where = [ "( t.debitore_transazione = :pgid OR t.creditore_transazione = :pgid )" ];
+        $filter    = False;
+        $where     = $tutti ? [] : [ "( t.debitore_transazione = :pgid OR t.creditore_transazione = :pgid )" ];
         $order_str = "";
-        $params = [
-            ":pgid" => $this->session->pg_loggato["id_personaggio"]
-        ];
+        $params    = $tutti ? [] : [ ":pgid" => $pgid ];
     
         if (isset($search) && isset($search["value"]) && $search["value"] != "")
         {
@@ -178,7 +181,7 @@ class TransactionManager
         {
             $order_by_field = $columns[$order[0]["column"]]["data"];
             $order_by_dir   = $order[0]["dir"];
-            $order_str = "ORDER BY t." . $order_by_field . " " . $order_by_dir;
+            $order_str      = "ORDER BY t." . $order_by_field . " " . $order_by_dir;
         }
     
         if (count($where) > 0)
