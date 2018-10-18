@@ -1,5 +1,5 @@
 <?php
-$path = $_SERVER['DOCUMENT_ROOT']."/reboot-live-api/src/";
+$path = $_SERVER['DOCUMENT_ROOT']."/";
 include_once($path."classes/APIException.class.php");
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
@@ -231,20 +231,26 @@ class CharactersManager
         $big_join = "SELECT
                         pg.id_personaggio,
                         pg.nome_personaggio,
-                        IF( ISNULL(pg.background_personaggio), 0, 1 ) AS bg_personaggio,
                         pg.px_personaggio,
                         pg.pc_personaggio,
-                        pg.credito_personaggio,
                         pg.data_creazione_personaggio,
                         pg.eliminato_personaggio,
                         pg.contattabile_personaggio,
                         pg.anno_nascita_personaggio,
                         pg.note_cartellino_personaggio,
                         gi.email_giocatore,
-                        CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         gi.note_giocatore,
                         gi.eliminato_giocatore,
                         gi.ruoli_nome_ruolo,
+                        ( 
+							SELECT SUM( COALESCE( u.importo, 0 ) ) as credito_personaggio FROM (
+								SELECT SUM( COALESCE( importo_transazione, 0 ) ) as importo, creditore_transazione as pg FROM transazioni_bit GROUP BY creditore_transazione
+								UNION ALL
+								SELECT ( SUM( COALESCE( importo_transazione, 0 ) ) * -1 ) as importo, debitore_transazione as pg FROM transazioni_bit GROUP BY debitore_transazione
+							) as u WHERE pg = pg.id_personaggio 
+						) as credito_personaggio,
+                        IF( ISNULL(pg.background_personaggio), 0, 1 ) AS bg_personaggio,
+                        CONCAT( gi.nome_giocatore, ' ', gi.cognome_giocatore ) AS nome_giocatore,
                         GROUP_CONCAT(DISTINCT cl_c.nome_classe SEPARATOR ', ') AS classi_civili,
                         GROUP_CONCAT(DISTINCT cl_m.nome_classe SEPARATOR ', ') AS classi_militari,
                         GROUP_CONCAT(DISTINCT CONCAT( ab_c.nome_abilita, COALESCE( CONCAT( ' (',phoa_c.opzioni_abilita_opzione,')' ), '' ) ) SEPARATOR ', ') AS abilita_civili,
@@ -278,7 +284,6 @@ class CharactersManager
         
         $risultati = $this->db->doQuery( $query, $params, False );
         $totale    = count($risultati);
-        
         if( count($risultati) > 0 )
         {
             for ($i = 0; $i < count($risultati); $i++)
@@ -884,19 +889,27 @@ class CharactersManager
                             pg.background_personaggio,
                             pg.px_personaggio,
                             pg.pc_personaggio,
-                            pg.credito_personaggio,
                             pg.data_creazione_personaggio,
                             pg.note_master_personaggio,
                             pg.giocatori_email_giocatore,
                             pg.anno_nascita_personaggio,
                             pg.motivazioni_olocausto_inserite_personaggio AS motivazioni,
                             gi.nome_giocatore,
+							( 
+								SELECT SUM( COALESCE( u.importo, 0 ) ) as credito_personaggio FROM (
+									SELECT SUM( COALESCE( importo_transazione, 0 ) ) as importo, creditore_transazione as pg FROM transazioni_bit GROUP BY creditore_transazione
+									UNION ALL
+									SELECT ( SUM( COALESCE( importo_transazione, 0 ) ) * -1 ) as importo, debitore_transazione as pg FROM transazioni_bit GROUP BY debitore_transazione
+								) as u WHERE pg = pg.id_personaggio 
+							) as credito_personaggio,
                             MAX(COALESCE(cl.mente_base_classe,0)) as mente_base_personaggio,
                             MAX(COALESCE(cl.shield_max_base_classe,0)) as scudo_base_personaggio
                     FROM personaggi AS pg
                         JOIN giocatori AS gi ON pg.giocatori_email_giocatore = gi.email_giocatore
                         JOIN personaggi_has_classi AS phc ON phc.personaggi_id_personaggio = pg.id_personaggio
                         JOIN classi AS cl ON phc.classi_id_classe = cl.id_classe
+                        LEFT OUTER JOIN transazioni_bit AS trans_d ON trans_d.debitore_transazione = pg.id_personaggio 
+                        LEFT OUTER JOIN transazioni_bit AS trans_c ON trans_c.creditore_transazione = pg.id_personaggio
                     WHERE id_personaggio = :idpg";
         $res_pg   = $this->db->doQuery( $query_pg, array( ":idpg" => $pgid ), False );
         
@@ -1118,5 +1131,19 @@ class CharactersManager
         ];
         
         return json_encode($output);
+    }
+    
+    public function recuperaCredito( $pgid )
+    {
+        $sql_check = "SELECT SUM( COALESCE( u.importo, 0 ) ) as credito FROM (
+						SELECT SUM( COALESCE( importo_transazione, 0 ) ) as importo, creditore_transazione as pg FROM transazioni_bit GROUP BY creditore_transazione
+						UNION ALL
+						SELECT ( SUM( COALESCE( importo_transazione, 0 ) ) * -1 ) as importo, debitore_transazione as pg FROM transazioni_bit GROUP BY debitore_transazione
+					) as u WHERE pg = :idpg";
+        $ris_check = $this->db->doQuery( $sql_check, [ ":idpg" => $pgid ], False );
+		
+		$credito = isset($ris_check) ? (int)$ris_check[0]["credito"] : 0;
+		
+		return $credito;
     }
 }

@@ -5,6 +5,7 @@ include_once($path."classes/APIException.class.php");
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/SessionManager.class.php");
+include_once($path."classes/CharacterManager.class.php");
 include_once($path."classes/Utils.class.php");
 include_once($path."config/constants.php");
 
@@ -12,11 +13,13 @@ class TransactionManager
 {
     protected $idev_in_corso;
     protected $session;
+    protected $character_manager;
     protected $db;
     
-    public function __construct($idev_in_corso = NULL)
+    public function __construct($char_manager, $idev_in_corso = NULL)
     {
         $this->idev_in_corso = $idev_in_corso;
+        $this->character_manager = $char_manager;
         $this->db = new DatabaseBridge();
         $this->session = SessionManager::getInstance();
     }
@@ -27,13 +30,12 @@ class TransactionManager
     
     public function inserisciTransazione( $id_debitore, $importo, $id_creditore = NULL, $note = NULL, $id_acq_comp = NULL )
     {
+		global $INFINITE_MONEY_PGS;
+		
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
     
-        $sql_check = "SELECT id_personaggio FROM personaggi WHERE credito_personaggio >= :tot AND id_personaggio = :idpg";
-        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $importo, ":idpg" => $id_debitore ], False );
-    
-        if( !isset($ris_check) || count($ris_check) === 0 )
-            throw new APIException("Non hai abbastanza Bit per completare l'acquisto.");
+        if( !in_array($id_debitore, $INFINITE_MONEY_PGS) && $this->character_manager->recuperaCredito( $id_debitore ) < $importo )
+            throw new APIException("Non hai abbastanza Bit per completare l'operzione.");
         
         $params = [
             ":pgdeb" => $id_debitore,
@@ -76,6 +78,7 @@ class TransactionManager
     {
         global $SCONTO_MERCATO;
         global $QTA_PER_SCONTO_MERCATO;
+		global $INFINITE_MONEY_PGS;
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__ );
         
@@ -104,11 +107,8 @@ class TransactionManager
         if( count( $ids ) % $QTA_PER_SCONTO_MERCATO === 0 )
             $totale = $totale - ( $totale * ( $SCONTO_MERCATO / 100 ) );
         
-        $sql_check = "SELECT id_personaggio FROM personaggi WHERE credito_personaggio >= :tot AND id_personaggio = :idpg";
-        $ris_check = $this->db->doQuery( $sql_check, [ ":tot" => $totale, ":idpg" => $this->session->pg_loggato["id_personaggio"] ], False );
-        
-        if( !isset($ris_check) || count($ris_check) === 0 )
-            throw new APIException("Non hai abbastanza Bit per completare l'acquisto.");
+        if( !in_array($this->session->pg_loggato["id_personaggio"], $INFINITE_MONEY_PGS) && $this->character_manager->recuperaCredito( $this->session->pg_loggato["id_personaggio"] ) < $totale )
+            throw new APIException("Non hai abbastanza Bit per completare l'operzione.");
         
         $sql_acq_comp = "INSERT INTO componenti_acquistati (cliente_acquisto, id_componente_acquisto, importo_acquisto) VALUES (:idpg, :idcomp, :costo)";
         
@@ -134,7 +134,11 @@ class TransactionManager
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $this->session->pg_loggato["id_personaggio"] );
     
         $sql_check = "SELECT
-                        ( SELECT credito_personaggio FROM personaggi WHERE id_personaggio = :idpg ) AS credito_personaggio,
+                        ( SELECT SUM( COALESCE( u.importo, 0 ) ) as credito FROM (
+							SELECT SUM( COALESCE( importo_transazione, 0 ) ) as importo, creditore_transazione as pg FROM transazioni_bit GROUP BY creditore_transazione
+							UNION ALL
+							SELECT ( SUM( COALESCE( importo_transazione, 0 ) ) * -1 ) as importo, debitore_transazione as pg FROM transazioni_bit GROUP BY debitore_transazione
+						) as u WHERE pg = :idpg ) AS credito_personaggio,
                         ( SELECT COALESCE( SUM(importo_transazione), 0 ) FROM transazioni_bit WHERE YEAR(data_transazione) = YEAR(NOW()) AND creditore_transazione = :idpg ) as entrate_anno_personaggio,
                         ( SELECT COALESCE( SUM(importo_transazione), 0 ) FROM transazioni_bit WHERE YEAR(data_transazione) = YEAR(NOW()) AND debitore_transazione = :idpg ) as uscite_anno_personaggio";
         $ris_check = $this->db->doQuery( $sql_check, [ ":idpg" => $this->session->pg_loggato["id_personaggio"] ], False );
@@ -161,11 +165,12 @@ class TransactionManager
         
         UsersManager::operazionePossibile( $this->session, __FUNCTION__, $pgid );
     
-        $filter    = False;
-        $where     = $tutti ? [] : [ "( t.debitore_transazione = :pgid OR t.creditore_transazione = :pgid )" ];
-        $params    = $tutti ? [] : [ ":pgid" => $pgid ];
-        $sql_tipo  = $tutti ? "" : ", IF( tb.creditore_transazione = :pgid, 'entrata', 'uscita' ) as tipo_transazione";
-        $order_str = "";
+        $filter     = False;
+        $where      = $tutti ? [] : [ "( t.debitore_transazione = :pgid OR t.creditore_transazione = :pgid )" ];
+        $params     = $tutti ? [] : [ ":pgid" => $pgid ];
+        $sql_tipo   = $tutti ? "" : ", IF( tb.creditore_transazione = :pgid, 'entrata', 'uscita' ) as tipo_transazione";
+        $order_str  = "";
+        $field_map  = [ "datait_transazione" => "data_transazione" ];
     
         if (isset($search) && isset($search["value"]) && $search["value"] != "")
         {
@@ -183,6 +188,7 @@ class TransactionManager
         if( isset( $order ) && count($order) > 0 )
         {
             $order_by_field = $columns[$order[0]["column"]]["data"];
+            $order_by_field = !isset( $field_map[$order_by_field] ) ? $order_by_field : $field_map[$order_by_field];
             $order_by_dir   = $order[0]["dir"];
             $order_str      = "ORDER BY t." . $order_by_field . " " . $order_by_dir;
         }

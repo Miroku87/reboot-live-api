@@ -31,29 +31,34 @@ class MessagingManager
         $id_check      = $tipo === "fg" ? "email_giocatore" : "id_personaggio";
         $eliminato     = $tipo === "fg" ? "eliminato_giocatore" : "eliminato_personaggio";
     
-        $query_check = "SELECT $id_check FROM $tabella_check WHERE ( $id_check = :mitt OR $id_check = :dest ) AND $eliminato = 0";
-        $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt, ":dest" => $dest ), False );
+        $dest_arr = explode(",",$dest);
         
-        if( count( $ris_check ) < 2 )
-            throw new APIException("Il mittente o il destinatario di questo messaggio non esistono.");
-        
-        $params = array(
-            ":mitt" => $mitt,
-            ":dest" => $dest,
-            ":ogg"  => $ogg,
-            ":mex"  => $mex
-        );
-        
-        if( isset( $risp_id ) )
+        foreach( $dest_arr as $d )
         {
-            $q_risp = ":risp";
-            $params[":risp"] = $risp_id;
-        }
-        else
-            $q_risp = "NULL";
+            $query_check = "SELECT $id_check FROM $tabella_check WHERE ( $id_check = :mitt OR $id_check = :dest ) AND $eliminato = 0";
+            $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt, ":dest" => trim($d) ), False );
+            
+            if( count( $ris_check ) < 2 )
+                throw new APIException("Il mittente o il destinatario di questo messaggio non esistono.");
         
-        $query_mex = "INSERT INTO $tabella (mittente_messaggio, destinatario_messaggio, oggetto_messaggio, testo_messaggio, risposta_a_messaggio) VALUES ( :mitt, :dest, :ogg, :mex, $q_risp )";
-        $this->db->doQuery( $query_mex, $params, False );
+            $params = array(
+                ":mitt" => $mitt,
+                ":dest" => $d,
+                ":ogg"  => $ogg,
+                ":mex"  => $mex
+            );
+            
+            if( isset( $risp_id ) )
+            {
+                $q_risp = ":risp";
+                $params[":risp"] = $risp_id;
+            }
+            else
+                $q_risp = "NULL";
+            
+            $query_mex = "INSERT INTO $tabella (mittente_messaggio, destinatario_messaggio, oggetto_messaggio, testo_messaggio, risposta_a_messaggio) VALUES ( :mitt, :dest, :ogg, :mex, $q_risp )";
+            $this->db->doQuery( $query_mex, $params, False );
+        }
         
         return "{\"status\": \"ok\",\"result\": \"true\"}";
     }
@@ -80,8 +85,8 @@ class MessagingManager
                         JOIN $t_join AS t_dest ON mex.destinatario_messaggio = t_dest.$campo_id
                       WHERE mex.id_messaggio = :idmex";
         $risultati  = $this->db->doQuery( $query_mex, $params, False );
-        
-        if(    ( property_exists($this->session, "pg_loggato") && $risultati[0]["id_destinatario"] === $this->session->pg_loggato->id_personaggio )
+		
+        if(    ( is_array($this->session->pg_loggato) && $risultati[0]["id_destinatario"] === $this->session->pg_loggato["id_personaggio"] )
             || $risultati[0]["id_destinatario"] === $this->session->email_giocatore )
         {
             $query_letto = "UPDATE $tabella SET letto_messaggio = :letto WHERE id_messaggio = :id";
