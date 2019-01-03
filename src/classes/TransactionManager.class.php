@@ -5,7 +5,7 @@ include_once($path."classes/APIException.class.php");
 include_once($path."classes/UsersManager.class.php");
 include_once($path."classes/DatabaseBridge.class.php");
 include_once($path."classes/SessionManager.class.php");
-include_once($path."classes/CharacterManager.class.php");
+include_once($path."classes/CharactersManager.class.php");
 include_once($path."classes/Utils.class.php");
 include_once($path."config/constants.php");
 
@@ -71,6 +71,16 @@ class TransactionManager
         
         $output = ["status" => "ok", "result" => true];
         
+        return json_encode($output);
+    }
+    
+    public function inserisciTransazioneMolti( $importo, $note, $creditori = [], $debitore = 1 )
+    {
+        foreach( $creditori as $cc )
+            $this->inserisciTransazione( $debitore, $importo, $cc, $note );
+    
+        $output = ["status" => "ok", "result" => true];
+    
         return json_encode($output);
     }
     

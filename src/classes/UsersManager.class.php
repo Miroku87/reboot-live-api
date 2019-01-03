@@ -128,11 +128,11 @@ class UsersManager
 
 		$params = array( ":mail" => $mail, ":pass" => sha1( $pass ) );
 		$result = $this->db->doQuery( $query_grants, $params, False );
-		$grants = array_map( "Utils::mappaPermessiUtente", $result );
 		
 		if( count( $result ) === 0 )
 			throw new APIException( "Email utente o password sono errati. Per favore riprovare." );
 
+		$grants = array_map( "Utils::mappaPermessiUtente", $result );
 		$query_pg_propri = "SELECT id_personaggio FROM personaggi WHERE giocatori_email_giocatore = :email";
         $pg_propri       = $this->db->doQuery( $query_pg_propri, array( ":email" => $mail ), False );
         
