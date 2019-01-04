@@ -29,17 +29,37 @@ class MessagingManager
         $tabella       = $tipo === "fg" ? "messaggi_fuorigioco" : "messaggi_ingioco";
         $tabella_check = $tipo === "fg" ? "giocatori" : "personaggi";
         $id_check      = $tipo === "fg" ? "email_giocatore" : "id_personaggio";
+        $name_check    = $tipo === "fg" ? "CONCAT(nome_giocatore,' ',cognome_giocatore) AS nome" : "nome_personaggio AS nome";
         $eliminato     = $tipo === "fg" ? "eliminato_giocatore" : "eliminato_personaggio";
-    
-        $dest_arr = explode(",",$dest);
+        $dest_names    = [];
         
-        foreach( $dest_arr as $d )
+        if( count( $dest ) === 0 )
+            throw new APIException("Non sono stati specificati dei destinatari.");
+        
+        $query_check = "SELECT $id_check, $name_check FROM $tabella_check WHERE $id_check = :mitt AND $eliminato = 0";
+        $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt ), False );
+        
+        if( count( $ris_check ) === 0 )
+            throw new APIException("Il mittente di questo messaggio non esiste.");
+        
+        foreach( $dest as $i => $d )
         {
-            $query_check = "SELECT $id_check FROM $tabella_check WHERE ( $id_check = :mitt OR $id_check = :dest ) AND $eliminato = 0";
-            $ris_check   = $this->db->doQuery( $query_check, array( ":mitt" => $mitt, ":dest" => trim($d) ), False );
+            if ( empty($d) || $d == NULL )
+                continue;
+    
+            $query_check = "SELECT $id_check, $name_check FROM $tabella_check WHERE $id_check = :dest AND $eliminato = 0";
+            $ris_check = $this->db->doQuery($query_check, array(":dest" => trim($d)), False);
+    
+            if (count($ris_check) === 0)
+                throw new APIException("Il destinatario $d di questo messaggio non esiste.");
             
-            if( count( $ris_check ) < 2 )
-                throw new APIException("Il mittente o il destinatario di questo messaggio non esistono.");
+            $dest_names[$i] = $ris_check[0]["nome"];
+        }
+        
+        foreach( $dest as $i => $d )
+        {
+            if( empty($d) || $d == NULL )
+                continue;
         
             $params = array(
                 ":mitt" => $mitt,
@@ -58,9 +78,15 @@ class MessagingManager
             
             $query_mex = "INSERT INTO $tabella (mittente_messaggio, destinatario_messaggio, oggetto_messaggio, testo_messaggio, risposta_a_messaggio) VALUES ( :mitt, :dest, :ogg, :mex, $q_risp )";
             $this->db->doQuery( $query_mex, $params, False );
+            
+            $inviato_a[] = $dest_names[$i];
         }
         
-        return "{\"status\": \"ok\",\"result\": \"true\"}";
+        return json_encode([
+            "status"  => "ok",
+            "result"  => True,
+            "message" =>"Messaggio inviato correttamente a ".implode(", ", $inviato_a)
+        ]);
     }
     
     public function recuperaMessaggioSingolo( $idmex, $idu, $tipo, $casella )
@@ -176,7 +202,7 @@ class MessagingManager
         $id_no = $tipo === "ig" ? $this->session->pg_loggato["id_personaggio"] : $this->session->email_giocatore;
         
         if( $tipo === "ig" )
-            $query_dest = "SELECT id_personaggio AS real_value, nome_personaggio AS label FROM personaggi WHERE nome_personaggio LIKE :term AND id_personaggio != :idno AND contattabile_personaggio = 1 AND eliminato_personaggio = 0";
+            $query_dest = "SELECT id_personaggio AS real_value, CONCAT( nome_personaggio, ' (#', id_personaggio, ')' ) AS label FROM personaggi WHERE nome_personaggio LIKE :term AND id_personaggio != :idno AND contattabile_personaggio = 1 AND eliminato_personaggio = 0";
         else if( $tipo === "fg" )
             $query_dest = "SELECT email_giocatore AS real_value,
                                   CONCAT( nome_giocatore, ' ', cognome_giocatore ) AS label
