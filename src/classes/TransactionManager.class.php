@@ -105,32 +105,43 @@ class TransactionManager
         $risultati = $this->db->doQuery($sql, $ids, False);
         
         $totale      = 0;
+        $sconto      = 0;
+        $sconto_txt  = "";
         $params_comp = [];
-        
+    
         foreach( $ids as $i )
         {
             $componente = Utils::filtraArrayDiArrayAssoc( $risultati, "id_componente", [ $i ] )[0];
             $totale += (int)$componente["costo_attuale_componente"];
-            $params_comp[] = [ ":idpg" => $this->session->pg_loggato["id_personaggio"], ":idcomp" => $i, ":costo" => $componente["costo_attuale_componente"] ];
+            $params_comp[] = [ ":idpg" => $this->session->pg_loggato["id_personaggio"], ":idcomp" => $i, ":costo" => (int)$componente["costo_attuale_componente"] ];
         }
-        
+    
         if( count( $ids ) % $QTA_PER_SCONTO_MERCATO === 0 )
-            $totale = $totale - ( $totale * ( $SCONTO_MERCATO / 100 ) );
-        
+        {
+            $sconto = ($SCONTO_MERCATO / 100);
+            $totale = $totale - ( $totale * $sconto );
+        }
+    
         if( !in_array($this->session->pg_loggato["id_personaggio"], $INFINITE_MONEY_PGS) && $this->character_manager->recuperaCredito( $this->session->pg_loggato["id_personaggio"] ) < $totale )
             throw new APIException("Non hai abbastanza Bit per completare l'operzione.");
-        
+    
         $sql_acq_comp = "INSERT INTO componenti_acquistati (cliente_acquisto, id_componente_acquisto, importo_acquisto) VALUES (:idpg, :idcomp, :costo)";
-        
+    
         foreach ($params_comp as $p)
         {
+            if( $sconto > 0 )
+            {
+                $sconto_txt = " Sconto del $SCONTO_MERCATO%. Prezzo pieno " . $p[":costo"] . " Bit.";
+                $p[":costo"] = $p[":costo"] - ( $p[":costo"] * $sconto );
+            }
+            
             $id_acq_com   = $this->db->doQuery( $sql_acq_comp, $p, False );
-            $this->inserisciTransazione( $p[":idpg"], $p[":costo"], NULL, "Acquisto componente ".$p[":idcomp"]." dal RavShop.", $id_acq_com );
+            $this->inserisciTransazione( $p[":idpg"], $p[":costo"], NULL, "Acquisto componente ".$p[":idcomp"]." dal RavShop.".$sconto_txt, $id_acq_com );
         }
         
         $output = [
             "status" => "ok",
-            "result" => $totale
+            "result" => True
         ];
         
         return json_encode($output);

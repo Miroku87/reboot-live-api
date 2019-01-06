@@ -466,6 +466,8 @@ class CraftingManager
         
         $query_ric = "SELECT $campi_str FROM componenti_crafting $where $order_str";
         
+        echo $query_ric;
+        die();
         $risultati = $this->db->doQuery($query_ric, $params, False);
         $totale = count($risultati);
         

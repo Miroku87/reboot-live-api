@@ -46,7 +46,7 @@ class Main
 		$this->grantsmanager      = new GrantsManager();
 		$this->newsmanager        = new NewsManager( $idev_in_corso );
 		$this->craftingmanager    = new CraftingManager( $idev_in_corso );
-		$this->transactionmanager = new TransactionManager( $idev_in_corso );
+		$this->transactionmanager = new TransactionManager( $this->charactersmanager, $idev_in_corso );
 	}
 	
 	public function __destruct()
