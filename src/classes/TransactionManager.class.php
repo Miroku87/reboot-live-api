@@ -28,7 +28,7 @@ class TransactionManager
     {
     }
     
-    public function inserisciTransazione( $id_debitore, $importo, $id_creditore = NULL, $note = NULL, $id_acq_comp = NULL )
+    public function inserisciTransazione( $id_debitore, $importo, $id_creditore, $note = NULL, $id_acq_comp = NULL )
     {
 		global $INFINITE_MONEY_PGS;
 		
@@ -48,7 +48,7 @@ class TransactionManager
             $params[$cred_macro] = $id_creditore;
         }
         else
-            $cred_macro = "NULL";
+            throw new APIException("Impossibile inserire una transazione senza indicare l'id del creditore.");
         
         if( isset($note) )
         {
@@ -136,7 +136,7 @@ class TransactionManager
             }
             
             $id_acq_com   = $this->db->doQuery( $sql_acq_comp, $p, False );
-            $this->inserisciTransazione( $p[":idpg"], $p[":costo"], NULL, "Acquisto componente ".$p[":idcomp"]." dal RavShop.".$sconto_txt, $id_acq_com );
+            $this->inserisciTransazione( $p[":idpg"], $p[":costo"], 1, "Acquisto componente ".$p[":idcomp"]." dal RavShop.".$sconto_txt, $id_acq_com );
         }
         
         $output = [

@@ -243,7 +243,7 @@ class CharactersManager
                         gi.eliminato_giocatore,
                         gi.ruoli_nome_ruolo,
                         ( 
-							SELECT SUM( COALESCE( u.importo, 0 ) ) as credito_personaggio FROM (
+							SELECT COALESCE( SUM( COALESCE( u.importo, 0 ) ), 0 ) as credito_personaggio FROM (
 								SELECT SUM( COALESCE( importo_transazione, 0 ) ) as importo, creditore_transazione as pg FROM transazioni_bit GROUP BY creditore_transazione
 								UNION ALL
 								SELECT ( SUM( COALESCE( importo_transazione, 0 ) ) * -1 ) as importo, debitore_transazione as pg FROM transazioni_bit GROUP BY debitore_transazione
@@ -1135,7 +1135,7 @@ class CharactersManager
     
     public function recuperaCredito( $pgid )
     {
-        $sql_check = "SELECT SUM( COALESCE( u.importo, 0 ) ) as credito FROM (
+        $sql_check = "SELECT COALESCE( SUM( COALESCE( u.importo, 0 ) ), 0 ) as credito FROM (
 						SELECT SUM( COALESCE( importo_transazione, 0 ) ) as importo, creditore_transazione as pg FROM transazioni_bit GROUP BY creditore_transazione
 						UNION ALL
 						SELECT ( SUM( COALESCE( importo_transazione, 0 ) ) * -1 ) as importo, debitore_transazione as pg FROM transazioni_bit GROUP BY debitore_transazione
