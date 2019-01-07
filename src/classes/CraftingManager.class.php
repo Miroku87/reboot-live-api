@@ -458,7 +458,7 @@ class CraftingManager
             
             $order_str = "ORDER BY " . implode($sorting, ",");
         }
-//        echo $order_str;
+        
         if (count($where) > 0)
             $where = "WHERE " . implode(" AND ", $where);
         else
@@ -466,8 +466,6 @@ class CraftingManager
         
         $query_ric = "SELECT $campi_str FROM componenti_crafting $where $order_str";
         
-        echo $query_ric;
-        die();
         $risultati = $this->db->doQuery($query_ric, $params, False);
         $totale = count($risultati);
         
@@ -529,6 +527,9 @@ class CraftingManager
             [ "data" => "energia_componente" ]
         ];*/
     
+        if( count($order) > 0 )
+            $order_field = $columns[$order[0]["column"]]["data"];
+    
         $columns[] = [ "data" => "costo_vecchio_componente" ];
         $columns[] = [ "data" => "volume_componente" ];
         $columns[] = [ "data" => "energia_componente" ];
@@ -558,6 +559,9 @@ class CraftingManager
             "tipo_applicativo_componente"
         ];
         $campi = Utils::filtraArrayDiArrayAssoc($columns,"data",$campi_permessi);
+        
+        if( isset( $order_field ) )
+            $order[0]["column"] = array_search($order_field, array_column($campi, 'data'));
         
         return $this->recuperaComponenti($draw, $campi, $order, $start, $length, $search, ["tipo_crafting_componente = '$tipo_crafting'"]);
     }
