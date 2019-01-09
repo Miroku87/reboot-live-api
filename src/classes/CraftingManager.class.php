@@ -527,7 +527,7 @@ class CraftingManager
             [ "data" => "energia_componente" ]
         ];*/
     
-        if( count($order) > 0 )
+        if( is_array($order) && count($order) > 0 )
             $order_field = $columns[$order[0]["column"]]["data"];
     
         $columns[] = [ "data" => "costo_vecchio_componente" ];
