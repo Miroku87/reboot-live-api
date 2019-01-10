@@ -423,6 +423,7 @@ class CraftingManager
         $order_str = "";
         $params = [];
         $campi = Utils::mappaArrayDiArrayAssoc($columns, "data");
+        $campi[] = "IF( POSITION( 'deve dichiarare' IN LOWER( effetto_sicuro_componente ) ) > 0, TRUE, FALSE ) AS deve";
         $campi_str = implode(",", $campi);
         
         if (isset($search) && isset($search["value"]) && $search["value"] != "")
