@@ -100,6 +100,7 @@ class CraftingManager
         
         for ($i = 0; $i < count($tutti_id); $i++)
             $sotto_query[] = "SELECT effetto_sicuro_componente,
+                                     IF( POSITION( 'deve dichiarare' IN  LOWER( effetto_sicuro_componente ) )  > 0,TRUE,FALSE) AS deve,
                                      tipo_applicativo_componente,
                                      volume_componente,
                                      energia_componente FROM componenti_crafting WHERE id_componente = ?";
@@ -110,6 +111,11 @@ class CraftingManager
         
         if( !isset($check_res) || count($check_res) === 0 )
             throw new APIException("Il crafting non &egrave; andato a buon fine. Riprovare.");
+        
+        $deve    = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "deve") ) );
+        
+        if( $deve > 1 )
+            throw new APIException("Impossibile completare l'operazione. Non &egrave; possibile combinare pi&ugrave; applicazioni che DEVONO dichiarare qualcosa.");
         
         $volume  = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "volume_componente") ) );
         $energia = array_sum( array_values( Utils::mappaArrayDiArrayAssoc($check_res, "energia_componente") ) );
