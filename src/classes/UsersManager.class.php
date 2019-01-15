@@ -53,7 +53,7 @@ class UsersManager
             throw new APIException( "Devi essere loggato per compiere questa operazione.", APIException::$LOGIN_ERROR );
     }
 
-    static function operazionePossibile( $sessione, $funzione, $id = NULL )
+    static function operazionePossibile( $sessione, $funzione, $id = NULL, $throw_exception = True )
     {
         global $TIPO_GRANT_PG_PROPRIO;
         global $TIPO_GRANT_PG_ALTRI;
@@ -66,9 +66,11 @@ class UsersManager
             $tipo_grant = in_array($id, $sessione->pg_propri) ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
         else if ( isset( $id ) && !in_array($id, $sessione->pg_propri) )
             $tipo_grant = $id === $sessione->email_giocatore ? $TIPO_GRANT_PG_PROPRIO : $TIPO_GRANT_PG_ALTRI;
-
-        if( !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
+        
+        if( $throw_exception && !in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore ) )
             throw new APIException( "Non hai i permessi per compiere questa operazione: <code>$funzione$tipo_grant</code>", APIException::$GRANTS_ERROR );
+        else
+            return in_array( $funzione.$tipo_grant, $sessione->permessi_giocatore );
     }
 
 	private function controllaInputPwd( $pass1, $pass2 )
@@ -357,12 +359,16 @@ class UsersManager
     public function modificaUtente( $modifiche, $id = NULL )
     {
         $id = isset( $id ) ? $id : $this->session->email_giocatore;
-    
-        foreach( $modifiche as $campo => $valore )
-            self::operazionePossibile( $this->session, __FUNCTION__."_".$campo, $id );
+        $mods = [];
         
-        $to_update = implode(" = ?, ",array_keys($modifiche) )." = ?";
-        $valori = array_values($modifiche);
+        foreach( $modifiche as $campo => $valore )
+        {
+            if( self::operazionePossibile($this->session, __FUNCTION__ . "_" . $campo, $id, False ) )
+                $mods[$campo] = $valore;
+        }
+        
+        $to_update = implode(" = ?, ",array_keys($mods) )." = ?";
+        $valori = array_values($mods);
         $valori[] = $id;
         
         $query_bg = "UPDATE giocatori SET $to_update WHERE email_giocatore = ?";
