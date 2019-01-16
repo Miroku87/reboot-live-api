@@ -89,7 +89,7 @@ class CharactersManager
     206
     Il valore di Difesa Mentale del personaggio aumenta di 2. (Sostituisce il bonus dato da Schermatura Cerebrale - 202)
     */
-    private function calcolaDifesaMentale( $base, $abilita )
+    public function calcolaDifesaMentale( $base, $abilita )
     {
         $punti = [];
         $id_offset_costante = [96,172,202];
@@ -150,7 +150,7 @@ class CharactersManager
     191
     Se il personaggio ha almeno un Punto Shield base, guadagna +2 punti al suo valore globale.
     */
-    private function calcolaShield( $base, $abilita )
+    public function calcolaShield( $base, $abilita )
     {
         $punti               = [0];
         $moltiplicatore_base = 1;
@@ -182,7 +182,7 @@ class CharactersManager
         return max( $min, ( $moltiplicatore_base * $base ) + array_sum( $punti ) );
     }
     
-    private function calcolaPF( $base, $abilita )
+    public function calcolaPF( $base, $abilita )
     {
         $punti = [0];
         

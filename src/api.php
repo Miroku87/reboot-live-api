@@ -10,6 +10,7 @@ include_once( $path."classes/GrantsManager.class.php" );
 include_once( $path."classes/NewsManager.class.php" );
 include_once( $path."classes/CraftingManager.class.php" );
 include_once( $path."classes/TransactionManager.class.php" );
+include_once( $path."classes/Statistics.class.php" );
 include_once( $path."config/constants.php" );
 
 class Main
@@ -22,6 +23,7 @@ class Main
 	protected $newsmanager;
 	protected $craftingmanager;
 	protected $transactionmanager;
+	protected $statistics;
 	
 	public function __construct()
 	{
@@ -47,6 +49,7 @@ class Main
 		$this->newsmanager        = new NewsManager( $idev_in_corso );
 		$this->craftingmanager    = new CraftingManager( $idev_in_corso );
 		$this->transactionmanager = new TransactionManager( $this->charactersmanager, $idev_in_corso );
+		$this->statistics         = new Statistics( $this->charactersmanager );
 	}
 	
 	public function __destruct()
