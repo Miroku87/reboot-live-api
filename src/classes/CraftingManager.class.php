@@ -563,6 +563,7 @@ class CraftingManager
             "psicotropo_secondario_componente",
             "tossico_secondario_componente",
             "possibilita_dipendeza_componente",
+            "effetto_sicuro_componente",
             "tipo_applicativo_componente"
         ];
         $campi = Utils::filtraArrayDiArrayAssoc($columns,"data",$campi_permessi);
