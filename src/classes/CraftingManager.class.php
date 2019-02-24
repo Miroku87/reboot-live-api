@@ -106,7 +106,7 @@ class CraftingManager
                                      energia_componente FROM componenti_crafting WHERE id_componente = ?";
         
         $union     =  implode(" UNION ALL ", $sotto_query);
-        $sql_check = "SELECT effetto_sicuro_componente, tipo_applicativo_componente, volume_componente, energia_componente FROM ( $union ) AS u";
+        $sql_check = "SELECT effetto_sicuro_componente, tipo_applicativo_componente, volume_componente, energia_componente, deve FROM ( $union ) AS u";
         $check_res = $this->db->doQuery( $sql_check, $tutti_id, False);
         
         if( !isset($check_res) || count($check_res) === 0 )
@@ -176,13 +176,13 @@ class CraftingManager
     
         $sql_info = "SELECT id_componente,
                             tipo_componente,
-                            curativo_primario_componente,
-                            psicotropo_primario_componente,
-                            tossico_primario_componente,
-                            curativo_secondario_componente,
-                            psicotropo_secondario_componente,
-                            tossico_secondario_componente,
-                            possibilita_dipendeza_componente,
+                            REPLACE(curativo_primario_componente,',','.') AS curativo_primario_componente,
+                            REPLACE(psicotropo_primario_componente,',','.') AS psicotropo_primario_componente,
+                            REPLACE(tossico_primario_componente,',','.') AS tossico_primario_componente,
+                            REPLACE(curativo_secondario_componente,',','.') AS curativo_secondario_componente,
+                            REPLACE(psicotropo_secondario_componente,',','.') AS psicotropo_secondario_componente,
+                            REPLACE(tossico_secondario_componente,',','.') AS tossico_secondario_componente,
+                            REPLACE(possibilita_dipendeza_componente,',','.') AS possibilita_dipendeza_componente,
                             effetto_sicuro_componente,
                             descrizione_componente
                      FROM componenti_crafting
@@ -195,33 +195,51 @@ class CraftingManager
         $info_sostanza2 = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$sostanza_2]))[0];
         $info_sostanza3 = array_values(Utils::filtraArrayDiArrayAssoc($info, "id_componente", [$sostanza_3]))[0];
     
-        $curativo = (int)$info_principio["curativo_primario_componente"] +
-            (int)$info_sostanza1["curativo_secondario_componente"] +
-            (int)$info_sostanza2["curativo_secondario_componente"] +
-            (int)$info_sostanza3["curativo_secondario_componente"];
+        $curativo = (float)$info_principio["curativo_primario_componente"] *
+            (
+				(
+					(float)$info_sostanza1["curativo_secondario_componente"] +
+					(float)$info_sostanza2["curativo_secondario_componente"] +
+					(float)$info_sostanza3["curativo_secondario_componente"]
+				) / 3
+			);
     
-        $tossico = (int)$info_principio["tossico_primario_componente"] +
-            (int)$info_sostanza1["tossico_secondario_componente"] +
-            (int)$info_sostanza2["tossico_secondario_componente"] +
-            (int)$info_sostanza3["tossico_secondario_componente"];
+		$calcoli = "CURA ".((float)$info_principio["curativo_primario_componente"])." * ( ( ".((float)$info_sostanza1["curativo_secondario_componente"])." + ".((float)$info_sostanza2["curativo_secondario_componente"])." + ".((float)$info_sostanza3["curativo_secondario_componente"]).") / 3 ) = ".$curativo."\n";
+		
+        $tossico = (float)$info_principio["tossico_primario_componente"] *
+			(
+				(
+					(float)$info_sostanza1["tossico_secondario_componente"] +
+					(float)$info_sostanza2["tossico_secondario_componente"] +
+					(float)$info_sostanza3["tossico_secondario_componente"]
+				) / 3
+			);
     
-        $psicotropo = (int)$info_principio["psicotropo_primario_componente"] +
-            (int)$info_sostanza1["psicotropo_secondario_componente"] +
-            (int)$info_sostanza2["psicotropo_secondario_componente"] +
-            (int)$info_sostanza3["psicotropo_secondario_componente"];
+		$calcoli .= "TOSSICO ".((float)$info_principio["tossico_primario_componente"])." * ( ( ".((float)$info_sostanza1["tossico_secondario_componente"])." + ".((float)$info_sostanza2["tossico_secondario_componente"])." + ".((float)$info_sostanza3["tossico_secondario_componente"]).") / 3 ) = ".$tossico."\n";
+    
+        $psicotropo = (float)$info_principio["psicotropo_primario_componente"] *
+			( 
+				(
+					(float)$info_sostanza1["psicotropo_secondario_componente"] +
+					(float)$info_sostanza2["psicotropo_secondario_componente"] +
+					(float)$info_sostanza3["psicotropo_secondario_componente"]
+				) / 3 
+			);
     
         if ($curativo > $tossico)
         {
             $campo_risultato = "curativo_crafting_chimico";
-            $id_effetto      = ceil( ( $curativo - $tossico ) / 3 );
+            $id_effetto      = ceil( $curativo - $tossico );
         }
         else
         {
             $campo_risultato = "tossico_crafting_chimico";
-            $id_effetto      = ceil( ( $tossico - $curativo ) / 3 );
+            $id_effetto      = ceil( $tossico - $curativo );
         }
         
-        $id_psicotropo = ceil( $psicotropo / 4 );
+        $id_psicotropo = ceil( $psicotropo );
+    
+		$calcoli .= "PSICO ".((float)$info_principio["psicotropo_primario_componente"])." * ( ( ".((float)$info_sostanza1["psicotropo_secondario_componente"])." + ".((float)$info_sostanza2["psicotropo_secondario_componente"])." + ".((float)$info_sostanza3["psicotropo_secondario_componente"]).") / 3 ) = ".$id_psicotropo."\n";
         
         $sql_risultato = "SELECT
                                 ( SELECT $campo_risultato FROM crafting_chimico WHERE id_crafting_chimico = :id_effetto ) AS effetto,
@@ -261,7 +279,7 @@ class CraftingManager
         $sql_componenti = "INSERT INTO componenti_ricetta (componenti_crafting_id_componente, ricette_id_ricetta, ruolo_componente_ricetta) VALUES (:idcomp,:idric,:ruolo)";
         $this->db->doMultipleManipulations( $sql_componenti, $inserts, False );
     
-        $output = ["status" => "ok", "result" => true];
+        $output = ["status" => "ok", "result" => true, "calcoli" => $calcoli];
     
         return json_encode($output);
     }
@@ -338,6 +356,9 @@ class CraftingManager
                                 ri.data_inserimento_ricetta,
                                 ri.tipo_ricetta,
                                 ri.tipo_oggetto,
+                                ri.risultato_ricetta,
+                                ri.extra_cartellino_ricetta,
+                                ri.note_ricetta,	
                                 ri.nome_ricetta,
                                 ri.gia_stampata,
                                 IF( cr.ruolo_componente_ricetta IS NOT NULL,
@@ -349,7 +370,6 @@ class CraftingManager
                                 CONCAT(gi.nome_giocatore,' ',gi.cognome_giocatore) AS nome_giocatore,
                                 pg.nome_personaggio,
                                 SUM( cc.fcc_componente ) AS fcc_componente
-                                $campi_str
                         FROM ricette AS ri
                             JOIN personaggi AS pg ON pg.id_personaggio = ri.personaggi_id_personaggio
                             JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore

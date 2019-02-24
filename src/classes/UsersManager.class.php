@@ -122,7 +122,11 @@ class UsersManager
 	    if( !Utils::controllaMail($mail) )
 	        throw new APIException("La mail inserita non &egrave; valida. Riprova con un'altra.");
 	    
-		$query_grants  = "SELECT gi.email_giocatore, CONCAT(gi.nome_giocatore,' ', gi.cognome_giocatore) AS nome_completo, rhg.grants_nome_grant AS permessi FROM giocatori AS gi
+		$query_grants  = "SELECT gi.email_giocatore,
+                                 gi.default_pg_giocatore,
+                                 CONCAT(gi.nome_giocatore,' ', gi.cognome_giocatore) AS nome_completo,
+                                 rhg.grants_nome_grant AS permessi
+                            FROM giocatori AS gi
                             LEFT OUTER JOIN ruoli_has_grants AS rhg ON gi.ruoli_nome_ruolo = rhg.ruoli_nome_ruolo
                             WHERE gi.email_giocatore = :mail AND 
                                   gi.password_giocatore = :pass AND
@@ -161,7 +165,6 @@ class UsersManager
 
 		if( Utils::clientInSameLAN() && isset($this->idev_in_corso) && !UsersManager::controllaPermessi( $this->session, [$GRANT_MOSTRA_ALTRI_PG] ) )
         {
-            //TODO: testare
             $query_iscrizione = "SELECT personaggi_id_personaggio FROM iscrizione_personaggi AS ip
                                     JOIN personaggi AS pg ON pg.id_personaggio = ip.personaggi_id_personaggio
                                     JOIN giocatori AS gi ON gi.email_giocatore = pg.giocatori_email_giocatore
@@ -172,8 +175,10 @@ class UsersManager
                 throw new APIException("Ci dispiace, solo i giocatori con personaggi iscritti all'evento in corso possono loggare.");
             
             $output["pg_da_loggare"] = $res_iscrizione[0]["personaggi_id_personaggio"];
-//            array_splice( $output["permessi"], array_search($GRANT_VISUALIZZA_MAIN,$output["permessi"] ),1 ); //mostriamo il pulsante ma facciamo il redirect tutto da front-end
+            $output["event_id"] = $this->idev_in_corso;
         }
+        else if ( $result[0]["default_pg_giocatore"] != NULL )
+            $output["pg_da_loggare"] = $result[0]["default_pg_giocatore"];
         
 		return json_encode($output);
 	}
@@ -359,16 +364,25 @@ class UsersManager
     public function modificaUtente( $modifiche, $id = NULL )
     {
         $id = isset( $id ) ? $id : $this->session->email_giocatore;
-        $mods = [];
+        $to_update = "";
+        $valori = [];
         
         foreach( $modifiche as $campo => $valore )
         {
             if( self::operazionePossibile($this->session, __FUNCTION__ . "_" . $campo, $id, False ) )
-                $mods[$campo] = $valore;
+            {
+                $val = $valore === "NULL" ? "NULL" : "?";
+                
+                if( $valore !== "NULL" )
+                    $valori[] = $valore;
+                
+                $to_update .= "$campo = $val";
+            }
         }
         
-        $to_update = implode(" = ?, ",array_keys($mods) )." = ?";
-        $valori = array_values($mods);
+        if( empty($to_update) )
+            throw new APIException("Non &egrave; possibile eseguire l'operazione.",APIException::$GENERIC_ERROR);
+        
         $valori[] = $id;
         
         $query_bg = "UPDATE giocatori SET $to_update WHERE email_giocatore = ?";
